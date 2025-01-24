@@ -15,94 +15,98 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
    final LoginApiService _loginApiService =LoginApiService();
 
   LoginBloc()
-  :super(LoginFormState()){
+  :super(LoginInitial()){
 
     on<LoginEmailChanged>(_onEmailChanged);
     on<LoginPasswordChanged>(_onPasswordChanged);
     on<LoginSubmitted>(_onSubmitted);
-    //on<LoginFailure>(_reLoginFormState);
+    on<TogglePasswordVisibility>(_onTogglePasswordVisibility);
 
   }
-
-  void _onEmailChanged(LoginEmailChanged event, Emitter<LoginState> emit){
-
-    if(state is LoginFormState){
-      final currentState=state as LoginFormState;
-        emit(LoginFormState(email: event.email,password: currentState.password,isEmailValid: EmailValidator.validate(event.email),isPasswordValid: currentState.isPasswordValid));
-
-
-      }
-
-
-  }
-
-  void _onPasswordChanged (
-      LoginPasswordChanged event,
-      Emitter<LoginState> emit,
-      ){
-
-    if(state is LoginFormState){
-      final currentState=state as LoginFormState;
+   void _onTogglePasswordVisibility(
+       TogglePasswordVisibility event,
+       Emitter<LoginState> emit
+       ) {
+     if (state is LoginFormState) {
+       final currentState = state as LoginFormState;
+       emit(currentState.copyWith(
+           isPasswordVisible: event.isVisible
+       ));
+     }
+   }
 
 
-        emit(LoginFormState(email: currentState.email,
-            password: event.password,
-            isEmailValid: currentState.isEmailValid,
-            isPasswordValid: _isPasswordValid(event.password)));
-      }
+   void _onEmailChanged(LoginEmailChanged event, Emitter<LoginState> emit) {
+     if (state is LoginFormState) {
+       final currentState = state as LoginFormState;
+       emit(LoginFormState(
+         email: event.email,
+         password: currentState.password,
+         isEmailValid: EmailValidator.validate(event.email),
+         isPasswordValid: currentState.isPasswordValid,
+         isPasswordVisible: currentState.isPasswordVisible,
+       ));
+     } else {
+       emit(LoginFormState(
+         email: event.email,
+         isEmailValid: EmailValidator.validate(event.email),
+       ));
+     }
+   }
 
-    // if(!_isPasswordValid(event.password)){
-    //   emit(LoginInvalidState());
-    // }else{
-    //   emit(LoginValidState());
-    // }
+   void _onPasswordChanged(
+       LoginPasswordChanged event,
+       Emitter<LoginState> emit,
+       ) {
+     if (state is LoginFormState) {
+       final currentState = state as LoginFormState;
+       emit(LoginFormState(
+         email: currentState.email,
+         password: event.password,
+         isEmailValid: currentState.isEmailValid,
+         isPasswordValid: _isPasswordValid(event.password),
+         isPasswordVisible: currentState.isPasswordVisible,
+       ));
+     } else {
+       emit(LoginFormState(
+         password: event.password,
+         isPasswordValid: _isPasswordValid(event.password),
+       ));
+     }
+   }
 
+   Future<void> _onSubmitted(
+       LoginSubmitted event,
+       Emitter<LoginState> emit,
+       ) async {
+     final isEmailValid = EmailValidator.validate(event.email);
+     final isPasswordValid = _isPasswordValid(event.password);
 
+     if (!isEmailValid || !isPasswordValid) {
+       emit(LoginFailure(error: "Invalid email or Password"));
+       emit(LoginFormState(
+         email: event.email,
+         password: event.password,
+         isEmailValid: isEmailValid,
+         isPasswordValid: isPasswordValid,
+       ));
+       return;
+     }
 
-  }
-
-  Future<void> _onSubmitted(
-      LoginSubmitted event,
-      Emitter<LoginState> emit,
-      ) async {
-
-    print("email ${event.email}");
-    print("password ${event.password}");
-    if(EmailValidator.validate(event.email)==false || !_isPasswordValid(event.password)){
-      print("Login Failure Event");
-      emit(LoginFailure(error: "Invalid email or Password"));
-      // Emit LoginFormState with current values to maintain form state
-      emit(LoginFormState(
-          email: event.email,
-          password: event.password,
-          isEmailValid: EmailValidator.validate(event.email),
-          isPasswordValid: _isPasswordValid(event.password)
-      ));
-      return;
-    }
-    print("Login Loading Event");
-    emit(LoginLoading());
-    try{
-
-      final data = await _loginApiService.login(event.email, event.password);
-      emit(LoginSuccess(data: data));
-
-
-
-    }catch(e){
-
-      emit(LoginFailure(error: e.toString()));
-      // Remove the LoginFormState emission
-      emit(LoginFormState(
-          email: event.email,
-          password: event.password,
-          isEmailValid: EmailValidator.validate(event.email),
-          isPasswordValid: _isPasswordValid(event.password)
-      ));
-    }
-
-
-  }
+     emit(LoginLoading());
+     try {
+       final data = await _loginApiService.login(event.email, event.password);
+       emit(LoginSuccess(data: data));
+     } catch (e) {
+       emit(LoginFailure(error: e.toString()));
+       emit(LoginFormState(
+         email: event.email,
+         password: event.password,
+         isEmailValid: isEmailValid,
+         isPasswordValid: isPasswordValid,
+       ));
+     }
+   }
 
 
 

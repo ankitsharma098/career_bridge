@@ -1,72 +1,115 @@
+import 'package:android/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static ThemeData lightTheme = ThemeData(
-    brightness: Brightness.light,
-    primarySwatch: Colors.blue,
-    textTheme: TextTheme(
-      displayLarge: GoogleFonts.poppins(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: Colors.black,
-      ),
-      bodyLarge: GoogleFonts.poppins(
-        fontSize: 16,
-        color: Colors.black,
-      ),
-      bodyMedium: GoogleFonts.poppins(
-        fontSize: 14,
-        color: Colors.black,
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.grey[200],
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
-        borderSide: BorderSide.none,
-      ),
-    ),
-    buttonTheme: const ButtonThemeData(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8.0)),
-      ),
-    ),
-  );
+  static ThemeData lightTheme(BuildContext context) {
+    return ThemeData(
 
-  static ThemeData darkTheme = ThemeData(
-    brightness: Brightness.dark,
-    primarySwatch: Colors.blue,
-    textTheme: TextTheme(
-      displayLarge: GoogleFonts.poppins(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
-      ),
-      bodyLarge: GoogleFonts.poppins(
-        fontSize: 16,
-        color: Colors.white,
-      ),
-      bodyMedium: GoogleFonts.poppins(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.blue[800],
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
-        borderSide: BorderSide.none,
-      ),
-    ),
-    buttonTheme: const ButtonThemeData(
-      buttonColor: Colors.green,
+      brightness: Brightness.light,
+      primarySwatch: Colors.blue,
+      appBarTheme: AppBarTheme(
+        color: AppColors.primary, // AppBar background color
+        elevation: 0, // Remove shadow
+        //centerTitle: true, // Center the title
+        titleTextStyle: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.045,
+          fontWeight: FontWeight.w500,
+          color: Colors.white, // Title text color
 
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+        ),
+        iconTheme: IconThemeData(
+          color: Colors.white, // Color of icons in AppBar
+        ),
       ),
-    ),
-  );
+
+      textTheme: TextTheme(
+
+        displayLarge: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.06,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        bodyLarge: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.04,
+          color: Colors.black,
+        ),
+        bodyMedium: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.05,
+          color: Colors.black,
+
+        ),
+        bodySmall: GoogleFonts.poppins(
+          fontSize:  MediaQuery.of(context).size.width* 0.035, // 3.5% of screen width
+          color: Colors.black,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.grey[200],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      buttonTheme: const ButtonThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+        ),
+      ),
+    );
+  }
+
+
+  static ThemeData darkTheme(BuildContext context) {
+    return  ThemeData(
+      brightness: Brightness.dark,
+      primarySwatch: Colors.blue,
+      appBarTheme: AppBarTheme(
+        color: Colors.blue[800], // Darker blue for dark theme
+        elevation: 0,
+        //centerTitle: true,
+        titleTextStyle: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.045,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
+      ),
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.06,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        bodyLarge: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.05,
+          color: Colors.white,
+        ),
+        bodyMedium: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.04,
+          color: Colors.white,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.blue[800],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      buttonTheme: const ButtonThemeData(
+        buttonColor: Colors.green,
+
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+        ),
+      ),
+    );
+  }
+
 }
+

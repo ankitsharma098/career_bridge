@@ -1,3 +1,4 @@
+import 'package:android/core/constants/colors.dart';
 import 'package:android/core/utils/custonErrorUtils.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
@@ -40,6 +41,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
         appBar: AppBar(
           title: Text('Employer Dashboard'),
@@ -53,6 +55,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               onPressed: () {},
             ),
           ],
+        ),
+        drawer: Container(
+
         ),
         body: SingleChildScrollView(
           child: BlocConsumer<EmployerDashboardBloc, EmployerDashboardState>(
@@ -75,14 +80,15 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                 if(state is EmployerDashboardLoaded){
                   Map<String,dynamic> dashboardStats = state.data;
                   return Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildProfileCompletionSection(dashboardStats),
-                          _buildJobInsightsSection(dashboardStats),
-                          _buildApplicationInsightsSection(dashboardStats),
-                          _buildRecentApplicationsSection(), // You might want to update this too
+                          _buildProfileCompletionSection(dashboardStats,screenSize),
+                          _buildJobInsightsSection(dashboardStats,screenSize),
+                          _buildApplicationInsightsSection(dashboardStats,screenSize),
+                          SizedBox(height: screenSize.height*0.01,),
+                          _buildRecentApplicationsSection(screenSize), // You might want to update this too
                         ],
                       ),
                   );
@@ -95,7 +101,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         ),
       );
   }
-  Widget _buildProfileCompletionSection(Map<String, dynamic> dashboardStats) {
+  Widget _buildProfileCompletionSection(Map<String, dynamic> dashboardStats,Size screenSize) {
     // Extract profile stats from the dashboard data
     final profileStats = dashboardStats['profileStats'] ?? {};
     final employerProfileCompletion = profileStats['employerProfileCompletion'] ?? {};
@@ -104,6 +110,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
     return Card(
       elevation: 4,
+      margin: EdgeInsets.all(0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -111,33 +118,34 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           children: [
             Text(
               'Profile Completion',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.deepPurple,
+                fontSize: screenSize.width*0.045,
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: screenSize.height * 0.02),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildProfileCompletionCircle(
                   'Employer Profile',
                   (employerProfileCompletion['score'] ?? 0) / (employerProfileCompletion['totalFields'] ?? 1),
-                  '${employerProfileCompletion['score'] ?? 0}/${employerProfileCompletion['totalFields'] ?? 0} Fields',
+                  '${employerProfileCompletion['score'] ?? 0}/${employerProfileCompletion['totalFields'] ?? 0} Fields',screenSize
                 ),
                 _buildProfileCompletionCircle(
                   'Company Profile',
                   (companyProfileCompletion['score'] ?? 0) / (companyProfileCompletion['totalFields'] ?? 1),
-                  '${companyProfileCompletion['score'] ?? 0}/${companyProfileCompletion['totalFields'] ?? 0} Fields',
+                  '${companyProfileCompletion['score'] ?? 0}/${companyProfileCompletion['totalFields'] ?? 0} Fields',screenSize
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: screenSize.height * 0.02),
             Text(
               'Missing Fields: ${(missingFields['employer'] as List?)?.join(', ') ?? 'None'}',
-              style: TextStyle(
-                color: Colors.orange,
-                fontWeight: FontWeight.w500,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: screenSize.width*0.04,
+                color: Colors.orange
               ),
             ),
           ],
@@ -146,7 +154,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     );
   }
 
-  Widget _buildJobInsightsSection(Map<String, dynamic> dashboardStats) {
+  Widget _buildJobInsightsSection(Map<String, dynamic> dashboardStats, Size screenSize) {
     final jobInsights = dashboardStats['jobInsights'] ?? {};
     final overview = jobInsights['overview'] ?? {};
     final jobsByType = jobInsights['jobsByType'] ?? [];
@@ -168,13 +176,13 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               children: [
                 Text(
                   'Job Insights',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.deepPurple,
-                  ),
+                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: screenSize.width*0.045,
+                     fontWeight: FontWeight.w700,
+                     color: AppColors.deepPurple,
                 ),
-                Icon(Icons.bar_chart, color: Colors.deepPurple),
+                ),
+                Icon(Icons.bar_chart, color: AppColors.deepPurple),
               ],
             ),
             Divider(height: 20, color: Colors.grey.shade300),
@@ -183,22 +191,24 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildEnhancedInsightCard('Total Jobs', '${overview['totalJobs'] ?? 0}', Icons.work_outline, Colors.blue),
-                _buildEnhancedInsightCard('Open Jobs', '${overview['openJobs'] ?? 0}', Icons.check_circle_outline, Colors.green),
-                _buildEnhancedInsightCard('Closed Jobs', '${overview['closedJobs'] ?? 0}', Icons.cancel_outlined, Colors.red),
+                _buildEnhancedInsightCard('Total Jobs', '${overview['totalJobs'] ?? 0}', Icons.work_outline, AppColors.primary,screenSize),
+                _buildEnhancedInsightCard('Open Jobs', '${overview['openJobs'] ?? 0}', Icons.check_circle_outline, AppColors.greenCircular,screenSize),
+                _buildEnhancedInsightCard('Closed Jobs', '${overview['closedJobs'] ?? 0}', Icons.cancel_outlined, AppColors.error,screenSize),
               ],
             ),
 
-            SizedBox(height: 16),
+            SizedBox(height: screenSize.height*0.02),
 
             // Job Type and Location Insights
             Row(
+             // mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: _buildJobTypeBreakdown(jobsByType),
+                Container(
+                  child: _buildJobTypeBreakdown(jobsByType,screenSize),
                 ),
-                Expanded(
-                  child: _buildJobLocationBreakdown(jobsByLocation),
+                SizedBox(width: screenSize.width*0.05,),
+                Container(
+                  child: _buildJobLocationBreakdown(jobsByLocation,screenSize),
                 ),
               ],
             ),
@@ -208,51 +218,59 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     );
   }
 
-  Widget _buildJobTypeBreakdown(List<dynamic> jobsByType) {
+  Widget _buildJobTypeBreakdown(List<dynamic> jobsByType,Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Job Type Breakdown',
-          style: TextStyle(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: screenSize.width*0.04
+            ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 8),
+        SizedBox(height: screenSize.width*0.015),
         ...jobsByType.map((type) =>
-            _buildBreakdownRow(type['_id'] ?? 'Unknown', type['count'] ?? 0, Colors.blue)
+            _buildBreakdownRow(type['_id'] ?? 'Unknown', type['count'] ?? 0, Colors.blue,screenSize)
         ).toList(),
       ],
     );
   }
 
-  Widget _buildJobLocationBreakdown(List<dynamic> jobsByLocation) {
+  Widget _buildJobLocationBreakdown(List<dynamic> jobsByLocation,Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 8),
+
         Text(
           'Job Location',
-          style: TextStyle(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: screenSize.width*0.04
+            ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 8),
+        SizedBox(height: screenSize.width*0.015),
         ...jobsByLocation.map((location) =>
             _buildBreakdownRow(location['_id'] ?? 'Unknown', location['count'] ?? 0,
-                location['_id'] == 'Remote' ? Colors.green : Colors.orange)
+                location['_id'] == 'Remote' ? Colors.green : Colors.orange,screenSize)
         ).toList(),
       ],
     );
   }
 
-  Widget _buildApplicationInsightsSection(Map<String, dynamic> dashboardStats) {
+  Widget _buildApplicationInsightsSection(Map<String, dynamic> dashboardStats, Size screenSize) {
     final applicationInsights = dashboardStats['applicationInsights'] ?? {};
     final overview = applicationInsights['overview'] ?? {};
 
     return Card(
       elevation: 4,
-      margin: EdgeInsets.symmetric(vertical: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
+      margin: EdgeInsets.all(0),
+
+          child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,13 +280,13 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               children: [
                 Text(
                   'Application Insights',
-                  style: TextStyle(
-                    fontSize: 20,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: screenSize.width*0.045,
                     fontWeight: FontWeight.w700,
-                    color: Colors.deepPurple,
+                    color: AppColors.deepPurple,
                   ),
                 ),
-                Icon(Icons.analytics_outlined, color: Colors.deepPurple),
+                Icon(Icons.analytics_outlined, color: AppColors.deepPurple),
               ],
             ),
             Divider(height: 20, color: Colors.grey.shade300),
@@ -277,22 +295,21 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildEnhancedInsightCard('Total', '${overview['totalApplications'] ?? 0}', Icons.people_outline, Colors.purple),
-                _buildEnhancedInsightCard('Shortlisted', '${overview['shortlistedApplications'] ?? 0}', Icons.check_circle_outline, Colors.green),
-                _buildEnhancedInsightCard('Rejected', '${overview['rejectedApplications'] ?? 0}', Icons.cancel_outlined, Colors.red),
+                _buildEnhancedInsightCard('Total', '${overview['totalApplications'] ?? 0}', Icons.people_outline, Colors.purple,screenSize),
+                _buildEnhancedInsightCard('Shortlisted', '${overview['shortlistedApplications'] ?? 0}', Icons.check_circle_outline, Colors.green,screenSize),
+                _buildEnhancedInsightCard('Rejected', '${overview['rejectedApplications'] ?? 0}', Icons.cancel_outlined, Colors.red,screenSize),
               ],
             ),
 
-            SizedBox(height: 16),
-            _buildApplicationStatusBarChart(overview),
-            SizedBox(height: 8),
+            SizedBox(height: screenSize.height*0.02),
+            _buildApplicationStatusBarChart(overview,screenSize),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildApplicationStatusBarChart(Map<String, dynamic> overview) {
+  Widget _buildApplicationStatusBarChart(Map<String, dynamic> overview,Size screenSize) {
     final totalApplications = overview['totalApplications'] ?? 0;
     final shortlistedApplications = overview['shortlistedApplications'] ?? 0;
     final rejectedApplications = overview['rejectedApplications'] ?? 0;
@@ -303,9 +320,15 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
       children: [
         Text(
           'Application Status',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: screenSize.width*0.045,
+            color: AppColors.secondary
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 16),
+        SizedBox(height: screenSize.height*0.01),
         AspectRatio(
           aspectRatio: 1.7,
           child: BarChart(
@@ -313,23 +336,21 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               alignment: BarChartAlignment.spaceAround,
               maxY: totalApplications.toDouble() > 0 ? totalApplications.toDouble() : 5,
               barGroups: [
-                _buildApplicationBar('Shortlisted', shortlistedApplications.toDouble(), Colors.green),
-                _buildApplicationBar('Rejected', rejectedApplications.toDouble(), Colors.red),
-                _buildApplicationBar('Pending', pendingApplications.toDouble(), Colors.orange),
+                _buildApplicationBar('Shortlisted', shortlistedApplications.toDouble(), AppColors.greenCircular),
+                _buildApplicationBar('Rejected', rejectedApplications.toDouble(), AppColors.error),
+                _buildApplicationBar('Pending', pendingApplications.toDouble(), AppColors.orange),
               ],
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(showTitles: true),
                 ),
+
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (double value, TitleMeta meta) {
                       const statuses = ['Shortlisted', 'Rejected', 'Pending'];
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(statuses[value.toInt()]),
-                      );
+                      return Text(statuses[value.toInt()],style: Theme.of(context).textTheme.bodySmall,overflow:TextOverflow.ellipsis,);
                     },
                   ),
                 ),
@@ -340,131 +361,36 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
       ],
     );
   }
-  // Widget _buildProfileCompletionSection() {
-  //   return Card(
-  //     elevation: 4,
-  //     child: Padding(
-  //       padding: const EdgeInsets.all(16.0),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Text(
-  //             'Profile Completion',
-  //             style: TextStyle(
-  //               fontSize: 18,
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //           ),
-  //           SizedBox(height: 16),
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //             children: [
-  //               _buildProfileCompletionCircle(
-  //                 'Employer Profile',
-  //                 0.83,
-  //                 '5/6 Fields',
-  //               ),
-  //               _buildProfileCompletionCircle(
-  //                 'Company Profile',
-  //                 1.0,
-  //                 '18/18 Fields',
-  //               ),
-  //             ],
-  //           ),
-  //           SizedBox(height: 16),
-  //           Text(
-  //             'Missing Fields: Gender',
-  //             style: TextStyle(
-  //               color: Colors.orange,
-  //               fontWeight: FontWeight.w500,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
-  Widget _buildProfileCompletionCircle(String title, double percentage, String details) {
+  Widget _buildProfileCompletionCircle(String title, double percentage, String details,Size screenSize) {
     return Column(
       children: [
         CircularPercentIndicator(
           radius: 60.0,
           lineWidth: 10.0,
           percent: percentage,
-          center: Text('${(percentage * 100).toInt()}%'),
-          progressColor: Colors.green,
+          center: Text('${(percentage * 100).toInt()}%',style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.primary
+          ),),
+          progressColor: AppColors.greenCircular,
         ),
-        SizedBox(height: 8),
+        SizedBox(height: screenSize.height*0.02),
         Text(
           title,
-          style: TextStyle(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: screenSize.width*0.045
+            ),
         ),
-        Text(details),
+        Text(details, style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: screenSize.width*0.04
+        ),),
       ],
     );
   }
 
-  // Widget _buildJobInsightsSection() {
-  //   return Card(
-  //     elevation: 4,
-  //     margin: EdgeInsets.symmetric(vertical: 12),
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.circular(15),
-  //     ),
-  //     child: Padding(
-  //       padding: const EdgeInsets.all(16.0),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               Text(
-  //                 'Job Insights',
-  //                 style: TextStyle(
-  //                   fontSize: 20,
-  //                   fontWeight: FontWeight.w700,
-  //                   color: Colors.deepPurple,
-  //                 ),
-  //               ),
-  //               Icon(Icons.bar_chart, color: Colors.deepPurple),
-  //             ],
-  //           ),
-  //           Divider(height: 20, color: Colors.grey.shade300),
-  //
-  //           // Insight Cards Row
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //             children: [
-  //               _buildEnhancedInsightCard('Total Jobs', '20', Icons.work_outline, Colors.blue),
-  //               _buildEnhancedInsightCard('Open Jobs', '20', Icons.check_circle_outline, Colors.green),
-  //               _buildEnhancedInsightCard('Closed Jobs', '0', Icons.cancel_outlined, Colors.red),
-  //             ],
-  //           ),
-  //
-  //           SizedBox(height: 16),
-  //
-  //           // Job Type and Location Insights
-  //           Row(
-  //             children: [
-  //               Expanded(
-  //                 child: _buildJobTypeBreakdown(),
-  //               ),
-  //               Expanded(
-  //                 child: _buildJobLocationBreakdown(),
-  //               ),
-  //             ],
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  Widget _buildEnhancedInsightCard(String title, String count, IconData icon, Color color) {
+  Widget _buildEnhancedInsightCard(String title, String count, IconData icon, Color color,Size screenSize) {
     return Container(
-      width: 100,
+      width: screenSize.width*0.28,
       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -474,169 +400,53 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
       child: Column(
         children: [
           Icon(icon, color: color, size: 30),
-          SizedBox(height: 8),
+          SizedBox(height: screenSize.height*0.01),
           Text(
             count,
-            style: TextStyle(
-              fontSize: 22,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: color,
-            ),
+              fontSize: screenSize.width*0.04
+            )
           ),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            maxLines: 1,
+            overflow:TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w200,
+                color: color,
+                fontSize: screenSize.width*0.035
+            )
           ),
         ],
       ),
     );
   }
 
-  // Widget _buildApplicationInsightsSection() {
-  //   return Card(
-  //     elevation: 4,
-  //     margin: EdgeInsets.symmetric(vertical: 12),
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.circular(15),
-  //     ),
-  //     child: Padding(
-  //       padding: const EdgeInsets.all(16.0),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               Text(
-  //                 'Application Insights',
-  //                 style: TextStyle(
-  //                   fontSize: 20,
-  //                   fontWeight: FontWeight.w700,
-  //                   color: Colors.deepPurple,
-  //                 ),
-  //               ),
-  //               Icon(Icons.analytics_outlined, color: Colors.deepPurple),
-  //             ],
-  //           ),
-  //           Divider(height: 20, color: Colors.grey.shade300),
-  //
-  //           // Insight Cards Row
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //             children: [
-  //               _buildEnhancedInsightCard('Total', '1', Icons.people_outline, Colors.purple),
-  //               _buildEnhancedInsightCard('Shortlisted', '1', Icons.check_circle_outline, Colors.green),
-  //               _buildEnhancedInsightCard('Rejected', '0', Icons.cancel_outlined, Colors.red),
-  //             ],
-  //           ),
-  //
-  //           SizedBox(height: 16),
-  //           _buildApplicationStatusBarChart(),
-  //           SizedBox(height: 8),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
 
-
-
-  // Widget _buildJobLocationBreakdown() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //         SizedBox(height: 8),
-  //       Text(
-  //         'Job Location',
-  //         style: TextStyle(fontWeight: FontWeight.bold),
-  //       ),
-  //        SizedBox(height: 8),
-  //       _buildBreakdownRow('Remote', 19, Colors.green),
-  //       _buildBreakdownRow('On-site', 1, Colors.orange),
-  //     ],
-  //   );
-  // }
-  //
-  //
-  // Widget _buildJobTypeBreakdown() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         'Job Type Breakdown',
-  //         style: TextStyle(fontWeight: FontWeight.bold),
-  //       ),
-  //       SizedBox(height: 8),
-  //       _buildBreakdownRow('Full-time', 20, Colors.blue),
-  //     ],
-  //   );
-  // }
-
-  Widget _buildBreakdownRow(String label, int count, Color color) {
+  Widget _buildBreakdownRow(String label, int count, Color color,Size screenSize) {
     return Row(
       children: [
         Container(
-          width: 10,
-          height: 10,
+          width: screenSize.width*0.06,
+          height: screenSize.height*0.01,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
           ),
         ),
-        SizedBox(width: 8),
-        Text('$label: $count'),
+        Text('$label: $count',style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w400,
+            fontSize: screenSize.width*0.04
+        ),),
       ],
     );
   }
 
 
-  // Widget _buildApplicationStatusBarChart() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         'Application Status',
-  //         style: TextStyle(fontWeight: FontWeight.bold),
-  //       ),
-  //       SizedBox(height: 16),
-  //       AspectRatio(
-  //         aspectRatio: 1.7,
-  //         child: BarChart(
-  //           BarChartData(
-  //             alignment: BarChartAlignment.spaceAround,
-  //             maxY: 5,
-  //             barGroups: [
-  //               _buildApplicationBar('Shortlisted', 1, Colors.green),
-  //               _buildApplicationBar('Rejected', 0, Colors.red),
-  //               _buildApplicationBar('Pending', 0, Colors.orange),
-  //             ],
-  //             titlesData: FlTitlesData(
-  //               leftTitles: AxisTitles(
-  //                 sideTitles: SideTitles(showTitles: true),
-  //               ),
-  //               bottomTitles: AxisTitles(
-  //                 sideTitles: SideTitles(
-  //                   showTitles: true,
-  //                   getTitlesWidget: (double value, TitleMeta meta) {
-  //                     const statuses = ['Shortlisted', 'Rejected', 'Pending'];
-  //                     return Padding(
-  //                       padding: const EdgeInsets.only(top: 8.0),
-  //                       child: Text(statuses[value.toInt()]),
-  //                     );
-  //                   },
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
+
 
   BarChartGroupData _buildApplicationBar(String x, double value, Color color) {
     return BarChartGroupData(
@@ -652,9 +462,10 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
   }
 
 
-  Widget _buildRecentApplicationsSection() {
+  Widget _buildRecentApplicationsSection(Size screenSize) {
     return Card(
       elevation: 4,
+      margin: EdgeInsets.all(0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -662,17 +473,18 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           children: [
             Text(
               'Recent Applications',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: screenSize.width*0.045,
+            fontWeight: FontWeight.w700,
+            color: AppColors.deepPurple,
+          ),),
+            SizedBox(height: screenSize.height*0.02),
             _buildApplicationItem(
               'Ankit Sharma',
               'Web Designer',
               'Shortlisted',
               '2024-12-12',
+              screenSize
             ),
           ],
         ),
@@ -680,14 +492,17 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     );
   }
 
-  Widget _buildApplicationItem(String name, String jobTitle, String status, String date) {
+  Widget _buildApplicationItem(String name, String jobTitle, String status, String date,Size screenSize) {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: Colors.blue.shade100,
         child: Icon(Icons.person, color: Colors.blue),
       ),
-      title: Text(name),
-      subtitle: Text(jobTitle),
+      title: Text(name,style: Theme.of(context).textTheme.bodySmall,),
+      subtitle: Text(jobTitle,style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        fontWeight: FontWeight.w500,
+        fontSize: screenSize.width*0.045,
+      )),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -700,8 +515,11 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             ),
           ),
           Text(
-            date,
-            style: TextStyle(color: Colors.grey),
+            date, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Colors.grey,
+            fontSize: screenSize.width*0.025,
+            fontWeight: FontWeight.w600
+          )
           ),
         ],
       ),

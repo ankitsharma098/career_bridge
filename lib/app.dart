@@ -48,7 +48,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme,
+      theme: _isDarkMode ? AppTheme.darkTheme(context) :  AppTheme.lightTheme(context),
+      debugShowCheckedModeBanner: false,
       home: isLoggedIn ? BlocProvider(
         create: (context) => EmployerDashboardBloc(),
         child: EmployerDashboardScreen(),

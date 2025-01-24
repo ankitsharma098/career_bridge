@@ -27,3 +27,10 @@ class LoginPasswordChanged extends LoginEvent {
 
 
 }
+
+class TogglePasswordVisibility extends LoginEvent {
+  final bool isVisible;
+
+  TogglePasswordVisibility(this.isVisible);
+}
+
