@@ -10,6 +10,11 @@ import '../../Dashboard/ui/employer_dashboard.dart';
 
 
 class LoginScreen extends StatefulWidget {
+  final bool isDarkMode;
+  final VoidCallback onThemeToggle;
+  const LoginScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
+
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -31,11 +36,11 @@ class _LoginScreenState extends State<LoginScreen> {
       SnackBarUtils.showRedSnackBar(state.error.toString(), context);
     }
     if(state is LoginSuccess){
-      print("SUccess ${state.data}");
+      // print("SUccess ${state.data}");
 
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
           create: (context) => EmployerDashboardBloc(),
-          child: EmployerDashboardScreen (),
+          child: EmployerDashboardScreen (isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
         ),));
             }
           },

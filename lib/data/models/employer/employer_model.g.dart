@@ -7,17 +7,25 @@ part of 'employer_model.dart';
 // **************************************************************************
 
 Employer _$EmployerFromJson(Map<String, dynamic> json) => Employer(
-      id: json['_id'] as String,
-      personalInfo:
-          PersonalInfo.fromJson(json['personalInfo'] as Map<String, dynamic>),
-      companyDetails: EmployerCompanyInfo.fromJson(
-          json['companyDetails'] as Map<String, dynamic>),
-      postedJobs: (json['postedJobs'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      stories: UserStories.fromJson(json['stories'] as Map<String, dynamic>),
-      events: UserEvents.fromJson(json['events'] as Map<String, dynamic>),
-      about: json['about'] as String,
+      id: json['_id'] as String? ?? '',
+      personalInfo: json['personalInfo'] == null
+          ? const PersonalInfo()
+          : PersonalInfo.fromJson(json['personalInfo'] as Map<String, dynamic>),
+      companyDetails: json['companyDetails'] == null
+          ? const EmployerCompanyInfo()
+          : EmployerCompanyInfo.fromJson(
+              json['companyDetails'] as Map<String, dynamic>),
+      postedJobs: (json['postedJobs'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      stories: json['stories'] == null
+          ? const UserStories()
+          : UserStories.fromJson(json['stories'] as Map<String, dynamic>),
+      events: json['events'] == null
+          ? const UserEvents()
+          : UserEvents.fromJson(json['events'] as Map<String, dynamic>),
+      about: json['about'] as String? ?? '',
     );
 
 Map<String, dynamic> _$EmployerToJson(Employer instance) => <String, dynamic>{
@@ -31,9 +39,9 @@ Map<String, dynamic> _$EmployerToJson(Employer instance) => <String, dynamic>{
     };
 
 PersonalInfo _$PersonalInfoFromJson(Map<String, dynamic> json) => PersonalInfo(
-      fullName: json['fullName'] as String,
-      email: json['email'] as String,
-      phoneNumber: json['phoneNumber'] as String,
+      fullName: json['fullName'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phoneNumber: json['phoneNumber'] as String? ?? '',
       profilePic: json['profilePic'] as String?,
     );
 
@@ -81,8 +89,8 @@ Map<String, dynamic> _$UserEventsToJson(UserEvents instance) =>
 
 EmployerCompanyInfo _$EmployerCompanyInfoFromJson(Map<String, dynamic> json) =>
     EmployerCompanyInfo(
-      companyId: json['companyId'] as String,
-      designation: json['designation'] as String,
+      companyId: json['companyId'] as String? ?? '',
+      designation: json['designation'] as String? ?? '',
     );
 
 Map<String, dynamic> _$EmployerCompanyInfoToJson(

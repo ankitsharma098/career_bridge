@@ -3,7 +3,7 @@
 import 'dart:convert';
 
 import 'package:android/core/constants/app_constants.dart';
-import 'package:android/core/utils/utils.dart';
+import 'package:android/core/utils/hiveUtils.dart';
 import 'package:dio/dio.dart';
 
 import '../../../data/models/company/company_model.dart';
@@ -13,7 +13,7 @@ class LoginApiService {
 
   final dio = Dio();
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<void> login(String email, String password) async {
     String baseUrl=AppConstants.baseUrl;
 
     try{
@@ -35,10 +35,11 @@ class LoginApiService {
 
 
 
-        final employerResponse = Employer.fromJson(employerData);
-        final companyResponse = CompanyDetails.fromJson(companyData);
-        print("////employer $employerResponse");
-        print("////companyDetails $companyResponse");
+        // final employerResponse = Employer.fromJson(employerData);
+        // final companyResponse = CompanyDetails.fromJson(companyData);
+
+        print("////employer runtimeType ${companyData.runtimeType}");
+        print("////companyDetails runtimeType ${employerData.runtimeType}");
         Map<String,dynamic> data={
           "employer": employerData,
           "companyDetails": companyData,
@@ -46,11 +47,6 @@ class LoginApiService {
           'refreshToken':tokens['refreshToken'],
         };
         await HiveUtils.storeUserData(data);
-
-        return {
-          "employer": employerResponse,
-          "companyDetails": companyResponse,
-        };
 
       }else {
 

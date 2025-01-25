@@ -5,23 +5,35 @@ part 'employer_model.g.dart';
 
 @JsonSerializable()
 class Employer {
-  @JsonKey(name: '_id')
+  @JsonKey(name: '_id', defaultValue: '')
   final String id;
+
   final PersonalInfo personalInfo;
+
+
   final EmployerCompanyInfo companyDetails;
+
+  @JsonKey(defaultValue: [])
   final List<String> postedJobs;
+
+
   final UserStories stories;
+
+
   final UserEvents events;
+
+  @JsonKey(defaultValue: '')
   final String about;
 
-  Employer(
-      {required this.id,
-      required this.personalInfo,
-      required this.companyDetails,
-      required this.postedJobs,
-      required this.stories,
-      required this.events,
-      required this.about});
+  Employer({
+    this.id = '',
+    this.personalInfo = const PersonalInfo(),
+    this.companyDetails = const EmployerCompanyInfo(),
+    this.postedJobs = const [],
+    this.stories = const UserStories(),
+    this.events = const UserEvents(),
+    this.about = '',
+  });
 
   factory Employer.fromJson(Map<String, dynamic> json) =>
       _$EmployerFromJson(json);
@@ -32,16 +44,24 @@ class Employer {
 
 @JsonSerializable()
 class PersonalInfo {
+  @JsonKey(defaultValue: '')
   final String fullName;
+
+  @JsonKey(defaultValue: '')
   final String email;
+
+  @JsonKey(defaultValue: '')
   final String phoneNumber;
+
+  @JsonKey(defaultValue: null)
   final String? profilePic;
 
-  PersonalInfo(
-      {required this.fullName,
-      required this.email,
-      required this.phoneNumber,
-      this.profilePic});
+  const PersonalInfo({
+    this.fullName = 'fullName',
+    this.email = 'email',
+    this.phoneNumber = '+91 730XXX',
+    this.profilePic,
+  });
 
   factory PersonalInfo.fromJson(Map<String, dynamic> json) =>
       _$PersonalInfoFromJson(json);
@@ -56,7 +76,10 @@ class UserStories {
   @JsonKey(name: 'savedStories', defaultValue: [])
   final List<String> savedStoryIds;
 
-  UserStories({required this.myStoryIds, required this.savedStoryIds});
+  const UserStories({
+    this.myStoryIds = const [],
+    this.savedStoryIds = const [],
+  });
 
   factory UserStories.fromJson(Map<String, dynamic> json) =>
       _$UserStoriesFromJson(json);
@@ -71,7 +94,12 @@ class UserEvents {
   @JsonKey(name: 'savedEvents', defaultValue: [])
   final List<String> savedEventIds;
 
-  UserEvents({required this.myEventIds, required this.savedEventIds});
+  const UserEvents({
+    this.myEventIds = const [],
+    this.savedEventIds = const [],
+  });
+
+
 
   factory UserEvents.fromJson(Map<String,dynamic> json)=>_$UserEventsFromJson(json);
 
@@ -80,12 +108,16 @@ class UserEvents {
 
 @JsonSerializable()
 class EmployerCompanyInfo {
+
+  @JsonKey(defaultValue: '')
   final String companyId;
+
+  @JsonKey(defaultValue: '')
   final String designation;
 
-  EmployerCompanyInfo({
-    required this.companyId,
-    required this.designation,
+  const EmployerCompanyInfo({
+    this.companyId='companyId',
+    this.designation='designation',
   });
 
   factory EmployerCompanyInfo.fromJson(Map<String, dynamic> json) =>

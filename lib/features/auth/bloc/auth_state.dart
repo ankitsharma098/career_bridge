@@ -9,9 +9,9 @@ class LoginLoading extends LoginState{}
 
 class LoginSuccess extends LoginState {
 
-  final Map<String,dynamic> data;
-
-  LoginSuccess({required this.data});
+  // final Map<String,dynamic> data;
+  //
+  // LoginSuccess(required this.data}{);
 
 }
 

@@ -1,12 +1,13 @@
-import 'package:android/core/utils/utils.dart';
+import 'package:android/core/utils/hiveUtils.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/Dashboard/ui/employer_dashboard.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/data/auth_api_service.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+import 'core/constants/colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/ui/login.dart';
 
@@ -18,7 +19,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _isDarkMode = false;
+  bool _isDarkMode = true;
 
   void toggleTheme() {
     setState(() {
@@ -27,14 +28,25 @@ class _MyAppState extends State<MyApp> {
   }
 
   bool isLoggedIn = false;
+  bool isLoading =false;
 
   void checkLoginStatus() async {
-    isLoggedIn = await HiveUtils.getLoggedIn();
-    if (isLoggedIn) {
-      print('User is logged in.');
-    } else {
-      print('User is not logged in.');
+    try {
+      isLoading=true;
+      isLoggedIn = await HiveUtils.getLoggedIn();
+      if (isLoggedIn) {
+        print('User is logged in.');
+      } else {
+        print('User is not logged in.');
+      }
+    }catch(e){
+
+    }finally{
+      setState(() {
+        isLoading=false;
+      });
     }
+
   }
 
   @override
@@ -48,71 +60,18 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: _isDarkMode ? AppTheme.darkTheme(context) :  AppTheme.lightTheme(context),
       debugShowCheckedModeBanner: false,
-      home: isLoggedIn ? BlocProvider(
+      theme: _isDarkMode ? AppTheme.darkTheme(context) :  AppTheme.lightTheme(context),
+
+      home: isLoading ?  Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.primary, size: 200),):isLoggedIn ? BlocProvider(
         create: (context) => EmployerDashboardBloc(),
-        child: EmployerDashboardScreen(),
+        child: EmployerDashboardScreen(isDarkMode: _isDarkMode, onThemeToggle:toggleTheme,),
       ) :
       BlocProvider(
         create: (context) => LoginBloc(),
-        child: LoginScreen(),
+        child: LoginScreen(isDarkMode: _isDarkMode, onThemeToggle:toggleTheme),
       ),
     );
   }
 }
-//
-// class LoginScreen extends StatelessWidget {
-//   final VoidCallback onToggleTheme;
-//
-//   const LoginScreen({Key? key, required this.onToggleTheme}) : super(key: key);
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Login'),
-//         actions: [
-//           IconButton(
-//             icon: const Icon(Icons.brightness_6),
-//             onPressed: onToggleTheme,
-//           ),
-//         ],
-//       ),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Text(
-//               'Welcome Back!',
-//               style: Theme.of(context).textTheme.displayLarge,
-//             ),
-//             const SizedBox(height: 20),
-//             TextField(
-//               decoration: InputDecoration(
-//                 labelText: 'Email',
-//                 prefixIcon: const Icon(Icons.email),
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             TextField(
-//               decoration: InputDecoration(
-//                 labelText: 'Password',
-//                 prefixIcon: const Icon(Icons.lock),
-//               ),
-//               obscureText: true,
-//             ),
-//             const SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: () {
-//                 // Perform login action
-//               },
-//               child: const Text('Login'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+

@@ -6,108 +6,110 @@ class EmployerDashboardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Profile Completion Shimmer
-              _buildShimmerCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildShimmerText(width: 150, height: 24),
-                    SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildShimmerCircle(),
-                        _buildShimmerCircle(),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    _buildShimmerText(width: 200, height: 20),
-                  ],
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Profile Completion Shimmer
+                _buildShimmerCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildShimmerText(width: 150, height: 24),
+                      SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildShimmerCircle(),
+                          _buildShimmerCircle(),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      _buildShimmerText(width: 200, height: 20),
+                    ],
+                  ),
                 ),
-              ),
-
-              // Job Insights Shimmer
-              _buildShimmerCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildShimmerText(width: 150, height: 24),
-                        _buildShimmerIcon(),
-                      ],
-                    ),
-                    Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildShimmerInsightCard(),
-                        _buildShimmerInsightCard(),
-                        _buildShimmerInsightCard(),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildShimmerList()),
-                        Expanded(child: _buildShimmerList()),
-                      ],
-                    ),
-                  ],
+      
+                // Job Insights Shimmer
+                _buildShimmerCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildShimmerText(width: 150, height: 24),
+                          _buildShimmerIcon(),
+                        ],
+                      ),
+                      Divider(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildShimmerInsightCard(),
+                          _buildShimmerInsightCard(),
+                          _buildShimmerInsightCard(),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(child: _buildShimmerList()),
+                          Expanded(child: _buildShimmerList()),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-
-              // Application Insights Shimmer
-              _buildShimmerCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildShimmerText(width: 180, height: 24),
-                        _buildShimmerIcon(),
-                      ],
-                    ),
-                    Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildShimmerInsightCard(),
-                        _buildShimmerInsightCard(),
-                        _buildShimmerInsightCard(),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    _buildShimmerText(width: 150, height: 20),
-                    SizedBox(height: 16),
-                    _buildShimmerBarChart(),
-                  ],
+      
+                // Application Insights Shimmer
+                _buildShimmerCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildShimmerText(width: 180, height: 24),
+                          _buildShimmerIcon(),
+                        ],
+                      ),
+                      Divider(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildShimmerInsightCard(),
+                          _buildShimmerInsightCard(),
+                          _buildShimmerInsightCard(),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      _buildShimmerText(width: 150, height: 20),
+                      SizedBox(height: 16),
+                      _buildShimmerBarChart(),
+                    ],
+                  ),
                 ),
-              ),
-
-              // Recent Applications Shimmer
-              _buildShimmerCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildShimmerText(width: 180, height: 24),
-                    SizedBox(height: 16),
-                    _buildShimmerListTile(),
-                  ],
+      
+                // Recent Applications Shimmer
+                _buildShimmerCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildShimmerText(width: 180, height: 24),
+                      SizedBox(height: 16),
+                      _buildShimmerListTile(),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

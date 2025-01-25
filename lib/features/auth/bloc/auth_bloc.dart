@@ -95,8 +95,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
      emit(LoginLoading());
      try {
-       final data = await _loginApiService.login(event.email, event.password);
-       emit(LoginSuccess(data: data));
+       await _loginApiService.login(event.email, event.password);
+       emit(LoginSuccess());
      } catch (e) {
        emit(LoginFailure(error: e.toString()));
        emit(LoginFormState(

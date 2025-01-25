@@ -65,10 +65,10 @@ class AppTheme {
     return  ThemeData(
       brightness: Brightness.dark,
       primarySwatch: Colors.blue,
+      scaffoldBackgroundColor: Colors.grey[900],
       appBarTheme: AppBarTheme(
         color: Colors.blue[800], // Darker blue for dark theme
         elevation: 0,
-        //centerTitle: true,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: MediaQuery.of(context).size.width * 0.045,
           fontWeight: FontWeight.w500,
@@ -78,32 +78,53 @@ class AppTheme {
           color: Colors.white,
         ),
       ),
+      primaryTextTheme: TextTheme(
+        bodyLarge: TextStyle(color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white),
+        bodySmall: TextStyle(color: Colors.white),
+      ),
       textTheme: TextTheme(
         displayLarge: GoogleFonts.poppins(
           fontSize: MediaQuery.of(context).size.width * 0.06,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: Colors.white, // Changed to white
         ),
         bodyLarge: GoogleFonts.poppins(
-          fontSize: MediaQuery.of(context).size.width * 0.05,
-          color: Colors.white,
+          fontSize: MediaQuery.of(context).size.width * 0.04,
+          color: Colors.white, // Changed from white70 to white
         ),
         bodyMedium: GoogleFonts.poppins(
-          fontSize: MediaQuery.of(context).size.width * 0.04,
-          color: Colors.white,
+          fontSize: MediaQuery.of(context).size.width * 0.045,
+          color: Colors.white, // Already white, but ensuring for clarity
         ),
+        bodySmall: GoogleFonts.poppins(
+          fontSize: MediaQuery.of(context).size.width * 0.035,
+          color: Colors.white, // Changed from white54 to white
+        ),
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: Colors.white,
+        selectionColor: Colors.white.withOpacity(0.3),
+        selectionHandleColor: Colors.white,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.blue[800],
+        fillColor: Colors.grey[800],
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide.none,
         ),
+        labelStyle: TextStyle(color: Colors.white),
+        hintStyle: TextStyle(color: Colors.white54),
       ),
-      buttonTheme: const ButtonThemeData(
-        buttonColor: Colors.green,
 
+      cardTheme: CardTheme(
+        color: Colors.grey[850],
+        elevation: 4,
+      ),
+
+      buttonTheme: ButtonThemeData(
+        buttonColor: Colors.blue[700],
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(8.0)),
         ),

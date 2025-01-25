@@ -1,6 +1,6 @@
 
 import 'package:android/core/constants/app_constants.dart';
-import 'package:android/core/utils/utils.dart';
+import 'package:android/core/utils/hiveUtils.dart';
 import 'package:dio/dio.dart';
 
 class EmployerDashboardService{

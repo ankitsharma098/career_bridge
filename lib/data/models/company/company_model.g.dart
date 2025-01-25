@@ -8,23 +8,31 @@ part of 'company_model.dart';
 
 CompanyDetails _$CompanyDetailsFromJson(Map<String, dynamic> json) =>
     CompanyDetails(
-      id: json['_id'] as String,
-      email: json['email'] as String,
-      companyName: json['companyName'] as String,
-      website: json['website'] as String,
-      about: json['about'] as String,
-      companyLogo: json['companyLogo'] as String,
-      industryType: json['industryType'] as String,
-      employerStrengths: json['employerStrengths'] as String,
-      location: Location.fromJson(json['location'] as Map<String, dynamic>),
-      officialAddress: json['officialAddress'] as String,
-      billingDetails: BillingDetails.fromJson(
-          json['billingDetails'] as Map<String, dynamic>),
-      companyProfile: json['companyProfile'] as String,
-      verificationDocument: VerificationDocument.fromJson(
-          json['verificationDocument'] as Map<String, dynamic>),
-      socialAccount:
-          SocialAccount.fromJson(json['socialAccount'] as Map<String, dynamic>),
+      id: json['_id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      companyName: json['companyName'] as String? ?? '',
+      website: json['website'] as String? ?? '',
+      about: json['about'] as String? ?? '',
+      companyLogo: json['companyLogo'] as String? ?? '',
+      industryType: json['industryType'] as String? ?? '',
+      employerStrengths: json['employerStrengths'] as String? ?? '',
+      location: json['location'] == null
+          ? const Location()
+          : Location.fromJson(json['location'] as Map<String, dynamic>),
+      officialAddress: json['officialAddress'] as String? ?? '',
+      billingDetails: json['billingDetails'] == null
+          ? const BillingDetails()
+          : BillingDetails.fromJson(
+              json['billingDetails'] as Map<String, dynamic>),
+      companyProfile: json['companyProfile'] as String? ?? '',
+      verificationDocument: json['verificationDocument'] == null
+          ? const VerificationDocument()
+          : VerificationDocument.fromJson(
+              json['verificationDocument'] as Map<String, dynamic>),
+      socialAccount: json['socialAccount'] == null
+          ? const SocialAccount()
+          : SocialAccount.fromJson(
+              json['socialAccount'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$CompanyDetailsToJson(CompanyDetails instance) =>
@@ -46,10 +54,10 @@ Map<String, dynamic> _$CompanyDetailsToJson(CompanyDetails instance) =>
     };
 
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
-      country: json['country'] as String,
-      state: json['state'] as String,
-      city: json['city'] as String,
-      pincode: json['pincode'] as String,
+      country: json['country'] as String? ?? '',
+      state: json['state'] as String? ?? '',
+      city: json['city'] as String? ?? '',
+      pincode: json['pincode'] as String? ?? '',
     );
 
 Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
@@ -61,9 +69,9 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
 
 BillingDetails _$BillingDetailsFromJson(Map<String, dynamic> json) =>
     BillingDetails(
-      gstNo: json['GSTNo'] as String,
-      panNo: json['PANNo'] as String,
-      msme: json['MSME'] as String,
+      gstNo: json['GSTNo'] as String? ?? '',
+      panNo: json['PANNo'] as String? ?? '',
+      msme: json['MSME'] as String? ?? '',
     );
 
 Map<String, dynamic> _$BillingDetailsToJson(BillingDetails instance) =>
@@ -76,8 +84,8 @@ Map<String, dynamic> _$BillingDetailsToJson(BillingDetails instance) =>
 VerificationDocument _$VerificationDocumentFromJson(
         Map<String, dynamic> json) =>
     VerificationDocument(
-      type: json['type'] as String,
-      url: json['URL'] as String,
+      type: json['type'] as String? ?? '',
+      url: json['URL'] as String? ?? '',
     );
 
 Map<String, dynamic> _$VerificationDocumentToJson(
@@ -89,9 +97,9 @@ Map<String, dynamic> _$VerificationDocumentToJson(
 
 SocialAccount _$SocialAccountFromJson(Map<String, dynamic> json) =>
     SocialAccount(
-      linkedin: json['linkedin'] as String,
-      instagram: json['instagram'] as String,
-      twitter: json['twitter'] as String,
+      linkedin: json['linkedin'] as String? ?? '',
+      instagram: json['instagram'] as String? ?? '',
+      twitter: json['twitter'] as String? ?? '',
     );
 
 Map<String, dynamic> _$SocialAccountToJson(SocialAccount instance) =>

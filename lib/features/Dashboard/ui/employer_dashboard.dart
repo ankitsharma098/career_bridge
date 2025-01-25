@@ -1,20 +1,30 @@
+import 'dart:math';
+
 import 'package:android/core/constants/colors.dart';
+import 'package:android/core/theme/app_theme.dart';
 import 'package:android/core/utils/custonErrorUtils.dart';
+import 'package:android/data/models/company/company_model.dart';
+import 'package:android/data/models/employer/employer_model.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
+import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
-import '../../../core/utils/utils.dart';
+import '../../../core/utils/hiveUtils.dart';
 import 'employer_dashboard_shimmer.dart';
 
 
 
 
 class EmployerDashboardScreen extends StatefulWidget {
-  const EmployerDashboardScreen({super.key});
+  final bool isDarkMode;
+  final VoidCallback onThemeToggle;
+  const EmployerDashboardScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
 
 
   @override
@@ -22,13 +32,43 @@ class EmployerDashboardScreen extends StatefulWidget {
 }
 
 class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
-  Map<String,dynamic>? companyData;
+  CompanyDetails? companyData;  // Nullable with '?'
+  Employer? employerData;
 
-  Map<String,dynamic>? employerData;
+  Future<void> loadData() async {
+    try {
+      print('Starting loadData method');
 
-  Future<void> loadData() async{
-    companyData= await HiveUtils.getCompanyData() ;
-    employerData =await HiveUtils.getEmployerData();
+      Map<String,dynamic> employerMap = await HiveUtils.getEmployerData();
+      Map<String,dynamic> companyMap = await HiveUtils.getCompanyData();
+
+
+      if(employerMap.isNotEmpty){
+        employerData =Employer.fromJson(employerMap);
+      }else {
+        employerData =Employer.fromJson({});
+      }
+      if(companyMap.isNotEmpty){
+        companyData =CompanyDetails.fromJson(companyMap);
+      }else {
+        companyData = CompanyDetails.fromJson({});
+      }
+
+    } catch (e) {
+      print('Error in loadData: $e');
+    }
+  }
+
+   Future<void>  logout() async {
+
+    return await HiveUtils.clearUserData();
+   }
+  bool _isDarkMode = false;
+
+  void toggleTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
   }
 
   @override
@@ -39,74 +79,292 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     BlocProvider.of<EmployerDashboardBloc>(context).add(FetchDashboardData());
   }
 
+  void _showLogoutConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Logout'),
+          content: Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Logout'),
+              onPressed: ()  {
+
+
+                 logout();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                      create: (context) => LoginBloc(),
+                      child: LoginScreen(isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
+                    ), // Navigate to login screen
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    return Scaffold(
-        appBar: AppBar(
-          title: Text('Employer Dashboard'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.notifications),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: Icon(Icons.settings),
-              onPressed: () {},
-            ),
-          ],
-        ),
-        drawer: Container(
+    return BlocConsumer<EmployerDashboardBloc, EmployerDashboardState>(
 
-        ),
-        body: SingleChildScrollView(
-          child: BlocConsumer<EmployerDashboardBloc, EmployerDashboardState>(
-              listener: (context, state) {
-                if (state is EmployerDashboardError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.error.toString())),
-                  );
-                }
-              },
-              builder: (context, state) {
-                if(state is EmployerDashboardLoading){
-                  return EmployerDashboardShimmer();
-                }
-                if (state is EmployerDashboardError) {
-                  return CustomErrorScreen(message: state.error.toString(),onRetry: (){
-                    BlocProvider.of<EmployerDashboardBloc>(context).add(FetchDashboardData());
-                  },);
-                }
-                if(state is EmployerDashboardLoaded){
-                  Map<String,dynamic> dashboardStats = state.data;
-                  return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildProfileCompletionSection(dashboardStats,screenSize),
-                          _buildJobInsightsSection(dashboardStats,screenSize),
-                          _buildApplicationInsightsSection(dashboardStats,screenSize),
-                          SizedBox(height: screenSize.height*0.01,),
-                          _buildRecentApplicationsSection(screenSize), // You might want to update this too
-                        ],
+    listener: (context, state) {
+      if (state is EmployerDashboardError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.error.toString())),
+        );
+      }
+    },
+
+        builder: (context, state) {
+          if(state is EmployerDashboardLoading){
+            return EmployerDashboardShimmer();
+
+          }
+          if (state is EmployerDashboardError) {
+            return CustomErrorScreen(message: state.error.toString(),onRetry: (){
+              BlocProvider.of<EmployerDashboardBloc>(context).add(FetchDashboardData());
+            },);
+          }
+          if(state is EmployerDashboardLoaded){
+            Map<String,dynamic> dashboardStats = state.data;
+
+              return  Scaffold(
+                appBar: AppBar(
+                  title: Text('Employer  Dashboard'),
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.notifications),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+                      onPressed: widget.onThemeToggle,
+                    ),
+                  ],
+                ),
+                body: SingleChildScrollView(
+
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildProfileCompletionSection(dashboardStats,screenSize),
+                        _buildJobInsightsSection(dashboardStats,screenSize),
+                        _buildApplicationInsightsSection(dashboardStats,screenSize),
+                        SizedBox(height: screenSize.height*0.01,),
+                        _buildRecentApplicationsSection(screenSize), // You might want to update this too
+                      ],
+                    ),
+                  ),
+                ),
+                drawer: Container(
+                  color: Colors.white,
+                  width: screenSize.width * 0.6,
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      Container(
+                        height: screenSize.height*0.25,
+                        child: DrawerHeader(
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: screenSize.width*0.15,
+                                backgroundImage: employerData?.personalInfo.profilePic != null
+                                    ? NetworkImage(employerData!.personalInfo.profilePic.toString())
+                                    : null,
+                                backgroundColor: AppColors.background,
+                                child: employerData?.personalInfo.profilePic == null
+                                    ? Icon(
+                                  Icons.person,
+                                  size: 50,
+                                  color: AppColors.primary,
+                                )
+                                    : null,
+                              ),
+                              Text(
+                                  employerData!.personalInfo.fullName ,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: AppColors.background,
+                                      fontSize: screenSize.width*0.045,
+                                      fontWeight: FontWeight.w600
+                                  )
+                              ),
+                              Text(
+                                  employerData!.personalInfo.email,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: AppColors.background,
+                                      fontSize: screenSize.width*0.03,
+                                      fontWeight: FontWeight.w300
+                                  )
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                  );
-                }
+                      _buildDrawerItem(
+                        icon: Icons.dashboard,
+                        title: 'Dashboard',
+                        onTap: () {
+                          // Current screen, so just close the drawer
+                          //Navigator.pop(context);
+                        },
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.work,
+                        title: 'Jobs',
+                        onTap: () {
+                          //  Navigator.pop(context);
+                          // Navigator.push(
+                          //    context,
+                          //    MaterialPageRoute(
+                          //      builder: (context) => JobsScreen(), // You'll need to create this screen
+                          //    ),
+                          //  );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.person,
+                        title: 'Profile',
+                        onTap: () {
+                          // Navigator.pop(context);
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => ProfileScreen(), // You'll need to create this screen
+                          //   ),
+                          // );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.web_stories,
+                        title: 'My Blog',
+                        onTap: () {
+                          // Navigator.pop(context);
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => BlogMessagesScreen(), // You'll need to create this screen
+                          //   ),
+                          // );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.message,
+                        title: 'Messages',
+                        onTap: () {
+                          // Navigator.pop(context);
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => BlogMessagesScreen(), // You'll need to create this screen
+                          //   ),
+                          // );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.event,
+                        title: 'Events',
+                        onTap: () {
+                          // Navigator.pop(context);
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => EventsScreen(), // You'll need to create this screen
+                          //   ),
+                          // );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        icon: CupertinoIcons.person_2_fill,
+                        title: 'About Us',
+                        onTap: () {
+                          // Navigator.pop(context);
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => EventsScreen(), // You'll need to create this screen
+                          //   ),
+                          // );
+                        },
+                      ),
+                      Divider(),
+                      _buildDrawerItem(
+                        icon: Icons.logout,
+                        title: 'Logout',
+                        onTap: () {
+                          // Implement logout logic
+                          _showLogoutConfirmationDialog(context);
+                        },
+                        color: Colors.red,
+                      ),
+                    ],
+                  ),
+                ),
+              );
 
-                return SizedBox();
+          }
 
-              },
-              ),
-        ),
+          return SizedBox();
+        },
       );
   }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: color ?? AppColors.deepPurple,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: color ?? Colors.black87,
+          fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
+
+
   Widget _buildProfileCompletionSection(Map<String, dynamic> dashboardStats,Size screenSize) {
     // Extract profile stats from the dashboard data
     final profileStats = dashboardStats['profileStats'] ?? {};
     final employerProfileCompletion = profileStats['employerProfileCompletion'] ?? {};
     final companyProfileCompletion = profileStats['companyProfileCompletion'] ?? {};
     final missingFields = profileStats['missingFields'] ?? {};
+    final employerField=missingFields['employer'] ?? [];
+    final company=missingFields['company'] ?? [];
+    final overAllMissingFields=employerField+company;
 
     return Card(
       elevation: 4,
@@ -142,7 +400,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             ),
             SizedBox(height: screenSize.height * 0.02),
             Text(
-              'Missing Fields: ${(missingFields['employer'] as List?)?.join(', ') ?? 'None'}',
+              'Missing Fields: ${(overAllMissingFields as List?)?.join(', ') ?? 'None'}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: screenSize.width*0.04,
                 color: Colors.orange
@@ -314,6 +572,10 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     final shortlistedApplications = overview['shortlistedApplications'] ?? 0;
     final rejectedApplications = overview['rejectedApplications'] ?? 0;
     final pendingApplications = totalApplications - shortlistedApplications - rejectedApplications;
+    double maxY=totalApplications.toDouble() > 0 ? totalApplications.toDouble() : 5;
+
+
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,8 +595,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           aspectRatio: 1.7,
           child: BarChart(
             BarChartData(
+
               alignment: BarChartAlignment.spaceAround,
-              maxY: totalApplications.toDouble() > 0 ? totalApplications.toDouble() : 5,
+              maxY: maxY,
               barGroups: [
                 _buildApplicationBar('Shortlisted', shortlistedApplications.toDouble(), AppColors.greenCircular),
                 _buildApplicationBar('Rejected', rejectedApplications.toDouble(), AppColors.error),
@@ -342,7 +605,37 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               ],
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: true),
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: maxY <= 5 ? 1 : (maxY / 5).ceilToDouble(),
+                    getTitlesWidget: (double value, TitleMeta meta) {
+                      // Only show whole numbers
+                      if (value.toInt() == value) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Text(
+                            value.toInt().toString(),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                    reservedSize: 40, // Increased reserved size for left titles
+                  ),
+                ),
+                rightTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: false
+                  )
+                ),
+                topTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: false
+                  )
                 ),
 
                 bottomTitles: AxisTitles(
@@ -354,6 +647,24 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                     },
                   ),
                 ),
+              ),
+
+              barTouchData: BarTouchData(
+                touchTooltipData: BarTouchTooltipData(
+                  tooltipPadding: EdgeInsets.all(8),
+                  tooltipMargin: 8,
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    return BarTooltipItem(
+                      rod.toY.toInt().toString(),
+                      TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+
+                    );
+                  },
+                ),
+                enabled: true,
               ),
             ),
           ),
@@ -370,9 +681,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           lineWidth: 10.0,
           percent: percentage,
           center: Text('${(percentage * 100).toInt()}%',style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.primary
+            color: AppColors.deepPurple
           ),),
-          progressColor: AppColors.greenCircular,
+          progressColor: AppColors.primary,
         ),
         SizedBox(height: screenSize.height*0.02),
         Text(
@@ -451,11 +762,13 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
   BarChartGroupData _buildApplicationBar(String x, double value, Color color) {
     return BarChartGroupData(
       x: x == 'Shortlisted' ? 0 : (x == 'Rejected' ? 1 : 2),
+      // showingTooltipIndicators: [0],
       barRods: [
         BarChartRodData(
           toY: value,
           color: color,
-          width: 40,
+          width: 16,
+          borderRadius: BorderRadius.circular(4),
         ),
       ],
     );
