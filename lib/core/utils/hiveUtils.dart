@@ -58,7 +58,46 @@ class HiveUtils {
     }
   }
 
-// Deep recursive map conversion
+  static Future<void> updateEmployerData(Map<String, dynamic> updatedUser) async {
+    try{
+
+      final box=await Hive.openBox(USER_BOX);
+      Map<String,dynamic> currentEmployerData = await getEmployerData();
+      if (updatedUser['personalInfo'] != null) {
+        currentEmployerData['personalInfo'] ??= {};
+
+        final personalInfo = updatedUser['personalInfo'];
+        if (personalInfo['fullName'] != null) {
+          currentEmployerData['personalInfo']['fullName'] = personalInfo['fullName'];
+        }
+        if (personalInfo['email'] != null) {
+          currentEmployerData['personalInfo']['email'] = personalInfo['email'];
+        }
+        if (personalInfo['phoneNumber'] != null) {
+          currentEmployerData['personalInfo']['phoneNumber'] = personalInfo['phoneNumber'];
+        }
+        if (personalInfo['profilePic'] != null) {
+          currentEmployerData['personalInfo']['profilePic'] = personalInfo['profilePic'];
+        }
+      }
+
+      if (updatedUser['companyDetails'] != null) {
+        currentEmployerData['companyDetails'] ??= {};
+
+        final companyDetails = updatedUser['companyDetails'];
+        if (companyDetails['designation'] != null) {
+          currentEmployerData['companyDetails']['designation'] = companyDetails['designation'];
+        }
+      }
+      await box.put('employer', currentEmployerData);
+
+    }catch(e){
+      print('Error updating employer data: $e');
+      throw Exception('Failed to update employer data');
+    }
+  }
+
+
   static Map<String, dynamic> _deepConvertMap(Map rawMap) {
     Map<String, dynamic> convertedMap = {};
 

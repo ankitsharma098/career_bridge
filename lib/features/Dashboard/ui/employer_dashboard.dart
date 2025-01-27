@@ -8,6 +8,7 @@ import 'package:android/data/models/employer/employer_model.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
+import 'package:android/features/profile/bloc/profile_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ import 'package:hive/hive.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 import '../../../core/utils/hiveUtils.dart';
+import '../../../core/utils/snackBarUtils.dart';
+import '../../profile/ui/employer_profile.dart';
 import 'employer_dashboard_shimmer.dart';
 
 
@@ -123,9 +126,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
     listener: (context, state) {
       if (state is EmployerDashboardError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.error.toString())),
-        );
+        SnackBarUtils.showRedSnackBar(state.error.toString(), context);
       }
     },
 
@@ -250,12 +251,15 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                         title: 'Profile',
                         onTap: () {
                           // Navigator.pop(context);
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => ProfileScreen(), // You'll need to create this screen
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BlocProvider(
+                                create: (context) => ProfileBloc(),
+                                child: EmployerProfile(employer: employerData, companyDetails: companyData,),
+                              ),
+                            ),
+                          );
                         },
                       ),
                       _buildDrawerItem(

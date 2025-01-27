@@ -37,9 +37,9 @@ class LoginApiService {
 
         // final employerResponse = Employer.fromJson(employerData);
         // final companyResponse = CompanyDetails.fromJson(companyData);
-
-        print("////employer runtimeType ${companyData.runtimeType}");
-        print("////companyDetails runtimeType ${employerData.runtimeType}");
+        //
+        // print("////employer runtimeType ${companyData.runtimeType}");
+        // print("////companyDetails runtimeType ${employerData.runtimeType}");
         Map<String,dynamic> data={
           "employer": employerData,
           "companyDetails": companyData,
