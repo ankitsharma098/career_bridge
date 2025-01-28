@@ -256,7 +256,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                             MaterialPageRoute(
                               builder: (context) => BlocProvider(
                                 create: (context) => ProfileBloc(),
-                                child: EmployerProfile(employer: employerData, companyDetails: companyData,),
+                                child: EmployerProfileScreen(),
                               ),
                             ),
                           );

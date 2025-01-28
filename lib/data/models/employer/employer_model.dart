@@ -50,17 +50,29 @@ class PersonalInfo {
   @JsonKey(defaultValue: '')
   final String email;
 
-  @JsonKey(defaultValue: '')
-  final String phoneNumber;
-
   @JsonKey(defaultValue: null)
   final String? profilePic;
 
-  const PersonalInfo({
+  @JsonKey(defaultValue: '')
+  final String phoneNumber;
+
+  @JsonKey(defaultValue: '')
+  final String address;
+
+  @JsonKey(defaultValue: null)
+  final DateTime? DOB;
+
+  @JsonKey(defaultValue: '')
+  final String gender;
+
+  const PersonalInfo( {
+    this.address='',
+    this.DOB=null,
+    this.gender='Male',
     this.fullName = 'fullName',
     this.email = 'email',
     this.phoneNumber = '+91 730XXX',
-    this.profilePic,
+     this.profilePic,
   });
 
   factory PersonalInfo.fromJson(Map<String, dynamic> json) =>

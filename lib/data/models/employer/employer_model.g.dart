@@ -39,6 +39,9 @@ Map<String, dynamic> _$EmployerToJson(Employer instance) => <String, dynamic>{
     };
 
 PersonalInfo _$PersonalInfoFromJson(Map<String, dynamic> json) => PersonalInfo(
+      address: json['address'] as String? ?? '',
+      DOB: json['DOB'] == null ? null : DateTime.parse(json['DOB'] as String),
+      gender: json['gender'] as String? ?? '',
       fullName: json['fullName'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phoneNumber: json['phoneNumber'] as String? ?? '',
@@ -49,8 +52,11 @@ Map<String, dynamic> _$PersonalInfoToJson(PersonalInfo instance) =>
     <String, dynamic>{
       'fullName': instance.fullName,
       'email': instance.email,
-      'phoneNumber': instance.phoneNumber,
       'profilePic': instance.profilePic,
+      'phoneNumber': instance.phoneNumber,
+      'address': instance.address,
+      'DOB': instance.DOB?.toIso8601String(),
+      'gender': instance.gender,
     };
 
 UserStories _$UserStoriesFromJson(Map<String, dynamic> json) => UserStories(

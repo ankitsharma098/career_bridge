@@ -5,19 +5,24 @@ sealed class ProfileState {}
 
 final class ProfileInitial extends ProfileState {}
 
-// class PersonalInfoChanged extends ProfileState {}
-//
-// class SocialMediaChanged extends ProfileState {}
+class ProfileDataLoading extends ProfileState{}
 
-class EmployerProfileUpdateSuccess extends ProfileState {
+class ProfileDataLoaded extends ProfileState{
+  final Employer employer;
+  final CompanyDetails companyDetails;
+
+  ProfileDataLoaded(this.employer, this.companyDetails);
+
+
+
+}
+
+class ProfileUpdateSuccess extends ProfileState {
   final String message;
-
-  EmployerProfileUpdateSuccess(this.message);
-
+  ProfileUpdateSuccess(this.message);
 }
-
-class EmployerProfileError extends ProfileState {
+class ProfileError extends ProfileState {
   final String error;
-
-   EmployerProfileError(this.error);
+  ProfileError(this.error);
 }
+

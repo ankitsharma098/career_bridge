@@ -1,6 +1,10 @@
+import 'package:android/data/models/company/company_model.dart';
 import 'package:bloc/bloc.dart';
+import 'package:hive/hive.dart';
 import 'package:meta/meta.dart';
 
+import '../../../core/utils/hiveUtils.dart';
+import '../../../data/models/employer/employer_model.dart';
 import '../data/profile_api_service.dart';
 
 part 'profile_event.dart';
@@ -10,67 +14,62 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   EmployerProfileService apiService= EmployerProfileService();
   
   ProfileBloc() : super(ProfileInitial()) {
-    on<UpdatePersonalInfo>(_onUpdatePersonalInfo);
-    on<UpdateProfilePic>(_onUpdateProfilePic);
-    on<UpdateSocialMedia>(_onUpdateSocialMedia);
-    on<UpdateCompanyInfo>(_onUpdateCompanyInfo);
+
+    on<FetchProfileData>(_onFetchProfileData);
+    on<UpdatePersonalInfoDialog>(_onUpdatePersonalInfo);
+    on<UpdateSocialMediaDialog>(_onUpdateSocialMedia);
+    on<UpdateCompanyInfoDialog>(_onUpdateCompanyInfo);
   }
 
- Future<void> _onUpdatePersonalInfo(UpdatePersonalInfo event,Emitter<ProfileState> emit) async{
-   try {
-
-     //Api caliing
-     //  if (state is )
-     await apiService.updatePersonalInfo(fullName: event.name, profilePic: '', email: event.email, phoneNumber: event.phone, address: event.address, DOB: event.DOB, designation: event.designation);
-     emit(EmployerProfileUpdateSuccess("Personal Info Updated successfully"));
-
-
-   }catch (e){
-
-     emit(EmployerProfileError(e.toString()));
-   }
-}
-
-  Future<void> _onUpdateSocialMedia(UpdateSocialMedia event,Emitter<ProfileState> emit) async{
-
+  Future<void> _onFetchProfileData(FetchProfileData event, Emitter<ProfileState> emit) async {
+    emit(ProfileDataLoading());
     try {
 
-      //Api caliing
-    //  if (state is )
-      emit(EmployerProfileUpdateSuccess('Social media updated successfully'));
+      Map<String,dynamic> employerData=await HiveUtils.getEmployerData();
+      Map<String,dynamic> companyData=await HiveUtils.getCompanyData();
+      if (employerData.isEmpty && companyData.isEmpty) {
+        emit(ProfileError('No data found'));
+        return;
+      }
+      emit(ProfileDataLoaded(Employer.fromJson(employerData), CompanyDetails.fromJson(companyData)));
+    } catch (e) {
+      emit(ProfileError(e.toString()));
+    }
+  }
+  Future<void> _onUpdatePersonalInfo(UpdatePersonalInfoDialog event, Emitter<ProfileState> emit) async {
+    try {
 
+      final personalInfo = event.personalInfo;
 
-    }catch (e){
-
-      emit(EmployerProfileError(e.toString()));
+      print('//personalInfo $personalInfo');
+      // Update implementation
+      await apiService.updatePersonalInfo(fullName: personalInfo['fullName'], profilePic: '', email: personalInfo['email'], phoneNumber: personalInfo['phoneNumber'], address: personalInfo['address'], DOB: personalInfo['DOB'], designation: personalInfo['designation']);
+      emit(ProfileUpdateSuccess('Personal info updated successfully'));
+      // Refresh data
+      add(FetchProfileData());
+    } catch (e) {
+      emit(ProfileError(e.toString()));
+    }
+  }
+  Future<void> _onUpdateSocialMedia(UpdateSocialMediaDialog event, Emitter<ProfileState> emit) async {
+    try {
+      // Update implementation
+      emit(ProfileUpdateSuccess('SocialMedia updated successfully'));
+      // Refresh data
+      add(FetchProfileData());
+    } catch (e) {
+      emit(ProfileError(e.toString()));
     }
   }
 
-  Future<void> _onUpdateCompanyInfo(UpdateCompanyInfo event,Emitter<ProfileState> emit) async{
+  Future<void> _onUpdateCompanyInfo(UpdateCompanyInfoDialog event, Emitter<ProfileState> emit) async {
     try {
-
-      //Api caliing
-      //  if (state is )
-      emit(EmployerProfileUpdateSuccess('Company info updated successfully'));
-
-
-    }catch (e){
-
-      emit(EmployerProfileError(e.toString()));
-    }
-  }
-
-  Future<void> _onUpdateProfilePic(UpdateProfilePic event,Emitter<ProfileState> emit) async{
-    try {
-
-
-      await apiService.updatePersonalInfo(fullName: null, profilePic: event.profilePic, email: null, phoneNumber: null, address: null, DOB: null, designation: null);
-      emit(EmployerProfileUpdateSuccess('ProfilePic updated successfully'));
-
-
-    }catch (e){
-
-      emit(EmployerProfileError(e.toString()));
+      // Update implementation
+      emit(ProfileUpdateSuccess('CompanyInfo updated successfully'));
+      // Refresh data
+      add(FetchProfileData());
+    } catch (e) {
+      emit(ProfileError(e.toString()));
     }
   }
 }
