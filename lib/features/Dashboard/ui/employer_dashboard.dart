@@ -157,19 +157,25 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                     ),
                   ],
                 ),
-                body: SingleChildScrollView(
+                body: RefreshIndicator(
+                  onRefresh: () async {
+                    loadData();
+                    BlocProvider.of<EmployerDashboardBloc>(context).add(FetchDashboardData());
+                  },
+                  child: SingleChildScrollView(
 
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildProfileCompletionSection(dashboardStats,screenSize),
-                        _buildJobInsightsSection(dashboardStats,screenSize),
-                        _buildApplicationInsightsSection(dashboardStats,screenSize),
-                        SizedBox(height: screenSize.height*0.01,),
-                        _buildRecentApplicationsSection(screenSize), // You might want to update this too
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildProfileCompletionSection(dashboardStats,screenSize),
+                          _buildJobInsightsSection(dashboardStats,screenSize),
+                          _buildApplicationInsightsSection(dashboardStats,screenSize),
+                          SizedBox(height: screenSize.height*0.01,),
+                          _buildRecentApplicationsSection(screenSize), // You might want to update this too
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -14,11 +14,12 @@ class EmployerDashboardBloc extends Bloc<EmployerDashboardEvent, EmployerDashboa
 
   Future<void> _onFetchDashboardData (FetchDashboardData event, Emitter<EmployerDashboardState> emit) async{
 
-    emit(EmployerDashboardLoading());
+   emit(EmployerDashboardLoading());
     try{
-      Map<String,dynamic> data =await apiService.dashboardStats();
+     Map<String,dynamic> data =await apiService.dashboardStats();
       print("Dashboard Data $data");
       emit(EmployerDashboardLoaded(data));
+
 
     }catch(e){
       emit(EmployerDashboardError(e.toString()));

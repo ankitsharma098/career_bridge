@@ -6,7 +6,9 @@ import 'package:android/data/models/company/company_model.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/employer/employer_model.dart';
 
 class EmployerProfileScreen extends StatefulWidget {
@@ -27,13 +29,25 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    return BlocBuilder<ProfileBloc, ProfileState>(
+    return BlocConsumer<ProfileBloc, ProfileState>(
+        listener: (context, state) {
+
+          if(state is ProfileUpdateSuccess){
+
+            SnackBarUtils.showGreenSnackBar(state.message, context);
+
+          }
+          if (state is ProfileError){
+            SnackBarUtils.showRedSnackBar(state.error.toString(), context);
+          }
+        },
       builder: (context, state) {
         if (state is ProfileDataLoading) {
           return Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.primary, size: 30),);
 
         } else if (state is ProfileDataLoaded) {
-          return _buildLoadedState(context, state,state.companyDetails,screenSize);
+          print(state.employer.personalInfo);
+          return _buildLoadedState(context, state,screenSize);
 
         } else if (state is ProfileError) {
           return CustomErrorScreen(message: state.error,onRetry: (){
@@ -42,14 +56,14 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         }
         return Container();
       },
-    );
+);
   }
 
-  Widget _buildLoadedState(BuildContext context, ProfileDataLoaded state,CompanyDetails companyDetails,Size screenSize) {
+  Widget _buildLoadedState(BuildContext context, ProfileDataLoaded state,Size screenSize) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(state.employer,companyDetails,screenSize),
+          _buildSliverAppBar(state.employer,state.companyDetails,screenSize),
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16),
@@ -64,7 +78,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
   Widget _buildSliverAppBar(Employer employer, CompanyDetails companyDetails,Size screenSize) {
 
     return SliverAppBar(
-      expandedHeight: 340,
+      expandedHeight: 300,
       floating: false,
       pinned: true,
       stretch: true,
@@ -94,20 +108,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                 ),
               ),
             ),
-            // Animated pattern overlay with shimmer effect
-            ShaderMask(
-              shaderCallback: (rect) {
-                return LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.white, Colors.white.withOpacity(0.5)],
-                ).createShader(rect);
-              },
-              child: CustomPaint(
-                painter: GridPainter(),
-              ),
-            ),
-            // Company logo with enhanced blur effect
+
+
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
@@ -197,14 +199,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: screenSize.height*0.01),
-                  Text(
-                    employer.personalInfo.email,
-                    style:Theme.of(context).textTheme.displayMedium?.copyWith(
-                    fontSize: screenSize.width*0.04,
-                      color: Colors.white.withOpacity(0.9),
-                      letterSpacing: 0.3,
-                  ),),
                 ],
               ),
             ),
@@ -244,6 +238,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
       ],
     );
   }
+
   Widget _buildInfoCard(String title, IconData icon, Widget content, Size screenSize, {VoidCallback? onEdit}) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8),
@@ -405,7 +400,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         _buildInfoListTile(
           Icons.cake,
           'Date of Birth',
-          employer.personalInfo.DOB?.toString() ?? 'Not provided',
+            DateFormat('dd/MM/yyyy').format(DateTime.parse(employer.personalInfo.DOB!)),
             screenSize
         ),
         _buildInfoListTile(
@@ -473,78 +468,84 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     TextEditingController phoneController = TextEditingController(text: employer.personalInfo.phoneNumber);
     TextEditingController addressController = TextEditingController(text: employer.personalInfo.address);
     TextEditingController designationController = TextEditingController(text: employer.companyDetails.designation);
-    TextEditingController dobController = TextEditingController(text: employer.personalInfo.DOB.toString());
+    TextEditingController dobController = TextEditingController(text:DateFormat('dd/MM/yyyy').format(DateTime.parse(employer.personalInfo.DOB!)));
     TextEditingController genderController = TextEditingController(text: employer.personalInfo.gender);
 
-
+    final BuildContext parentContext = context;
     showDialog(
       context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          insetPadding: EdgeInsets.all(2),
-          child: SingleChildScrollView(
-            child: Container(
-              width: screenSize.width*0.88,
-              padding: EdgeInsets.all(8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Edit Personal Info',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  SizedBox(height: screenSize.height*0.03),
-                  _buildTextField(fullNameController, 'Full Name', Icons.person),
-                  _buildTextField(designationController, 'Designation', Icons.work),
-                  _buildTextField(emailController, 'Email', Icons.email),
-                  _buildTextField(phoneController, 'Phone Number', Icons.phone),
-                  _buildTextField(addressController, 'Address', Icons.location_on),
-                  _buildDOBField(dobController),
-                  _buildTextField(genderController, 'Gender', Icons.person_outline),
-                  SizedBox(height: screenSize.height*0.03),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          'Cancel',
-                          style: Theme.of(context).textTheme.bodySmall,
+      builder: (BuildContext dialogContext)=>
+         Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                insetPadding: EdgeInsets.all(2),
+                child: SingleChildScrollView(
+                  child: Container(
+                    width: screenSize.width*0.88,
+                    padding: EdgeInsets.all(8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Edit Personal Info',
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                      ),
-                      SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<ProfileBloc>().add(
-                            UpdatePersonalInfoDialog({
-                              'fullName': fullNameController.text,
-                              'email': emailController.text,
-                              'phoneNumber': phoneController.text,
-                              'address': addressController.text,
-                            }),
-                          );
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                        SizedBox(height: screenSize.height*0.03),
+                        _buildTextField(fullNameController, 'Full Name', Icons.person),
+                        _buildTextField(designationController, 'Designation', Icons.work),
+                        _buildTextField(emailController, 'Email', Icons.email),
+                        _buildTextField(phoneController, 'Phone Number', Icons.phone),
+                        _buildTextField(addressController, 'Address', Icons.location_on),
+                        _buildDOBField(dobController),
+                        _buildTextField(genderController, 'Gender', Icons.person_outline),
+                        SizedBox(height: screenSize.height*0.03),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                'Cancel',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: () {
+                                DateTime parsedDOB = DateFormat('dd/MM/yyyy').parse(dobController.text.trim());
+                                String isoDOB = parsedDOB.toIso8601String();
+                                Map<String,dynamic> personalInfo = {
+                                  'fullName': fullNameController.text.trim(),
+                                  'designation': designationController.text.trim(),
+                                  'email': emailController.text.trim(),
+                                  'phoneNumber': phoneController.text.trim(),
+                                  'address': addressController.text.trim(),
+                                  'DOB': isoDOB,
+                                  'gender': genderController.text.trim(),
+                                };
+                                BlocProvider.of<ProfileBloc>(parentContext).add(
+                                    UpdatePersonalInfoDialog(personalInfo)
+                                );
+                                Navigator.pop(dialogContext);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text('Save Changes',  style: Theme.of(context).textTheme.bodySmall,),
+                            ),
+                          ],
                         ),
-                        child: Text('Save Changes',  style: Theme.of(context).textTheme.bodySmall,),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+                ),
+              )
+
     );
   }
 
@@ -702,41 +703,40 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  Widget _buildDOBField (TextEditingController _dobController){
-
+  Widget _buildDOBField(TextEditingController _dobController) {
     Future<void> _selectDate(BuildContext context) async {
       DateTime? pickedDate = await showDatePicker(
         context: context,
         initialDate: DateTime.now(),
-        firstDate: DateTime(1900), // Earliest year
-        lastDate: DateTime.now(),  // Latest year
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
       );
 
       if (pickedDate != null) {
         setState(() {
-          _dobController.text = "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+          // Format the date in dd/MM/yyyy format to match the display format
+          _dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
         });
       }
     }
 
     return TextFormField(
       controller: _dobController,
-      readOnly: true, // Prevents manual editing
-        decoration: InputDecoration(
+      readOnly: true,
+      decoration: InputDecoration(
         labelText: "Date of Birth",
+        hintText: "Select date",
         prefixIcon: Icon(Icons.calendar_today, color: Colors.blue.shade700),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
-          ),
-
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-      onTap: () => _selectDate(context), // Opens the date picker
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+        ),
+      ),
+      onTap: () => _selectDate(context),
     );
-
   }
 
 }

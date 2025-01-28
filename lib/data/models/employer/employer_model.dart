@@ -59,15 +59,15 @@ class PersonalInfo {
   @JsonKey(defaultValue: '')
   final String address;
 
-  @JsonKey(defaultValue: null)
-  final DateTime? DOB;
-
   @JsonKey(defaultValue: '')
+  final String? DOB;
+
+  @JsonKey(defaultValue: 'Male')
   final String gender;
 
   const PersonalInfo( {
     this.address='',
-    this.DOB=null,
+    this.DOB='',
     this.gender='Male',
     this.fullName = 'fullName',
     this.email = 'email',

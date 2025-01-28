@@ -24,6 +24,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   Future<void> _onFetchProfileData(FetchProfileData event, Emitter<ProfileState> emit) async {
     emit(ProfileDataLoading());
     try {
+      print("FetchProfileData");
 
       Map<String,dynamic> employerData=await HiveUtils.getEmployerData();
       Map<String,dynamic> companyData=await HiveUtils.getCompanyData();
@@ -31,11 +32,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileError('No data found'));
         return;
       }
+
       emit(ProfileDataLoaded(Employer.fromJson(employerData), CompanyDetails.fromJson(companyData)));
     } catch (e) {
       emit(ProfileError(e.toString()));
     }
   }
+
   Future<void> _onUpdatePersonalInfo(UpdatePersonalInfoDialog event, Emitter<ProfileState> emit) async {
     try {
 
@@ -43,8 +46,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       print('//personalInfo $personalInfo');
       // Update implementation
-      await apiService.updatePersonalInfo(fullName: personalInfo['fullName'], profilePic: '', email: personalInfo['email'], phoneNumber: personalInfo['phoneNumber'], address: personalInfo['address'], DOB: personalInfo['DOB'], designation: personalInfo['designation']);
-      emit(ProfileUpdateSuccess('Personal info updated successfully'));
+      await apiService.updatePersonalInfo(
+          fullName: personalInfo['fullName'],
+          profilePic: '',
+          email: personalInfo['email'],
+          phoneNumber: personalInfo['phoneNumber'],
+          address: personalInfo['address'],
+          DOB: personalInfo['DOB'],
+          designation: personalInfo['designation'],
+          gender: personalInfo['gender']
+      );
+     emit(ProfileUpdateSuccess('Personal info updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
