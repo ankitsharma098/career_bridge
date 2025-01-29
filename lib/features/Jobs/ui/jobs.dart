@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/colors.dart';
+import 'Job_stats_shimmer.dart';
 
 class JobStatsScreen extends StatelessWidget {
   const JobStatsScreen({Key? key}) : super(key: key);
@@ -25,16 +26,50 @@ class JobStatsScreen extends StatelessWidget {
             icon: Icon(Icons.arrow_back_ios_new),
             onPressed: () => Navigator.pop(context),
           ),
-          bottom: const TabBar(
-            labelColor: AppColors.deepPurple,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: AppColors.deepPurple,
+          bottom: TabBar(
+            labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontSize: screenSize.width*0.04,
+              fontWeight: FontWeight.w600
+          ),
+            unselectedLabelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: screenSize.width*0.035,
+                fontWeight: FontWeight.w600
+            ),
+            labelColor: AppColors.background,
+            unselectedLabelColor: AppColors.secondary,
+            indicator: BoxDecoration(),
             tabs: [
-              Tab(text:'Statistics'),
-              Tab(text: 'Posted Jobs'),
+              Tab(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.analytics_outlined),
+                      SizedBox(width: 8),
+                      Text('Statistics'),
+                    ],
+                  ),
+                ),
+              ),
+              Tab(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.work_outline),
+                      SizedBox(width: 8),
+                      Text('Posted Jobs'),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-          title: Text('Job Dashboard'),
+          title: Text(
+            'Job Dashboard',
+          ),
         ),
         body: TabBarView(
           children: [
@@ -75,133 +110,15 @@ class _JobStatsTabState extends State<JobStatsTab> {
     return BlocBuilder<JobStatsBloc, JobStatsState>(
       builder: (context, state) {
         if (state is JobStatsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return  JobStatsShimmer(screenSize: widget.screenSize,);
         }
 
         if (state is JobStatsLoaded) {
          // final stats = state.stats['stats'];
-          Map<String,dynamic> stats = {
-            "jobMetrics": {
-              "_id": null,
-              "totalJobs": 35,
-              "openJobs": 25,
-              "closedJobs": 10,
-              "totalApplicants": 12,
-              "totalViews": 780
-            },
-            "distributionInsights": {
-              "jobTypes": [
-                {
-                  "_id": "Full-time",
-                  "count": 15,
-                  "applicants": 7,
-                  "views": 400
-                },
-                {
-                  "_id": "Part-time",
-                  "count": 10,
-                  "applicants": 3,
-                  "views": 200
-                },
-                {
-                  "_id": "Internship",
-                  "count": 5,
-                  "applicants": 2,
-                  "views": 100
-                },
-                {
-                  "_id": "Freelance",
-                  "count": 5,
-                  "applicants": 0,
-                  "views": 80
-                }
-              ],
-              "experienceLevels": [
-                {
-                  "_id": "Entry-level",
-                  "count": 10,
-                  "applicants": 5,
-                  "views": 250
-                },
-                {
-                  "_id": "Intermediate",
-                  "count": 15,
-                  "applicants": 4,
-                  "views": 300
-                },
-                {
-                  "_id": "Senior",
-                  "count": 5,
-                  "applicants": 2,
-                  "views": 150
-                },
-                {
-                  "_id": "Expert",
-                  "count": 5,
-                  "applicants": 1,
-                  "views": 80
-                }
-              ]
-            },
-            "performanceMetrics": {
-              "recentPerformance": {},
-              "conversionMetrics": {
-                "_id": null,
-                "totalJobViews": 780,
-                "totalApplicants": 12,
-                "averageViewsPerJob": 22.3,
-                "averageApplicantsPerJob": 0.34
-              },
-              "topPerformingJobs": [
-                {
-                  "_id": "675a9cfbbd365c4f15d1fc99",
-                  "title": "Web Designer",
-                  "status": "Open",
-                  "views": 120,
-                  "applicantCount": 4
-                },
-                {
-                  "_id": "67644ff44bc6d912612052bb",
-                  "title": "Software Developer",
-                  "status": "Open",
-                  "views": 100,
-                  "applicantCount": 3
-                },
-                {
-                  "_id": "675f1f0b189c2ea9edcff887",
-                  "title": "Cybersecurity Analyst",
-                  "status": "Open",
-                  "views": 85,
-                  "applicantCount": 2
-                },
-                {
-                  "_id": "6767072a288e589b7a8fc70d",
-                  "title": "Data Scientist",
-                  "status": "Open",
-                  "views": 75,
-                  "applicantCount": 1
-                },
-                {
-                  "_id": "6765b9c4288e589b7a8fb08d",
-                  "title": "Full-Stack Developer",
-                  "status": "Closed",
-                  "views": 70,
-                  "applicantCount": 2
-                }
-              ]
-            },
-            "inclusivityMetrics": {
-              "_id": null,
-              "accessibleJobs": 10,
-              "blindRecruitmentJobs": 3,
-              "totalJobs": 35,
-              "accessibleJobsPercentage": "28.57"
-            }
-          };
-          final jobMetrics = stats['jobMetrics'];
-          final performanceMetrics = stats['performanceMetrics'];
-          final distributionInsights = stats['distributionInsights'];
-          final inclusivityMetrics = stats['inclusivityMetrics'];
+          final jobMetrics = state.stats['jobMetrics'];
+          final performanceMetrics = state.stats['performanceMetrics'];
+          final distributionInsights = state.stats['distributionInsights'];
+          final inclusivityMetrics = state.stats['inclusivityMetrics'];
           final conversionMetrics = performanceMetrics['conversionMetrics'];
 
 
@@ -233,33 +150,70 @@ class _JobStatsTabState extends State<JobStatsTab> {
   }
 
   Widget _buildHeader(BuildContext context, Size screenSize) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Job Insights',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.deepPurple,
+    return Card(
+      margin: EdgeInsets.all(0),
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Job Insights',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                //  color: Colors.grey[800],
+              ),
             ),
-          ),
-          Icon(Icons.bar_chart, color: AppColors.deepPurple),
-        ],
+            Icon(Icons.bar_chart),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildOverviewCards(
+      BuildContext context,
+      Size screenSize,
+      Map<String, dynamic> metrics,
+      ) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: screenSize.width * 0.03,
+      crossAxisSpacing: screenSize.width * 0.03,
+      childAspectRatio: 1.5,
+      children: [
+        _statsCard(
+            'Total Jobs',
+            metrics['totalJobs'].toString(),
+            Icons.work,
+            Colors.blue,
+            screenSize
+        ),
+        _statsCard(
+            'Open Jobs',
+            metrics['openJobs'].toString(),
+            Icons.door_back_door_outlined,
+            Colors.green,
+            screenSize
+        ),
+        _statsCard(
+            'Total Applicants',
+            metrics['totalApplicants'].toString(),
+            Icons.people,
+            Colors.orange,
+            screenSize
+        ),
+        _statsCard(
+            'Total Views',
+            metrics['totalViews'].toString(),
+            Icons.visibility,
+            Colors.purple,
+            screenSize
+        ),
+      ],
     );
   }
 
@@ -276,33 +230,30 @@ class _JobStatsTabState extends State<JobStatsTab> {
           'Job Distribution Insights',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+          //  color: Colors.grey[800],
           ),
         ),
         SizedBox(height: screenSize.height * 0.02),
-        SizedBox(
-          height: screenSize.height * 0.44,
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildPieChart(
-                  'Job Types',
-                  insights['jobTypes'] as List,
-                  Colors.blue[400]!,
-                  screenSize
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildPieChart(
+                'Job Types',
+                insights['jobTypes'] as List,
+                Colors.blue[400]!,
+                screenSize
               ),
-              SizedBox(width: screenSize.width * 0.04),
-              Expanded(
-                child: _buildPieChart(
-                  'Experience Levels',
-                  insights['experienceLevels'] as List,
-                  Colors.teal[400]!,
-                  screenSize
-                ),
+            ),
+            SizedBox(width: screenSize.width * 0.04),
+            Expanded(
+              child: _buildPieChart(
+                'Experience Levels',
+                insights['experienceLevels'] as List,
+                Colors.teal[400]!,
+                screenSize
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -328,166 +279,101 @@ class _JobStatsTabState extends State<JobStatsTab> {
       return PieChartSectionData(
         value: percentage,
         title: percentage >= 10 ? '${percentage.toStringAsFixed(1)}%' : '',
-        titleStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
+        titleStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontSize: screenSize.width*0.025,
           fontWeight: FontWeight.w600,
-          shadows: [
-            Shadow(
-              color: Colors.black26,
-              blurRadius: 2,
-            ),
-          ],
         ),
         color: sectionColors[index % sectionColors.length],
-        radius: 50,
-        borderSide: const BorderSide(color: Colors.white, width: 2),
+        radius: 60,
+        borderSide: const BorderSide(color: Colors.white, width: 1),
         showTitle: true,
       );
     }).toList();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Color(0xFF334155),
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    return Card(
+      margin: EdgeInsets.all(0),
+      elevation: 0,
+
+      child: Padding(
+        padding: const  EdgeInsets.symmetric(vertical: 8,horizontal: 5),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style:Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700
+              )
             ),
-          ),
-          Container(color:Colors.grey,height: screenSize.height*0.01),
-          Container(
+            Container(height: screenSize.height*0.01),
+            SizedBox(
               height: screenSize.height*0.2,
-            color: Colors.greenAccent,
-            child: PieChart(
-              PieChartData(
-                sections: sections,
-                sectionsSpace: 2,
-                centerSpaceRadius: 30,
-                centerSpaceColor: Colors.white,
-                pieTouchData: PieTouchData(
-                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                    // Add touch interaction if needed
-                  },
+              child: PieChart(
+                PieChartData(
+                  sections: sections,
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 25,
+                  centerSpaceColor: Theme.of(context).primaryColor,
                 ),
               ),
             ),
-          ),
-           SizedBox(height: screenSize.height*0.01),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'Total: $totalCount',
-              style: const TextStyle(
-                color: Color(0xFF64748B),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+             SizedBox(height: screenSize.height*0.01),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Total: $totalCount',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Color(0xFF64748B),
+                  fontSize: screenSize.width*0.03,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          Column(
-            children: data.asMap().entries.map((entry){
-              final int index = entry.key;
-                    final item = entry.value;
-                    final count = item['count'] as int;
-                    final percentage = (count / totalCount * 100).toStringAsFixed(1);
-              return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: sectionColors[index % sectionColors.length],
-                        shape: BoxShape.circle,
+            SizedBox(height: screenSize.height*0.01,),
+            Column(
+              children: data.asMap().entries.map((entry){
+                final int index = entry.key;
+                      final item = entry.value;
+                      final count = item['count'] as int;
+                      final percentage = (count / totalCount * 100).toStringAsFixed(1);
+                return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: sectionColors[index % sectionColors.length],
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      item['_id'],
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                      SizedBox(width: 8),
+                      Text(
+                        item['_id'],
+                        style:Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: screenSize.width*0.028,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-              );
-            }).toList()
-          )
-        ],
+                );
+              }).toList()
+            )
+          ],
+        ),
       ),
     );
   }
 
 
-  Widget _buildOverviewCards(
-      BuildContext context,
-      Size screenSize,
-      Map<String, dynamic> metrics,
-      ) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: screenSize.width * 0.03,
-      crossAxisSpacing: screenSize.width * 0.03,
-      childAspectRatio: 1.5,
-      children: [
-        _statsCard(
-          'Total Jobs',
-          metrics['totalJobs'].toString(),
-          Icons.work,
-          Colors.blue,
-          screenSize
-        ),
-        _statsCard(
-          'Open Jobs',
-          metrics['openJobs'].toString(),
-          Icons.door_back_door_outlined,
-          Colors.green,
-          screenSize
-        ),
-        _statsCard(
-          'Total Applicants',
-          metrics['totalApplicants'].toString(),
-          Icons.people,
-          Colors.orange,
-          screenSize
-        ),
-        _statsCard(
-          'Total Views',
-          metrics['totalViews'].toString(),
-          Icons.visibility,
-          Colors.purple,
-          screenSize
-        ),
-      ],
-    );
-  }
+
 
 
 
@@ -503,109 +389,78 @@ class _JobStatsTabState extends State<JobStatsTab> {
     final double maxValue = max(averageViews, averageApplicants);
     final double roundedMaxY = (maxValue * 1.2).ceilToDouble();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Conversion Metrics',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
-              ),
-              Row(
-                children: [
-                  _buildMetricBadge(
-                    'Total Views',
-                    metrics['totalJobViews'].toString(),
-                    Colors.blue[400]!,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildMetricBadge(
-                    'Total Applicants',
-                    metrics['totalApplicants'].toString(),
-                    Colors.teal[400]!,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: screenSize.height * 0.02),
-          SizedBox(
-            height: screenSize.height * 0.25,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: roundedMaxY,
-                barGroups: [
-                  _createBarGroup(0, averageViews, Colors.blue[400]!),
-                  _createBarGroup(1, averageApplicants, Colors.teal[400]!),
-                ],
-                gridData: FlGridData(
-                  show: true,
-                  drawHorizontalLine: true,
-                  horizontalInterval: roundedMaxY / 5,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey[200],
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                borderData: FlBorderData(show: false),
-                titlesData: _createBarTitles(context),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    return Card(
 
-  Widget _buildMetricBadge(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+      margin: EdgeInsets.all(0),
+      // color: Colors.white,
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8,left: 15,right: 5,bottom: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Conversion Metrics',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(width: screenSize.width*0.02,),
+                Container(
+                  width: screenSize.width*0.38,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildMetricBadge(
+                          'Views',
+                          metrics['totalJobViews'].toString(),
+                          Colors.blue[400]!,
+                        ),
+                         SizedBox(width: screenSize.width*0.02),
+                        _buildMetricBadge(
+                          'Applicants',
+                          metrics['totalApplicants'].toString(),
+                          Colors.teal[400]!,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+            SizedBox(height: screenSize.height * 0.02),
+            SizedBox(
+              height: screenSize.height * 0.25,
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: roundedMaxY,
+                  barGroups: [
+                    _createBarGroup(0, averageViews, Colors.blue[400]!),
+                    _createBarGroup(1, averageApplicants, Colors.teal[400]!),
+                  ],
+                  gridData: FlGridData(
+                    show: true,
+                    drawHorizontalLine: true,
+                    horizontalInterval: roundedMaxY <= 5 ? 1 : (roundedMaxY / 5).ceilToDouble(),
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey[200],
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: _createBarTitles(context,roundedMaxY),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -633,7 +488,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
     );
   }
 
-  FlTitlesData _createBarTitles(BuildContext context) {
+  FlTitlesData _createBarTitles(BuildContext context, double maxY) {
     return FlTitlesData(
       show: true,
       bottomTitles: AxisTitles(
@@ -659,7 +514,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
       leftTitles: AxisTitles(
         sideTitles: SideTitles(
           showTitles: true,
-          interval: null, // Will be calculated based on maxY
+          interval: maxY <= 5 ? 1 : (maxY / 5).ceilToDouble(),
           reservedSize: 40,
           getTitlesWidget: (value, meta) {
             return Text(
@@ -678,6 +533,40 @@ class _JobStatsTabState extends State<JobStatsTab> {
   }
 
 
+  Widget _buildMetricBadge(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style:Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: color,
+                fontWeight: FontWeight.w600
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style:Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: color,
+              fontWeight: FontWeight.w600
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+
   Widget _buildInclusivityMetrics(
       BuildContext context,
       Size screenSize,
@@ -685,68 +574,64 @@ class _JobStatsTabState extends State<JobStatsTab> {
       ) {
     final double accessiblePercentage = double.parse(metrics['accessibleJobsPercentage']);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Inclusivity Metrics',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildMetricTile(
-                      'Accessible Jobs',
-                      '${metrics['accessibleJobs']}',
-                      '${metrics['accessibleJobsPercentage']}%',
-                      Icons.accessibility_new,
-                      Colors.teal[400]!,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMetricTile(
-                      'Blind Recruitment',
-                      metrics['blindRecruitmentJobs'].toString(),
-                      '${((metrics['blindRecruitmentJobs'] / metrics['totalJobs']) * 100).toStringAsFixed(1)}%',
-                      Icons.remove_red_eye_outlined,
-                      Colors.blue[400]!,
-                    ),
-                  ],
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.all(0),
+
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0,horizontal: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Inclusivity Metrics',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  //  color: Colors.grey[800],
                 ),
-              ),
-              Expanded(
-                child: CustomPaint(
-                  size: Size(screenSize.width * 0.2, screenSize.width * 0.2),
-                  painter: CircularProgressPainter(
-                    percentage: accessiblePercentage / 100,
-                    color: Colors.teal[400]!,
+            ),
+             SizedBox(height: screenSize.height*0.02),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildMetricTile(
+                        'Accessible Jobs',
+                        '${metrics['accessibleJobs']}',
+                        '${metrics['accessibleJobsPercentage']}%',
+                        Icons.accessibility_new,
+                        Colors.teal[400]!,
+                        screenSize
+                      ),
+                       SizedBox(height: screenSize.height*0.02),
+                      _buildMetricTile(
+                        'Blind Recruitment',
+                        metrics['blindRecruitmentJobs'].toString(),
+                        '${((metrics['blindRecruitmentJobs'] / metrics['totalJobs']) * 100).toStringAsFixed(1)}%',
+                        Icons.remove_red_eye_outlined,
+                        Colors.blue[400]!,
+                        screenSize
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+
+                Expanded(
+                  child: CustomPaint(
+                    size: Size(screenSize.width * 0.2, screenSize.width * 0.2),
+                    painter: CircularProgressPainter(
+                      percentage: accessiblePercentage / 100,
+                      color: Colors.teal[400]!,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -757,6 +642,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
       String percentage,
       IconData icon,
       Color color,
+      Size screenSize
       ) {
     return Row(
       children: [
@@ -768,27 +654,28 @@ class _JobStatsTabState extends State<JobStatsTab> {
           ),
           child: Icon(icon, color: color, size: 24),
         ),
-        const SizedBox(width: 16),
+         SizedBox(width: screenSize.width*0.03),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
+               style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                 color: Colors.grey[500],
+                 fontSize:screenSize.width*0.03,
+                 fontWeight: FontWeight.w600
+               ),
               ),
-              const SizedBox(height: 4),
+               SizedBox(height: screenSize.height*0.008),
               Row(
                 children: [
                   Text(
                     value,
-                    style: TextStyle(
-                      color: Colors.grey[800],
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                        fontSize:screenSize.width*0.04,
+                        fontWeight: FontWeight.w700
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -803,10 +690,10 @@ class _JobStatsTabState extends State<JobStatsTab> {
                     ),
                     child: Text(
                       percentage,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: color,
+                          fontSize:screenSize.width*0.03,
+                          fontWeight: FontWeight.w700
                       ),
                     ),
                   ),
@@ -868,7 +755,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
           'Top Performing Jobs',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+            //  color: Colors.grey[800],
           ),
         ),
         SizedBox(height: screenSize.height * 0.02),
@@ -878,20 +765,9 @@ class _JobStatsTabState extends State<JobStatsTab> {
           itemCount: performance['topPerformingJobs'].length,
           itemBuilder: (context, index) {
             final job = performance['topPerformingJobs'][index];
-            return Container(
+            return Card(
               margin: EdgeInsets.only(bottom: screenSize.height * 0.01),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+             elevation: 0,
               child: ListTile(
                 contentPadding: const EdgeInsets.all(16),
                 leading: CircleAvatar(
@@ -909,10 +785,10 @@ class _JobStatsTabState extends State<JobStatsTab> {
                     Expanded(
                       child: Text(
                         job['title'],
-                        style: TextStyle(
-                          color: Colors.grey[800],
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                          fontSize: screenSize.width*0.04
+                          //  color: Colors.grey[800],
                         ),
                       ),
                     ),
@@ -929,11 +805,11 @@ class _JobStatsTabState extends State<JobStatsTab> {
                       ),
                       child: Text(
                         job['status'],
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: job['status'].toLowerCase() == 'active'
                               ? Colors.green[700]
                               : Colors.orange[700],
-                          fontSize: 12,
+                          fontSize: screenSize.width*0.03,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -949,28 +825,27 @@ class _JobStatsTabState extends State<JobStatsTab> {
                         Icon(
                           Icons.remove_red_eye_outlined,
                           size: 16,
-                          color: Colors.grey[600],
+                          // color: Colors.grey[600],
                         ),
                         SizedBox(width: 4),
                         Text(
                           '${job['views']} views',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: screenSize.width*0.03,
                           ),
                         ),
-                        SizedBox(width: 16),
+                        SizedBox(width: screenSize.width*0.05),
                         Icon(
                           Icons.people_outline,
                           size: 16,
-                          color: Colors.grey[600],
                         ),
                         SizedBox(width: 4),
                         Text(
                           '${job['applicantCount']} applicants',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: screenSize.width*0.03,
                           ),
                         ),
                       ],
@@ -980,7 +855,6 @@ class _JobStatsTabState extends State<JobStatsTab> {
                 trailing: Icon(
                   Icons.arrow_forward_ios,
                   size: 16,
-                  color: Colors.grey[400],
                 ),
               ),
             );

@@ -182,7 +182,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   ),
                 ),
                 drawer: Container(
-                  color: Colors.white,
+                  color: Theme.of(context).brightness == Brightness.dark ?Colors.grey[850] : Colors.white,
                   width: screenSize.width * 0.6,
                   child: ListView(
                     padding: EdgeInsets.zero,
@@ -215,7 +215,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                                   employerData!.personalInfo.fullName ,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.background,
                                       fontSize: screenSize.width*0.045,
                                       fontWeight: FontWeight.w600
                                   )
@@ -224,7 +223,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                                   employerData!.personalInfo.email,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.background,
                                       fontSize: screenSize.width*0.03,
                                       fontWeight: FontWeight.w300
                                   )
@@ -353,12 +351,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     return ListTile(
       leading: Icon(
         icon,
-        color: color ?? AppColors.deepPurple,
+        color: color ?? AppColors.primary,
       ),
       title: Text(
         title,
-        style: TextStyle(
-          color: color ?? Colors.black87,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          //color: color ?? Colors.black87,
           fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
         ),
       ),
@@ -390,7 +388,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               'Profile Completion',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.deepPurple,
                 fontSize: screenSize.width*0.045,
               ),
             ),
@@ -449,7 +446,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontSize: screenSize.width*0.045,
                      fontWeight: FontWeight.w700,
-                     color: AppColors.deepPurple,
                 ),
                 ),
                 Icon(Icons.bar_chart, color: AppColors.deepPurple),
@@ -553,10 +549,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontSize: screenSize.width*0.045,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.deepPurple,
                   ),
                 ),
-                Icon(Icons.analytics_outlined, color: AppColors.deepPurple),
+                Icon(Icons.analytics_outlined),
               ],
             ),
             Divider(height: 20, color: Colors.grey.shade300),
@@ -801,7 +796,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             fontSize: screenSize.width*0.045,
             fontWeight: FontWeight.w700,
-            color: AppColors.deepPurple,
           ),),
             SizedBox(height: screenSize.height*0.02),
             _buildApplicationItem(
