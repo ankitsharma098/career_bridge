@@ -6,6 +6,7 @@ import 'package:android/core/utils/custonErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
 import 'package:android/data/models/employer/employer_model.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
+import 'package:android/features/Jobs/bloc/jobs_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
@@ -18,6 +19,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 
 import '../../../core/utils/hiveUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
+import '../../Jobs/ui/jobs.dart';
 import '../../profile/ui/employer_profile.dart';
 import 'employer_dashboard_shimmer.dart';
 
@@ -244,12 +246,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                         title: 'Jobs',
                         onTap: () {
                           //  Navigator.pop(context);
-                          // Navigator.push(
-                          //    context,
-                          //    MaterialPageRoute(
-                          //      builder: (context) => JobsScreen(), // You'll need to create this screen
-                          //    ),
-                          //  );
+                          Navigator.push(
+                             context,
+                             MaterialPageRoute(
+                               builder: (context) => JobStatsScreen(), // You'll need to create this screen
+                             ),
+                           );
                         },
                       ),
                       _buildDrawerItem(

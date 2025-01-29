@@ -19,6 +19,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<UpdatePersonalInfoDialog>(_onUpdatePersonalInfo);
     on<UpdateSocialMediaDialog>(_onUpdateSocialMedia);
     on<UpdateCompanyInfoDialog>(_onUpdateCompanyInfo);
+    on<UpdateAboutDialog>(_onUpdateAboutDialog);
   }
 
   Future<void> _onFetchProfileData(FetchProfileData event, Emitter<ProfileState> emit) async {
@@ -83,5 +84,21 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     } catch (e) {
       emit(ProfileError(e.toString()));
     }
+  }
+
+  Future<void> _onUpdateAboutDialog (UpdateAboutDialog event, Emitter<ProfileState> emit) async{
+
+    try{
+
+      await apiService.updateAboutSection(event.about.toString());
+
+      emit (ProfileUpdateSuccess("About section updated successfully"));
+      add(FetchProfileData());
+
+    }catch(e){
+
+      emit(ProfileError(e.toString()));
+    }
+
   }
 }

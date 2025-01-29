@@ -10,6 +10,11 @@ class UpdatePersonalInfoDialog extends ProfileEvent {
   UpdatePersonalInfoDialog(this.personalInfo);
 }
 
+class UpdateAboutDialog extends ProfileEvent {
+  final String about;
+  UpdateAboutDialog(this.about);
+}
+
 class UpdateSocialMediaDialog extends ProfileEvent {
   final Map<String, String> socialMedia;
   UpdateSocialMediaDialog(this.socialMedia);

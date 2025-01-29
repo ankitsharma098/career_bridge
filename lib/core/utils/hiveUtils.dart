@@ -64,6 +64,7 @@ class HiveUtils {
       final box=await Hive.openBox(USER_BOX);
 
       Map<String,dynamic> currentEmployerData = await getEmployerData();
+      print("Before changing employer $currentEmployerData");
 
       if (updatedUser['personalInfo'] != null) {
         currentEmployerData['personalInfo'] ??= {};
@@ -100,9 +101,17 @@ class HiveUtils {
           currentEmployerData['companyDetails']['designation'] = companyDetails['designation'];
         }
       }
-      print("currentEmployerData ////////////////////////////////////$currentEmployerData");
-      //Map<String,dynamic>.from(PersonalInfo.fromJson(currentEmployerData));
-     await box.put('employer', currentEmployerData);
+
+      if(updatedUser['about']!=null){
+        currentEmployerData['about'] ??= '';
+        final about =updatedUser['about'];
+        if(about!=null){
+          currentEmployerData['about']=about;
+        }
+      }
+      print("After changing employer data ////////////////////////////////////$currentEmployerData");
+
+      await box.put('employer', currentEmployerData);
 
     }catch(e){
       print('Error updating employer data: $e');

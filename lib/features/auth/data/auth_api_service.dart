@@ -48,15 +48,21 @@ class LoginApiService {
         };
         await HiveUtils.storeUserData(data);
 
-      }else {
-
-        throw Exception('Failed to login');
       }
 
-    }catch(e){
-      print("error $e");
-      throw Exception('Network Error $e');
-
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
     }
   }
 

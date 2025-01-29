@@ -219,7 +219,15 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           screenSize,
           onEdit: () => _editPersonalInfo(context, state.employer,screenSize),
         ),
-        SizedBox(height: 16),
+        SizedBox(height: screenSize.height*0.02),
+        _buildInfoCard(
+          'About',
+          Icons.description,
+          _buildAboutContent(state.employer.about, screenSize),
+          screenSize,
+          onEdit: () => _editAbout(context, state.employer.about ?? '', screenSize),
+        ),
+        SizedBox(height: screenSize.height*0.02),
         _buildInfoCard(
           'Company Details',
           Icons.business,
@@ -227,7 +235,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           screenSize,
           onEdit: () => _editCompanyDetails(context, state.companyDetails,screenSize),
         ),
-        SizedBox(height: 16),
+        SizedBox(height: screenSize.height*0.02),
         _buildInfoCard(
           'Social Links',
           Icons.share,
@@ -315,57 +323,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  Widget _buildCompanyDetailsContent(CompanyDetails companyDetails,Size screenSize) {
-    return Column(
-      children: [
-        _buildInfoListTile(
-          Icons.business_center,
-          'Company Name',
-          companyDetails.companyName,
-          screenSize
-        ),
-        _buildInfoListTile(
-          Icons.web,
-          'Website',
-          companyDetails.website,
-            screenSize
-        ),
-        _buildInfoListTile(
-          Icons.category,
-          'Industry Type',
-          companyDetails.industryType,
-            screenSize
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSocialLinksContent(SocialAccount socialAccount,Size screenSize) {
-    return Column(
-      children: [
-        _buildInfoListTile(
-          Icons.link,
-          'LinkedIn',
-          socialAccount.linkedin.isEmpty ? 'Not provided' : socialAccount.linkedin,
-            screenSize
-        ),
-        _buildInfoListTile(
-          Icons.camera_alt,
-          'Instagram',
-          socialAccount.instagram.isEmpty ? 'Not provided' : socialAccount.instagram,
-            screenSize
-        ),
-        _buildInfoListTile(
-          Icons.flutter_dash,
-          'Twitter',
-          socialAccount.twitter.isEmpty ? 'Not provided' : socialAccount.twitter,
-            screenSize
-        ),
-      ],
-    );
-  }
-
-
 
 
 
@@ -412,6 +369,78 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
       ],
     );
   }
+  Widget _buildAboutContent(String about, Size screenSize) {
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Text(
+          about,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: screenSize.width * 0.04,
+            height: 1.5,
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildCompanyDetailsContent(CompanyDetails companyDetails,Size screenSize) {
+    return Column(
+      children: [
+        _buildInfoListTile(
+            Icons.business_center,
+            'Company Name',
+            companyDetails.companyName,
+            screenSize
+        ),
+        _buildInfoListTile(
+            Icons.web,
+            'Website',
+            companyDetails.website,
+            screenSize
+        ),
+        _buildInfoListTile(
+            Icons.category,
+            'Industry Type',
+            companyDetails.industryType,
+            screenSize
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialLinksContent(SocialAccount socialAccount,Size screenSize) {
+    return Column(
+      children: [
+        _buildInfoListTile(
+            Icons.link,
+            'LinkedIn',
+            socialAccount.linkedin.isEmpty ? 'Not provided' : socialAccount.linkedin,
+            screenSize
+        ),
+        _buildInfoListTile(
+            Icons.camera_alt,
+            'Instagram',
+            socialAccount.instagram.isEmpty ? 'Not provided' : socialAccount.instagram,
+            screenSize
+        ),
+        _buildInfoListTile(
+            Icons.flutter_dash,
+            'Twitter',
+            socialAccount.twitter.isEmpty ? 'Not provided' : socialAccount.twitter,
+            screenSize
+        ),
+      ],
+    );
+  }
+
+
+
 
   Widget _buildInfoListTile(IconData icon, String label, String value, Size screenSize) {
     return Card(
@@ -546,6 +575,82 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                 ),
               )
 
+    );
+  }
+
+  void _editAbout(BuildContext context, String currentAbout, Size screenSize) {
+    TextEditingController aboutController = TextEditingController(text: currentAbout);
+    final BuildContext parentContext = context;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        insetPadding: EdgeInsets.all(2),
+        child: Container(
+          width: screenSize.width * 0.88,
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Edit About',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              SizedBox(height: screenSize.height * 0.03),
+              TextField(
+                controller: aboutController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText: 'Write about yourself...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+                  ),
+                ),
+              ),
+              SizedBox(height: screenSize.height * 0.03),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      BlocProvider.of<ProfileBloc>(parentContext).add(
+                          UpdateAboutDialog(aboutController.text.trim().toString())
+                      );
+                      Navigator.pop(dialogContext);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Save Changes',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -703,8 +808,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  Widget _buildDOBField(TextEditingController _dobController) {
-    Future<void> _selectDate(BuildContext context) async {
+  Widget _buildDOBField(TextEditingController dobController) {
+    Future<void> selectDate(BuildContext context) async {
       DateTime? pickedDate = await showDatePicker(
         context: context,
         initialDate: DateTime.now(),
@@ -715,13 +820,13 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
       if (pickedDate != null) {
         setState(() {
           // Format the date in dd/MM/yyyy format to match the display format
-          _dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+          dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
         });
       }
     }
 
     return TextFormField(
-      controller: _dobController,
+      controller: dobController,
       readOnly: true,
       decoration: InputDecoration(
         labelText: "Date of Birth",
@@ -735,7 +840,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
         ),
       ),
-      onTap: () => _selectDate(context),
+      onTap: () => selectDate(context),
     );
   }
 

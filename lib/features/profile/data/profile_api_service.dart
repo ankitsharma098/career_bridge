@@ -3,6 +3,8 @@
 import 'package:android/core/constants/app_constants.dart';
 import 'package:android/core/utils/hiveUtils.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
 class EmployerProfileService{
@@ -78,6 +80,51 @@ class EmployerProfileService{
         throw Exception('Network error occurred');
     }
   }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+
+
+  }
+
+  Future<void> updateAboutSection(String about) async{
+    try{
+
+      String? accessToken= await HiveUtils.getAccessToken();
+      if(accessToken==null || accessToken.isEmpty){
+        throw Exception("Access Token not found");
+
+      }
+      final response =await dio.put( "${AppConstants.baseUrl}/employer/update/about",
+      options: Options(
+        headers: {
+          'Authorization' :'Bearer $accessToken'
+        }
+      ),
+        data: {
+        'about':about
+        }
+      );
+      if (response.statusCode == 200) {
+        final updatedUser = response.data['updatedUser'];
+
+        print("Response $updatedUser");
+        await HiveUtils.updateEmployerData(updatedUser);
+      }
+
+
+
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
     catch(e){
       print("Error: $e");
       throw Exception('An unexpected error occurred');
