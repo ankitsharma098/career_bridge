@@ -144,15 +144,15 @@ class VerificationDocument {
 @JsonSerializable()
 class SocialAccount {
 
-  @JsonKey(defaultValue: '')
+  @JsonKey(defaultValue: 'linkedin')
   final String linkedin;
 
 
-  @JsonKey(defaultValue: '')
+  @JsonKey(defaultValue: 'instagram')
   final String instagram;
 
 
-  @JsonKey(defaultValue: '')
+  @JsonKey(defaultValue: 'twitter')
   final String twitter;
 
  const SocialAccount({

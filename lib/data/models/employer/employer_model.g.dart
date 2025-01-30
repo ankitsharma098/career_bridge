@@ -41,7 +41,7 @@ Map<String, dynamic> _$EmployerToJson(Employer instance) => <String, dynamic>{
 PersonalInfo _$PersonalInfoFromJson(Map<String, dynamic> json) => PersonalInfo(
       address: json['address'] as String? ?? '',
       DOB: json['DOB'] as String? ?? '',
-      gender: json['gender'] as String? ?? '',
+      gender: json['gender'] as String? ?? 'Male',
       fullName: json['fullName'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phoneNumber: json['phoneNumber'] as String? ?? '',

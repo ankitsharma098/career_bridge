@@ -97,9 +97,9 @@ Map<String, dynamic> _$VerificationDocumentToJson(
 
 SocialAccount _$SocialAccountFromJson(Map<String, dynamic> json) =>
     SocialAccount(
-      linkedin: json['linkedin'] as String? ?? '',
-      instagram: json['instagram'] as String? ?? '',
-      twitter: json['twitter'] as String? ?? '',
+      linkedin: json['linkedin'] as String? ?? 'linkedin',
+      instagram: json['instagram'] as String? ?? 'instagram',
+      twitter: json['twitter'] as String? ?? 'twitter',
     );
 
 Map<String, dynamic> _$SocialAccountToJson(SocialAccount instance) =>

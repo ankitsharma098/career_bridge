@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:android/core/constants/colors.dart';
-import 'package:android/core/utils/custonErrorUtils.dart';
+import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +13,7 @@ import '../../../data/models/employer/employer_model.dart';
 
 class EmployerProfileScreen extends StatefulWidget {
 
-  const EmployerProfileScreen({Key? key}) : super(key: key);
+  const EmployerProfileScreen({super.key});
 
   @override
   State<EmployerProfileScreen> createState() => _EmployerProfileScreenState();
@@ -43,7 +43,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         },
       builder: (context, state) {
         if (state is ProfileDataLoading) {
-          return Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.primary, size: 30),);
+          return Center(child: LoadingAnimationWidget.hexagonDots(color: Theme.of(context).brightness ==Brightness.dark ?AppColors.lightPrimary :AppColors.lightPrimary, size: 30),);
 
         } else if (state is ProfileDataLoaded) {
           print(state.employer.personalInfo);
@@ -127,7 +127,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                   child: Opacity(
                     opacity: 0.15,
                     child: Image.network(
-                      '${companyDetails.companyLogo}',
+                      companyDetails.companyLogo,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -193,7 +193,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       employer.companyDetails.designation,
                       style:Theme.of(context).textTheme.displayMedium?.copyWith(
                         fontSize: screenSize.width*0.045,
-                        color: AppColors.background,
+                        //color: AppColors.background,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.5,
                       ),
@@ -225,7 +225,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           Icons.description,
           _buildAboutContent(state.employer.about, screenSize),
           screenSize,
-          onEdit: () => _editAbout(context, state.employer.about ?? '', screenSize),
+          onEdit: () => _editAbout(context, state.employer.about, screenSize),
         ),
         SizedBox(height: screenSize.height*0.02),
         _buildInfoCard(
@@ -281,7 +281,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       color: Colors.white,
                       child: Padding(
                         padding: const EdgeInsets.all(5.0),
-                        child: Icon(icon, color: AppColors.primary, size: 24),
+                        child: Icon(icon,size: 24),
                       ),
                     ),
                     SizedBox(width: 12),
@@ -289,7 +289,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       title,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
                         letterSpacing: 0.5,
                         fontSize:  screenSize.width*0.04,
                       )
@@ -306,7 +305,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                         padding: EdgeInsets.all(8),
                         child: Icon(
                           Icons.edit,
-                          color:AppColors.primary,
                         ),
                       ),
                     ),
@@ -559,7 +557,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                                 Navigator.pop(dialogContext);
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
                                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -634,7 +631,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       Navigator.pop(dialogContext);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
                       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -700,7 +696,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:AppColors.primary,
+                         // backgroundColor:AppColors.primary,
                           padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

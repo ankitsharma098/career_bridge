@@ -1,12 +1,8 @@
-import 'dart:math';
-
 import 'package:android/core/constants/colors.dart';
-import 'package:android/core/theme/app_theme.dart';
-import 'package:android/core/utils/custonErrorUtils.dart';
+import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
 import 'package:android/data/models/employer/employer_model.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
-import 'package:android/features/Jobs/bloc/jobs_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
@@ -14,9 +10,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-
 import '../../../core/utils/hiveUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../Jobs/ui/jobs.dart';
@@ -187,12 +181,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-                      Container(
+                      SizedBox(
                         height: screenSize.height*0.25,
                         child: DrawerHeader(
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                          ),
+                          // decoration: BoxDecoration(
+                          //   color: AppColors.primary,
+                          // ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -202,12 +196,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                                 backgroundImage: employerData?.personalInfo.profilePic != null
                                     ? NetworkImage(employerData!.personalInfo.profilePic.toString())
                                     : null,
-                                backgroundColor: AppColors.background,
+                               // backgroundColor: AppColors.background,
                                 child: employerData?.personalInfo.profilePic == null
                                     ? Icon(
                                   Icons.person,
                                   size: 50,
-                                  color: AppColors.primary,
+                                 // color: AppColors.primary,
                                 )
                                     : null,
                               ),
@@ -351,7 +345,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     return ListTile(
       leading: Icon(
         icon,
-        color: color ?? AppColors.primary,
+        //color: color ?? AppColors.primary,
       ),
       title: Text(
         title,
@@ -448,7 +442,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                      fontWeight: FontWeight.w700,
                 ),
                 ),
-                Icon(Icons.bar_chart, color: AppColors.deepPurple),
+                Icon(Icons.bar_chart),
               ],
             ),
             Divider(height: 20, color: Colors.grey.shade300),
@@ -457,9 +451,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildEnhancedInsightCard('Total Jobs', '${overview['totalJobs'] ?? 0}', Icons.work_outline, AppColors.primary,screenSize),
-                _buildEnhancedInsightCard('Open Jobs', '${overview['openJobs'] ?? 0}', Icons.check_circle_outline, AppColors.greenCircular,screenSize),
-                _buildEnhancedInsightCard('Closed Jobs', '${overview['closedJobs'] ?? 0}', Icons.cancel_outlined, AppColors.error,screenSize),
+                _buildEnhancedInsightCard('Total Jobs', '${overview['totalJobs'] ?? 0}', Icons.work_outline, AppColors.lightPrimary,screenSize),
+                _buildEnhancedInsightCard('Open Jobs', '${overview['openJobs'] ?? 0}', Icons.check_circle_outline, AppColors.lightSuccess,screenSize),
+                _buildEnhancedInsightCard('Closed Jobs', '${overview['closedJobs'] ?? 0}', Icons.cancel_outlined, AppColors.lightError,screenSize),
               ],
             ),
 
@@ -500,7 +494,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         SizedBox(height: screenSize.width*0.015),
         ...jobsByType.map((type) =>
             _buildBreakdownRow(type['_id'] ?? 'Unknown', type['count'] ?? 0, Colors.blue,screenSize)
-        ).toList(),
+        ),
       ],
     );
   }
@@ -523,7 +517,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         ...jobsByLocation.map((location) =>
             _buildBreakdownRow(location['_id'] ?? 'Unknown', location['count'] ?? 0,
                 location['_id'] == 'Remote' ? Colors.green : Colors.orange,screenSize)
-        ).toList(),
+        ),
       ],
     );
   }
@@ -592,7 +586,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
               fontSize: screenSize.width*0.045,
-            color: AppColors.secondary
+           // color: AppColors.secondary
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -606,9 +600,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               alignment: BarChartAlignment.spaceAround,
               maxY: maxY,
               barGroups: [
-                _buildApplicationBar('Shortlisted', shortlistedApplications.toDouble(), AppColors.greenCircular),
-                _buildApplicationBar('Rejected', rejectedApplications.toDouble(), AppColors.error),
-                _buildApplicationBar('Pending', pendingApplications.toDouble(), AppColors.orange),
+                _buildApplicationBar('Shortlisted', shortlistedApplications.toDouble(), AppColors.lightSuccess),
+                _buildApplicationBar('Rejected', rejectedApplications.toDouble(), AppColors.lightError),
+                _buildApplicationBar('Pending', pendingApplications.toDouble(), AppColors.lightWarning),
               ],
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
@@ -688,9 +682,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           lineWidth: 10.0,
           percent: percentage,
           center: Text('${(percentage * 100).toInt()}%',style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.deepPurple
+           // color: AppColors.deepPurple
           ),),
-          progressColor: AppColors.primary,
+         // progressColor: AppColors.primary,
         ),
         SizedBox(height: screenSize.height*0.02),
         Text(
