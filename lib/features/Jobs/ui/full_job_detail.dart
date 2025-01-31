@@ -25,12 +25,12 @@ class JobDetailsScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.edit_outlined),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditJobScreen(job: job),
-                ),
-              );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (context) => EditJobScreen(job: job),
+              //   ),
+              // );
             },
           ),
         ],
@@ -51,7 +51,7 @@ class JobDetailsScreen extends StatelessWidget {
   Widget _buildHeaderSection(BuildContext context, Size screenSize) {
     return Card(
       margin: EdgeInsets.all(5),
-      elevation:1,
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -65,16 +65,15 @@ class JobDetailsScreen extends StatelessWidget {
                     job.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                     //color: AppColors.deepPurple,
                     ),
                   ),
                 ),
-                _buildStatusChip(context,job.status,screenSize),
+                _buildStatusChip(context, job.status, screenSize),
               ],
             ),
-            SizedBox(height: screenSize.height*0.02),
+            SizedBox(height: screenSize.height * 0.02),
             Text(
-              job.description.companyOverview,
+              job.overview,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             SizedBox(height: 20),
@@ -84,7 +83,23 @@ class JobDetailsScreen extends StatelessWidget {
       ),
     );
   }
-  Widget _buildStatusChip(BuildContext context,String status,Size screenSize) {
+
+  Widget _buildKeyDetails(BuildContext context) {
+    return Wrap(
+      spacing: 35,
+      runSpacing: 15,
+      children: [
+        _buildDetailChip(context, Icons.location_on, '${job.location.city}, ${job.location.state}'),
+        _buildDetailChip(context, Icons.business_center, job.employmentType),
+        _buildDetailChip(context, Icons.timer, job.experienceLevel),
+        _buildDetailChip(context, Icons.trending_up, 'Deadline: ${_formatDate(job.deadline)}'),
+        _buildDetailChip(context, Icons.attach_money,
+            '${job.salary.currency} ${job.salary.min}-${job.salary.max}/year'),
+      ],
+    );
+  }
+
+  Widget _buildStatusChip(BuildContext context, String status, Size screenSize) {
     Color chipColor;
     switch (status.toLowerCase()) {
       case 'open':
@@ -104,16 +119,15 @@ class JobDetailsScreen extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Text(
-            status,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: chipColor,
-                fontSize: screenSize.width*0.04
-            )
+          status,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: chipColor,
+            fontSize: screenSize.width * 0.04,
+          ),
         ),
       ),
     );
   }
-
 
   Widget _buildContentSection(BuildContext context, Size screenSize) {
     return Card(
@@ -124,38 +138,35 @@ class JobDetailsScreen extends StatelessWidget {
         children: [
           _buildSection(
             context,
-            'Role Overview',
-            job.description.roleOverview,
+            'Job Overview',
+            job.overview,
             Icons.work_outline,
           ),
           _buildResponsibilitiesSection(context),
-          _buildQualificationsSection(context,screenSize),
+          _buildQualificationsSection(context, screenSize),
           _buildBenefitsSection(context),
           _buildWorkEnvironmentSection(context),
-          _buildGrowthSection(context),
-          _buildApplicationSection(context),
           _buildAccessibilitySection(context),
-          _buildInclusivitySection(context),
         ],
       ),
     );
   }
 
-  Widget _buildKeyDetails(BuildContext context) {
-    return Wrap(
-      spacing: 35,
-      runSpacing: 15,
-      children: [
-        _buildDetailChip(context,Icons.location_on, '${job.jobLocationDetails.city}, ${job.jobLocationDetails.state}'),
-        _buildDetailChip(context,Icons.business_center, job.jobType),
-        _buildDetailChip(context,Icons.timer, job.employmentType),
-        _buildDetailChip(context,Icons.trending_up, job.experienceLevel),
-        _buildDetailChip(context,Icons.calendar_today, 'Deadline: ${_formatDate(job.deadline)}'),
-        _buildDetailChip(context,Icons.attach_money,
-            '${job.description.salary.currency} ${job.description.salary.min}-${job.description.salary.max}k/year'),
-      ],
-    );
-  }
+  // Widget _buildKeyDetails(BuildContext context) {
+  //   return Wrap(
+  //     spacing: 35,
+  //     runSpacing: 15,
+  //     children: [
+  //       _buildDetailChip(context,Icons.location_on, '${job.jobLocationDetails.city}, ${job.jobLocationDetails.state}'),
+  //       _buildDetailChip(context,Icons.business_center, job.jobType),
+  //       _buildDetailChip(context,Icons.timer, job.employmentType),
+  //       _buildDetailChip(context,Icons.trending_up, job.experienceLevel),
+  //       _buildDetailChip(context,Icons.calendar_today, 'Deadline: ${_formatDate(job.deadline)}'),
+  //       _buildDetailChip(context,Icons.attach_money,
+  //           '${job.description.salary.currency} ${job.description.salary.min}-${job.description.salary.max}k/year'),
+  //     ],
+  //   );
+  // }
 
   Widget _buildSection(BuildContext context, String title, String content, IconData icon) {
     return Card(
@@ -214,7 +225,7 @@ class JobDetailsScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12),
-            ...job.description.responsibilities.map((resp) => Padding(
+            ...job.responsibilities.map((resp) => Padding(
               padding: EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,40 +265,27 @@ class JobDetailsScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: screenSize.height*0.01),
-            _buildQualificationItem(context, 'Education', job.description.qualifications.education),
-            _buildQualificationItem(context, 'Experience', job.description.qualifications.experience),
-            _buildSkillsGrid(context, job.description.qualifications.skills),
-            if (job.description.qualifications.certifications.isNotEmpty)
-              _buildCertifications(context, job.description.qualifications.certifications),
+            ...job.qualifications.map((qual) => Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.school, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(child: Text(qual, style: Theme.of(context).textTheme.bodyMedium)),
+                ],
+              ),
+            )),
+            SizedBox(height: 16),
+            _buildSkillsGrid(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQualificationItem(BuildContext context, String title, String content) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            content,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSkillsGrid(BuildContext context, List<String> skills) {
+  Widget _buildSkillsGrid(BuildContext context,) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -301,17 +299,17 @@ class JobDetailsScreen extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: skills.map((skill) => Card(
+          children: job.skills.map((skill) => Card(
             margin: EdgeInsets.all(0),
-            color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSecondary.withOpacity(0.1):AppColors.lightDeepPurple.withOpacity(0.1),
+            color: Theme.of(context).brightness == Brightness.dark ?
+            Colors.grey.shade700 : Colors.grey.shade200,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             elevation: 0,
             child: Padding(
-              padding:   EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: Text(
                 skill,
-                style: TextStyle(
-                 // color: AppColors.deepPurple,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -322,32 +320,6 @@ class JobDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCertifications(BuildContext context, List<String> certifications) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: 12),
-        Text(
-          'Preferred Certifications',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          //  color: AppColors.deepPurple,
-          ),
-        ),
-        SizedBox(height: 8),
-        ...certifications.map((cert) => Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              Icon(Icons.verified, size: 16),
-              SizedBox(width: 8),
-              Text(cert, style: Theme.of(context).textTheme.bodyMedium,),
-            ],
-          ),
-        )),
-      ],
-    );
-  }
 
   Widget _buildBenefitsSection(BuildContext context) {
     return Card(
@@ -372,13 +344,13 @@ class JobDetailsScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12),
-            ...job.description.benefits.map((benefit) => Padding(
+            ...job.benefits.map((benefit) => Padding(
               padding: EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
                   Icon(Icons.check_circle_outline, size: 16),
                   SizedBox(width: 8),
-                  Expanded(child: Text(benefit, style: Theme.of(context).textTheme.bodyMedium,)),
+                  Expanded(child: Text(benefit, style: Theme.of(context).textTheme.bodyMedium)),
                 ],
               ),
             )),
@@ -411,117 +383,100 @@ class JobDetailsScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12),
-            _buildWorkEnvironmentItem(context, 'Location', job.description.workEnvironment.location),
-            _buildWorkEnvironmentItem(context, 'Schedule', job.description.workEnvironment.schedule),
+            _buildWorkEnvironmentItem(context, 'Work Type', job.location.type),
+            _buildWorkEnvironmentItem(context, 'Address', job.location.address),
           ],
         ),
       ),
     );
   }
+  // Widget _buildGrowthSection(BuildContext context) {
+  //   return Card(
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //     margin: EdgeInsets.only(bottom: 24),
+  //     elevation: 0,
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16.0),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Icon(Icons.trending_up),
+  //               SizedBox(width: 8),
+  //               Text(
+  //                 'Growth Opportunities',
+  //                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(height: 12),
+  //           Text(job.description.growthOpportunities, style: Theme.of(context).textTheme.bodyMedium,),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildWorkEnvironmentItem(BuildContext context, String title, String content) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$title: ',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          Expanded(child: Text(content, style: Theme.of(context).textTheme.bodyMedium,)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGrowthSection(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.only(bottom: 24),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.trending_up),
-                SizedBox(width: 8),
-                Text(
-                  'Growth Opportunities',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Text(job.description.growthOpportunities, style: Theme.of(context).textTheme.bodyMedium,),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildApplicationSection(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.only(bottom: 24),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.assignment_turned_in),
-                SizedBox(width: 8),
-                Text(
-                  'Application Process',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Text(
-              job.description.applicationInstructions,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            SizedBox(height: 16),
-            ...job.applicationProcess.steps.asMap().entries.map((entry) => Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Card(
-                    elevation: 0,
-                    color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary.withOpacity(0.1):AppColors.lightPrimary.withOpacity(0.1),
-                    shape: CircleBorder(),
-                    margin: EdgeInsets.all(0),
-                    child: Padding(
-                      padding: EdgeInsets.all(5),
-                      child: Text(
-                        '${entry.key + 1}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(child: Text(entry.value, style: Theme.of(context).textTheme.bodyMedium,)),
-                ],
-              ),
-            )),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildApplicationSection(BuildContext context) {
+  //   return Card(
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //     margin: EdgeInsets.only(bottom: 24),
+  //     elevation: 0,
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16.0),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Icon(Icons.assignment_turned_in),
+  //               SizedBox(width: 8),
+  //               Text(
+  //                 'Application Process',
+  //                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(height: 12),
+  //           Text(
+  //             job.description.applicationInstructions,
+  //             style: Theme.of(context).textTheme.bodyMedium,
+  //           ),
+  //           SizedBox(height: 16),
+  //           ...job.applicationProcess.steps.asMap().entries.map((entry) => Padding(
+  //             padding: EdgeInsets.symmetric(vertical: 4),
+  //             child: Row(
+  //               children: [
+  //                 Card(
+  //                   elevation: 0,
+  //                   color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary.withOpacity(0.1):AppColors.lightPrimary.withOpacity(0.1),
+  //                   shape: CircleBorder(),
+  //                   margin: EdgeInsets.all(0),
+  //                   child: Padding(
+  //                     padding: EdgeInsets.all(5),
+  //                     child: Text(
+  //                       '${entry.key + 1}',
+  //                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
+  //                         fontWeight: FontWeight.w600,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 SizedBox(width: 8),
+  //                 Expanded(child: Text(entry.value, style: Theme.of(context).textTheme.bodyMedium,)),
+  //               ],
+  //             ),
+  //           )),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildAccessibilitySection(BuildContext context) {
     return Card(
@@ -546,20 +501,43 @@ class JobDetailsScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12),
-            _buildAccessibilityItem(context, 'Workplace Accommodations',
-                job.accessibilityFeatures.workplaceAccommodations.join(', ')),
-            _buildAccessibilityItem(context, 'Communication Support',
-                job.accessibilityFeatures.communicationSupport),
-            _buildAccessibilityItem(context, 'Disability Friendliness',
-                job.accessibilityFeatures.disabilityFriendliness),
+            _buildAccessibilityItem(context, 'Workspace Accommodations', job.workspaceAccommodations),
+            _buildAccessibilityItem(context, 'Interview Accommodations', job.interviewAccommodations),
             if (job.disabilityTypes.supportedDisabilities.isNotEmpty)
-              _buildAccessibilityItem(context, 'Supported Disabilities',
-                  job.disabilityTypes.supportedDisabilities.join(', ')),
+              _buildAccessibilityItem(
+                context,
+                'Supported Disabilities',
+                job.disabilityTypes.supportedDisabilities.join(', '),
+              ),
+            if (job.location.facilityAccessibility.isNotEmpty)
+              _buildAccessibilityItem(
+                context,
+                'Facility Accessibility',
+                job.location.facilityAccessibility.join(', '),
+              ),
           ],
         ),
       ),
     );
   }
+
+
+  Widget _buildWorkEnvironmentItem(BuildContext context, String title, String content) {
+    return Padding(
+        padding: EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+          Text(
+          '$title: ',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        Expanded(child: Text(content, style: Theme.of(context).textTheme.bodyMedium)),
+          ],
+        ),
+    );
+  }
+
 
   Widget _buildAccessibilityItem(BuildContext context, String title, String content) {
     return Padding(
@@ -572,68 +550,67 @@ class JobDetailsScreen extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 4),
-          Text(content, style: Theme.of(context).textTheme.bodyMedium,),
+          Text(content, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
   }
 
-  Widget _buildInclusivitySection(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.only(bottom: 24),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.diversity_3),
-                SizedBox(width: 8),
-                Text(
-                  'Inclusivity Statement',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Text(job.inclusivityStatement),
-            if (job.inclusiveHiringPractices.alternativeInterviewFormats.isNotEmpty) ...[
-              SizedBox(height: 16),
-              Text(
-                'Alternative Interview Formats Available:',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: 4),
-              ...job.inclusiveHiringPractices.alternativeInterviewFormats.map((format) =>
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check, size: 16),
-                        SizedBox(width: 8),
-                        Text(format),
-                      ],
-                    ),
-                  ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildInclusivitySection(BuildContext context) {
+  //   return Card(
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //     margin: EdgeInsets.only(bottom: 24),
+  //     elevation: 0,
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16.0),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Icon(Icons.diversity_3),
+  //               SizedBox(width: 8),
+  //               Text(
+  //                 'Inclusivity Statement',
+  //                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(height: 12),
+  //           Text(job.inclusivityStatement),
+  //           if (job.inclusiveHiringPractices.alternativeInterviewFormats.isNotEmpty) ...[
+  //             SizedBox(height: 16),
+  //             Text(
+  //               'Alternative Interview Formats Available:',
+  //               style: TextStyle(fontWeight: FontWeight.w600),
+  //             ),
+  //             SizedBox(height: 4),
+  //             ...job.inclusiveHiringPractices.alternativeInterviewFormats.map((format) =>
+  //                 Padding(
+  //                   padding: EdgeInsets.symmetric(vertical: 2),
+  //                   child: Row(
+  //                     children: [
+  //                       Icon(Icons.check, size: 16),
+  //                       SizedBox(width: 8),
+  //                       Text(format),
+  //                     ],
+  //                   ),
+  //                 ),
+  //             ),
+  //           ],
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildBottomBar(BuildContext context, Size screenSize) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: EdgeInsets.only(bottom: 24),
       elevation: 0,
-
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -643,7 +620,7 @@ class JobDetailsScreen extends StatelessWidget {
                 onPressed: () {
                   // Handle view applicants
                 },
-                icon: Icon(Icons.people,color: AppColors.lightDivider,),
+                icon: Icon(Icons.people, color: Colors.white),
                 label: Text('View ${job.applicants.length} Applicants'),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -665,10 +642,8 @@ class JobDetailsScreen extends StatelessWidget {
   }
 
   // Helper widgets and methods...
-  Widget _buildDetailChip(BuildContext context,IconData icon, String label) {
+  Widget _buildDetailChip(BuildContext context, IconData icon, String label) {
     return Card(
-      //shape: RoundedRectangleBorder(side: BorderSide(color: Theme.of(context).brightness == Brightness.dark ?AppColors.lightBackground:AppColors.lightPrimary,),borderRadius: BorderRadius.circular(16)),
-     // color: Theme.of(context).brightness == Brightness.dark ?AppColors.darkPrimary.withOpacity(0.1):AppColors.lightDeepPurple.withOpacity(0.1),
       margin: EdgeInsets.all(0),
       elevation: 0,
       child: Row(
@@ -676,10 +651,7 @@ class JobDetailsScreen extends StatelessWidget {
         children: [
           Icon(icon, size: 16),
           SizedBox(width: 4),
-          Text(
-            label,
-
-          ),
+          Text(label),
         ],
       ),
     );
@@ -692,313 +664,313 @@ class JobDetailsScreen extends StatelessWidget {
 }
 
 
-class EditJobScreen extends StatefulWidget {
-  final JobModel job;
-
-  const EditJobScreen({super.key, required this.job});
-
-  @override
-  State<EditJobScreen> createState() => _EditJobScreenState();
-}
-
-class _EditJobScreenState extends State<EditJobScreen> {
-  late TextEditingController titleController;
-  late TextEditingController companyOverviewController;
-  late TextEditingController roleOverviewController;
-  late TextEditingController experienceController;
-  late TextEditingController educationController;
-  late List<TextEditingController> responsibilitiesControllers;
-  late List<TextEditingController> skillsControllers;
-  late List<TextEditingController> certificationsControllers;
-  late List<TextEditingController> benefitsControllers;
-
-  @override
-  void initState() {
-    super.initState();
-    initializeControllers();
-  }
-
-  void initializeControllers() {
-    titleController = TextEditingController(text: widget.job.title);
-    companyOverviewController = TextEditingController(text: widget.job.description.companyOverview);
-    roleOverviewController = TextEditingController(text: widget.job.description.roleOverview);
-    experienceController = TextEditingController(text: widget.job.description.qualifications.experience);
-    educationController = TextEditingController(text: widget.job.description.qualifications.education);
-
-    responsibilitiesControllers = widget.job.description.responsibilities
-        .map((r) => TextEditingController(text: r))
-        .toList();
-
-    skillsControllers = widget.job.description.qualifications.skills
-        .map((s) => TextEditingController(text: s))
-        .toList();
-
-    certificationsControllers = widget.job.description.qualifications.certifications
-        .map((c) => TextEditingController(text: c))
-        .toList();
-
-    benefitsControllers = widget.job.description.benefits
-        .map((b) => TextEditingController(text: b))
-        .toList();
-  }
-
-  @override
-  void dispose() {
-    titleController.dispose();
-    companyOverviewController.dispose();
-    roleOverviewController.dispose();
-    experienceController.dispose();
-    educationController.dispose();
-    for (var controller in responsibilitiesControllers) {
-      controller.dispose();
-    }
-    for (var controller in skillsControllers) {
-      controller.dispose();
-    }
-    for (var controller in certificationsControllers) {
-      controller.dispose();
-    }
-    for (var controller in benefitsControllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Edit Job'),
-        actions: [
-          TextButton(
-            onPressed: () => _saveJob(context),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSection(
-              context,
-              'Basic Information',
-              Column(
-                children: [
-                  _buildTextField(
-                    controller: titleController,
-                    label: 'Job Title',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: companyOverviewController,
-                    label: 'Company Overview',
-                    maxLines: 3,
-                  ),
-                ],
-              ),
-            ),
-
-            _buildSection(
-              context,
-              'Role Details',
-              Column(
-                children: [
-                  _buildTextField(
-                    controller: roleOverviewController,
-                    label: 'Role Overview',
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDynamicList(
-                    context,
-                    'Responsibilities',
-                    responsibilitiesControllers,
-                  ),
-                ],
-              ),
-            ),
-
-            _buildSection(
-              context,
-              'Qualifications',
-              Column(
-                children: [
-                  _buildTextField(
-                    controller: educationController,
-                    label: 'Education Requirements',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: experienceController,
-                    label: 'Experience Requirements',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDynamicList(
-                    context,
-                    'Required Skills',
-                    skillsControllers,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDynamicList(
-                    context,
-                    'Certifications',
-                    certificationsControllers,
-                  ),
-                ],
-              ),
-            ),
-
-            _buildSection(
-              context,
-              'Benefits',
-              _buildDynamicList(
-                context,
-                'Benefits',
-                benefitsControllers,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSection(BuildContext context, String title, Widget content) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            content,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    int maxLines = 1,
-  }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-      ),
-    );
-  }
-
-  Widget _buildDynamicList(
-      BuildContext context,
-      String label,
-      List<TextEditingController> controllers,
-      ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                setState(() {
-                  controllers.add(TextEditingController());
-                });
-              },
-            ),
-          ],
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: controllers.length,
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: controllers[index],
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        labelText: '${label} ${index + 1}',
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () {
-                      setState(() {
-                        controllers[index].dispose();
-                        controllers.removeAt(index);
-                      });
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  void _saveJob(BuildContext context) {
-    final updatedJob = {
-      'title': titleController.text,
-      'description': {
-        'companyOverview': companyOverviewController.text,
-        'roleOverview': roleOverviewController.text,
-        'responsibilities': responsibilitiesControllers
-            .map((controller) => controller.text)
-            .where((text) => text.isNotEmpty)
-            .toList(),
-        'qualifications': {
-          'education': educationController.text,
-          'experience': experienceController.text,
-          'skills': skillsControllers
-              .map((controller) => controller.text)
-              .where((text) => text.isNotEmpty)
-              .toList(),
-          'certifications': certificationsControllers
-              .map((controller) => controller.text)
-              .where((text) => text.isNotEmpty)
-              .toList(),
-        },
-        'benefits': benefitsControllers
-            .map((controller) => controller.text)
-            .where((text) => text.isNotEmpty)
-            .toList(),
-      },
-    };
-
-    // Here you would typically call your API to update the job
-    // For now, we'll just print the updated job and pop back
-    print(updatedJob);
-    Navigator.pop(context);
-  }
-}
+// class EditJobScreen extends StatefulWidget {
+//   final JobModel job;
+//
+//   const EditJobScreen({super.key, required this.job});
+//
+//   @override
+//   State<EditJobScreen> createState() => _EditJobScreenState();
+// }
+//
+// class _EditJobScreenState extends State<EditJobScreen> {
+//   late TextEditingController titleController;
+//   late TextEditingController companyOverviewController;
+//   late TextEditingController roleOverviewController;
+//   late TextEditingController experienceController;
+//   late TextEditingController educationController;
+//   late List<TextEditingController> responsibilitiesControllers;
+//   late List<TextEditingController> skillsControllers;
+//   late List<TextEditingController> certificationsControllers;
+//   late List<TextEditingController> benefitsControllers;
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     initializeControllers();
+//   }
+//
+//   void initializeControllers() {
+//     titleController = TextEditingController(text: widget.job.title);
+//     companyOverviewController = TextEditingController(text: widget.job.description.companyOverview);
+//     roleOverviewController = TextEditingController(text: widget.job.description.roleOverview);
+//     experienceController = TextEditingController(text: widget.job.description.qualifications.experience);
+//     educationController = TextEditingController(text: widget.job.description.qualifications.education);
+//
+//     responsibilitiesControllers = widget.job.description.responsibilities
+//         .map((r) => TextEditingController(text: r))
+//         .toList();
+//
+//     skillsControllers = widget.job.description.qualifications.skills
+//         .map((s) => TextEditingController(text: s))
+//         .toList();
+//
+//     certificationsControllers = widget.job.description.qualifications.certifications
+//         .map((c) => TextEditingController(text: c))
+//         .toList();
+//
+//     benefitsControllers = widget.job.description.benefits
+//         .map((b) => TextEditingController(text: b))
+//         .toList();
+//   }
+//
+//   @override
+//   void dispose() {
+//     titleController.dispose();
+//     companyOverviewController.dispose();
+//     roleOverviewController.dispose();
+//     experienceController.dispose();
+//     educationController.dispose();
+//     for (var controller in responsibilitiesControllers) {
+//       controller.dispose();
+//     }
+//     for (var controller in skillsControllers) {
+//       controller.dispose();
+//     }
+//     for (var controller in certificationsControllers) {
+//       controller.dispose();
+//     }
+//     for (var controller in benefitsControllers) {
+//       controller.dispose();
+//     }
+//     super.dispose();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final screenSize = MediaQuery.of(context).size;
+//
+//     return Scaffold(
+//       appBar: AppBar(
+//         elevation: 0,
+//         leading: IconButton(
+//           icon: const Icon(Icons.arrow_back_ios_new),
+//           onPressed: () => Navigator.pop(context),
+//         ),
+//         title: const Text('Edit Job'),
+//         actions: [
+//           TextButton(
+//             onPressed: () => _saveJob(context),
+//             child: const Text('Save'),
+//           ),
+//         ],
+//       ),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             _buildSection(
+//               context,
+//               'Basic Information',
+//               Column(
+//                 children: [
+//                   _buildTextField(
+//                     controller: titleController,
+//                     label: 'Job Title',
+//                   ),
+//                   const SizedBox(height: 16),
+//                   _buildTextField(
+//                     controller: companyOverviewController,
+//                     label: 'Company Overview',
+//                     maxLines: 3,
+//                   ),
+//                 ],
+//               ),
+//             ),
+//
+//             _buildSection(
+//               context,
+//               'Role Details',
+//               Column(
+//                 children: [
+//                   _buildTextField(
+//                     controller: roleOverviewController,
+//                     label: 'Role Overview',
+//                     maxLines: 3,
+//                   ),
+//                   const SizedBox(height: 16),
+//                   _buildDynamicList(
+//                     context,
+//                     'Responsibilities',
+//                     responsibilitiesControllers,
+//                   ),
+//                 ],
+//               ),
+//             ),
+//
+//             _buildSection(
+//               context,
+//               'Qualifications',
+//               Column(
+//                 children: [
+//                   _buildTextField(
+//                     controller: educationController,
+//                     label: 'Education Requirements',
+//                   ),
+//                   const SizedBox(height: 16),
+//                   _buildTextField(
+//                     controller: experienceController,
+//                     label: 'Experience Requirements',
+//                   ),
+//                   const SizedBox(height: 16),
+//                   _buildDynamicList(
+//                     context,
+//                     'Required Skills',
+//                     skillsControllers,
+//                   ),
+//                   const SizedBox(height: 16),
+//                   _buildDynamicList(
+//                     context,
+//                     'Certifications',
+//                     certificationsControllers,
+//                   ),
+//                 ],
+//               ),
+//             ),
+//
+//             _buildSection(
+//               context,
+//               'Benefits',
+//               _buildDynamicList(
+//                 context,
+//                 'Benefits',
+//                 benefitsControllers,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildSection(BuildContext context, String title, Widget content) {
+//     return Card(
+//       margin: const EdgeInsets.only(bottom: 16),
+//       child: Padding(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text(
+//               title,
+//               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+//                 fontWeight: FontWeight.bold,
+//               ),
+//             ),
+//             const SizedBox(height: 16),
+//             content,
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildTextField({
+//     required TextEditingController controller,
+//     required String label,
+//     int maxLines = 1,
+//   }) {
+//     return TextField(
+//       controller: controller,
+//       maxLines: maxLines,
+//       decoration: InputDecoration(
+//         labelText: label,
+//         border: const OutlineInputBorder(),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildDynamicList(
+//       BuildContext context,
+//       String label,
+//       List<TextEditingController> controllers,
+//       ) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             Text(label),
+//             IconButton(
+//               icon: const Icon(Icons.add),
+//               onPressed: () {
+//                 setState(() {
+//                   controllers.add(TextEditingController());
+//                 });
+//               },
+//             ),
+//           ],
+//         ),
+//         ListView.builder(
+//           shrinkWrap: true,
+//           physics: const NeverScrollableScrollPhysics(),
+//           itemCount: controllers.length,
+//           itemBuilder: (context, index) {
+//             return Padding(
+//               padding: const EdgeInsets.only(bottom: 8),
+//               child: Row(
+//                 children: [
+//                   Expanded(
+//                     child: TextField(
+//                       controller: controllers[index],
+//                       decoration: InputDecoration(
+//                         border: const OutlineInputBorder(),
+//                         labelText: '${label} ${index + 1}',
+//                       ),
+//                     ),
+//                   ),
+//                   IconButton(
+//                     icon: const Icon(Icons.remove_circle_outline),
+//                     onPressed: () {
+//                       setState(() {
+//                         controllers[index].dispose();
+//                         controllers.removeAt(index);
+//                       });
+//                     },
+//                   ),
+//                 ],
+//               ),
+//             );
+//           },
+//         ),
+//       ],
+//     );
+//   }
+//
+//   void _saveJob(BuildContext context) {
+//     final updatedJob = {
+//       'title': titleController.text,
+//       'description': {
+//         'companyOverview': companyOverviewController.text,
+//         'roleOverview': roleOverviewController.text,
+//         'responsibilities': responsibilitiesControllers
+//             .map((controller) => controller.text)
+//             .where((text) => text.isNotEmpty)
+//             .toList(),
+//         'qualifications': {
+//           'education': educationController.text,
+//           'experience': experienceController.text,
+//           'skills': skillsControllers
+//               .map((controller) => controller.text)
+//               .where((text) => text.isNotEmpty)
+//               .toList(),
+//           'certifications': certificationsControllers
+//               .map((controller) => controller.text)
+//               .where((text) => text.isNotEmpty)
+//               .toList(),
+//         },
+//         'benefits': benefitsControllers
+//             .map((controller) => controller.text)
+//             .where((text) => text.isNotEmpty)
+//             .toList(),
+//       },
+//     };
+//
+//     // Here you would typically call your API to update the job
+//     // For now, we'll just print the updated job and pop back
+//     print(updatedJob);
+//     Navigator.pop(context);
+//   }
+// }

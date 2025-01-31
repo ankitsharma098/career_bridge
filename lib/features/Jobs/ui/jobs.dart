@@ -124,11 +124,10 @@ class _JobStatsTabState extends State<JobStatsTab> {
         }
 
         if (state is JobStatsLoaded) {
-         // final stats = state.stats['stats'];
           final jobMetrics = state.stats['jobMetrics'];
           final performanceMetrics = state.stats['performanceMetrics'];
           final distributionInsights = state.stats['distributionInsights'];
-          final inclusivityMetrics = state.stats['inclusivityMetrics'];
+          final disabilityMetrics = state.stats['disabilityMetrics'];
           final conversionMetrics = performanceMetrics['conversionMetrics'];
 
 
@@ -146,7 +145,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
                 SizedBox(height: widget.screenSize.height * 0.03),
                 _buildConversionMetrics(context, widget.screenSize, conversionMetrics),
                 SizedBox(height: widget.screenSize.height * 0.03),
-                _buildInclusivityMetrics(context, widget.screenSize, inclusivityMetrics),
+                _buildDistributionMetrics(context, widget.screenSize, disabilityMetrics),
                 SizedBox(height: widget.screenSize.height * 0.03),
                 _buildPerformanceSection(context, widget.screenSize, performanceMetrics),
               ],
@@ -248,19 +247,19 @@ class _JobStatsTabState extends State<JobStatsTab> {
           children: [
             Expanded(
               child: _buildPieChart(
-                'Job Types',
-                insights['jobTypes'] as List,
-                Colors.blue[400]!,
-                screenSize
+                  'Employment Types',
+                  insights['employmentTypes'] as List,
+                  Colors.blue[400]!,
+                  screenSize
               ),
             ),
             SizedBox(width: screenSize.width * 0.04),
             Expanded(
               child: _buildPieChart(
-                'Experience Levels',
-                insights['experienceLevels'] as List,
-                Colors.teal[400]!,
-                screenSize
+                  'Experience Levels',
+                  insights['experienceLevels'] as List,
+                  Colors.teal[400]!,
+                  screenSize
               ),
             ),
           ],
@@ -392,20 +391,23 @@ class _JobStatsTabState extends State<JobStatsTab> {
       Size screenSize,
       Map<String, dynamic> metrics,
       ) {
-    final double averageViews = metrics['averageViewsPerJob'].toDouble();
-    final double averageApplicants = metrics['averageApplicantsPerJob'].toDouble();
+    // Add null safety and default values
+    final double averageViews = (metrics['averageViewsPerJob'] ?? 0).toDouble();
+    final double averageApplicants = (metrics['averageApplicantsPerJob'] ?? 0).toDouble();
+
+    // Safely handle total metrics with null checks
+    final int totalJobViews = metrics['totalJobViews']?.toInt() ?? 0;
+    final int totalApplicants = metrics['totalApplicants']?.toInt() ?? 0;
 
     // Calculate a reasonable maxY that's slightly above the highest value
     final double maxValue = max(averageViews, averageApplicants);
     final double roundedMaxY = (maxValue * 1.2).ceilToDouble();
 
     return Card(
-
-      margin: EdgeInsets.all(0),
-      // color: Colors.white,
+      margin: EdgeInsets.zero,
       elevation: 0,
       child: Padding(
-        padding: const EdgeInsets.only(top: 8,left: 15,right: 5,bottom: 8),
+        padding: const EdgeInsets.only(top: 8, left: 15, right: 5, bottom: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -418,22 +420,22 @@ class _JobStatsTabState extends State<JobStatsTab> {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(width: screenSize.width*0.02,),
-                Container(
-                  width: screenSize.width*0.38,
+                SizedBox(width: screenSize.width * 0.02),
+                SizedBox(
+                  width: screenSize.width * 0.38,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
                         _buildMetricBadge(
                           'Views',
-                          metrics['totalJobViews'].toString(),
+                          totalJobViews.toString(),
                           Colors.blue[400]!,
                         ),
-                         SizedBox(width: screenSize.width*0.02),
+                        SizedBox(width: screenSize.width * 0.02),
                         _buildMetricBadge(
                           'Applicants',
-                          metrics['totalApplicants'].toString(),
+                          totalApplicants.toString(),
                           Colors.teal[400]!,
                         ),
                       ],
@@ -445,7 +447,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
             SizedBox(height: screenSize.height * 0.02),
             SizedBox(
               height: screenSize.height * 0.25,
-              child: BarChart(
+              child: roundedMaxY > 0 ? BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
                   maxY: roundedMaxY,
@@ -465,7 +467,12 @@ class _JobStatsTabState extends State<JobStatsTab> {
                     },
                   ),
                   borderData: FlBorderData(show: false),
-                  titlesData: _createBarTitles(context,roundedMaxY),
+                  titlesData: _createBarTitles(context, roundedMaxY),
+                ),
+              ) : Center(
+                child: Text(
+                  'No data available',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ),
@@ -577,17 +584,20 @@ class _JobStatsTabState extends State<JobStatsTab> {
 
 
 
-  Widget _buildInclusivityMetrics(
+  Widget _buildDistributionMetrics(
       BuildContext context,
       Size screenSize,
       Map<String, dynamic> metrics,
       ) {
-    final double accessiblePercentage = double.parse(metrics['accessibleJobsPercentage']);
+    final double accessiblePercentage = metrics['disabilitySupportPercentage'] is int
+        ? (metrics['disabilitySupportPercentage'] as int).toDouble()
+        : metrics['disabilitySupportPercentage'] is String
+        ? double.tryParse(metrics['disabilitySupportPercentage']) ?? 0.0
+        : metrics['disabilitySupportPercentage']?.toDouble() ?? 0.0;
 
     return Card(
       elevation: 0,
       margin: EdgeInsets.all(0),
-
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0,horizontal: 10),
         child: Column(
@@ -595,12 +605,11 @@ class _JobStatsTabState extends State<JobStatsTab> {
           children: [
             Text(
               'Inclusivity Metrics',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  //  color: Colors.grey[800],
-                ),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-             SizedBox(height: screenSize.height*0.02),
+            SizedBox(height: screenSize.height*0.02),
             Row(
               children: [
                 Expanded(
@@ -609,26 +618,25 @@ class _JobStatsTabState extends State<JobStatsTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildMetricTile(
-                        'Accessible Jobs',
-                        '${metrics['accessibleJobs']}',
-                        '${metrics['accessibleJobsPercentage']}%',
-                        Icons.accessibility_new,
-                        Colors.teal[400]!,
-                        screenSize
+                          'Jobs with Disability Support',
+                          '${metrics['jobsWithDisabilitySupport']}',
+                          '${metrics['disabilitySupportPercentage']}%',
+                          Icons.accessibility_new,
+                          Colors.teal[400]!,
+                          screenSize
                       ),
-                       SizedBox(height: screenSize.height*0.02),
+                      SizedBox(height: screenSize.height*0.02),
                       _buildMetricTile(
-                        'Blind Recruitment',
-                        metrics['blindRecruitmentJobs'].toString(),
-                        '${((metrics['blindRecruitmentJobs'] / metrics['totalJobs']) * 100).toStringAsFixed(1)}%',
-                        Icons.remove_red_eye_outlined,
-                        Colors.blue[400]!,
-                        screenSize
+                          'Workspace Accommodation',
+                          metrics['workspaceAccommodationJobs'].toString(),
+                          '${metrics['workspaceAccommodationPercentage']}%',
+                          Icons.work_outline,
+                          Colors.blue[400]!,
+                          screenSize
                       ),
                     ],
                   ),
                 ),
-
                 Expanded(
                   child: CustomPaint(
                     size: Size(screenSize.width * 0.2, screenSize.width * 0.2),
@@ -1049,47 +1057,104 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
 
   Widget _buildJobsList(Size screenSize) {
     return BlocConsumer<JobBloc, JobState>(
-        listener: (context,state) {
-          if(state is JobError){
+        listener: (context, state) {
+          if (state is JobError) {
             return SnackBarUtils.showRedSnackBar(state.error.toString(), context);
           }
         },
-      builder: (context, state) {
-        if (state is JobLoading) {
-          return PostedJobsShimmer();
-        }
+        builder: (context, state) {
+          if (state is JobLoading) {
+            return PostedJobsShimmer();
+          }
 
-        if (state is JobLoaded) {
-          return ListView.builder(
-            controller: scrollController,
-            itemCount:  state.jobs.length + (state.hasReachedMax ? 0 : 1),
-            itemBuilder: (context, index) {
-              if (index >= state.jobs.length) {
-                if (!state.hasReachedMax) {
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: LoadingAnimationWidget.progressiveDots(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.darkPrimary
-                              : AppColors.lightPrimary,
-                          size: 20
+          if (state is JobLoaded) {
+            if (state.jobs.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.work_off_outlined,
+                      size: screenSize.width * 0.15,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: screenSize.height * 0.02),
+                    Text(
+                      'No Jobs Posted Yet',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                } else {
-                  return SizedBox.shrink(); // Return empty widget if reached max
-                }
-              }
+                    SizedBox(height: screenSize.height * 0.01),
+                    Text(
+                      'Click the + button above to post your first job',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-              final job = state.jobs[index];
-              return _buildJobCard(job, screenSize, context);
-            },
+            return ListView.builder(
+              controller: scrollController,
+              itemCount: state.jobs.length + (state.hasReachedMax ? 0 : 1),
+              itemBuilder: (context, index) {
+                if (index >= state.jobs.length) {
+                  if (!state.hasReachedMax && state.jobs.isNotEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: LoadingAnimationWidget.progressiveDots(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkPrimary
+                                : AppColors.lightPrimary,
+                            size: 20
+                        ),
+                      ),
+                    );
+                  } else {
+                    return SizedBox.shrink();
+                  }
+                }
+
+                final job = state.jobs[index];
+                return _buildJobCard(job, screenSize, context);
+              },
+            );
+          }
+
+          // Handle initial/error state with a message
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: screenSize.width * 0.15,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: screenSize.height * 0.02),
+                Text(
+                  'Something went wrong',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: screenSize.height * 0.01),
+                Text(
+                  'Please try again later',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
           );
         }
-
-        return Center(child: Text('No jobs found'));
-      }
     );
   }
 
@@ -1122,7 +1187,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          job.description.companyOverview,
+                          job.overview,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -1154,13 +1219,13 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                       _buildInfoPill(
                         context,
                         Icons.location_on,
-                        '${job.jobLocationDetails.city}, ${job.jobLocationDetails.state}',
+                        '${job.location.city}, ${job.location.state}', // Updated location access
                       ),
                       SizedBox(width: 5,),
                       _buildInfoPill(
                         context,
                         Icons.work,
-                        job.jobType,
+                        job.employmentType, // Changed from jobType
                       ),
                       SizedBox(width: 5,),
                       _buildInfoPill(
@@ -1179,10 +1244,9 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '${job.description.salary.currency} ${job.description.salary.min}-${job.description.salary.max}',
+                      '${job.salary.currency} ${job.salary.min}-${job.salary.max}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w500,
-                       // color: AppColors.primary,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1208,7 +1272,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                 ),
                 SizedBox(height: screenSize.height * 0.01),
                 Column(
-                  children: job.description.responsibilities
+                  children: job.responsibilities
                       .take(2) // Show only first 2 responsibilities
                       .map((resp) => Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1238,7 +1302,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: job.description.qualifications.skills
+                  children: job.skills
                       .take(3) // Show only first 3 skills
                       .map((skill) => Card(
                     margin: EdgeInsets.all(0),

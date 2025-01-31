@@ -418,7 +418,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
   Widget _buildJobInsightsSection(Map<String, dynamic> dashboardStats, Size screenSize) {
     final jobInsights = dashboardStats['jobInsights'] ?? {};
     final overview = jobInsights['overview'] ?? {};
-    final jobsByType = jobInsights['jobsByType'] ?? [];
+    final employmentType = jobInsights['employmentType'] ?? [];
     final jobsByLocation = jobInsights['jobsByLocation'] ?? [];
 
     return Card(
@@ -464,7 +464,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  child: _buildJobTypeBreakdown(jobsByType,screenSize),
+                  child: _buildJobTypeBreakdown(employmentType,screenSize),
                 ),
                 SizedBox(width: screenSize.width*0.05,),
                 Container(
@@ -478,12 +478,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     );
   }
 
-  Widget _buildJobTypeBreakdown(List<dynamic> jobsByType,Size screenSize) {
+  Widget _buildJobTypeBreakdown(List<dynamic> employmentType,Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Job Type Breakdown',
+          'Employment Type',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 fontSize: screenSize.width*0.04
@@ -492,7 +492,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         SizedBox(height: screenSize.width*0.015),
-        ...jobsByType.map((type) =>
+        ...employmentType.map((type) =>
             _buildBreakdownRow(type['_id'] ?? 'Unknown', type['count'] ?? 0, Colors.blue,screenSize)
         ),
       ],
