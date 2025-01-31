@@ -12,20 +12,26 @@ JobModel _$JobModelFromJson(Map<String, dynamic> json) => JobModel(
       employerId: json['employerId'] as String? ?? '',
       employerEmail: json['employerEmail'] as String? ?? '',
       title: json['title'] as String? ?? '',
-      description:
-          JobDescription.fromJson(json['description'] as Map<String, dynamic>),
+      description: json['description'] == null
+          ? const JobDescription()
+          : JobDescription.fromJson(
+              json['description'] as Map<String, dynamic>),
       requirements: (json['requirements'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
       jobType: json['jobType'] as String? ?? '',
       jobLocation: json['jobLocation'] as String? ?? '',
-      jobLocationDetails: JobLocationDetails.fromJson(
-          json['jobLocationDetails'] as Map<String, dynamic>),
+      jobLocationDetails: json['jobLocationDetails'] == null
+          ? const JobLocationDetails()
+          : JobLocationDetails.fromJson(
+              json['jobLocationDetails'] as Map<String, dynamic>),
       employmentType: json['employmentType'] as String? ?? '',
       experienceLevel: json['experienceLevel'] as String? ?? '',
-      applicationProcess: ApplicationProcess.fromJson(
-          json['applicationProcess'] as Map<String, dynamic>),
+      applicationProcess: json['applicationProcess'] == null
+          ? const ApplicationProcess()
+          : ApplicationProcess.fromJson(
+              json['applicationProcess'] as Map<String, dynamic>),
       deadline: json['deadline'] as String? ?? '',
       status: json['status'] as String? ?? '',
       applicants: (json['applicants'] as List<dynamic>?)
@@ -33,15 +39,22 @@ JobModel _$JobModelFromJson(Map<String, dynamic> json) => JobModel(
               .toList() ??
           [],
       views: (json['views'] as num?)?.toInt() ?? 0,
-      accessibilityFeatures: AccessibilityFeatures.fromJson(
-          json['accessibilityFeatures'] as Map<String, dynamic>),
+      accessibilityFeatures: json['accessibilityFeatures'] == null
+          ? const AccessibilityFeatures()
+          : AccessibilityFeatures.fromJson(
+              json['accessibilityFeatures'] as Map<String, dynamic>),
       inclusivityStatement: json['inclusivityStatement'] as String? ?? '',
-      specialNeeds:
-          SpecialNeeds.fromJson(json['specialNeeds'] as Map<String, dynamic>),
-      disabilityTypes: DisabilityTypes.fromJson(
-          json['disabilityTypes'] as Map<String, dynamic>),
-      inclusiveHiringPractices: InclusiveHiringPractices.fromJson(
-          json['inclusiveHiringPractices'] as Map<String, dynamic>),
+      specialNeeds: json['specialNeeds'] == null
+          ? const SpecialNeeds()
+          : SpecialNeeds.fromJson(json['specialNeeds'] as Map<String, dynamic>),
+      disabilityTypes: json['disabilityTypes'] == null
+          ? const DisabilityTypes()
+          : DisabilityTypes.fromJson(
+              json['disabilityTypes'] as Map<String, dynamic>),
+      inclusiveHiringPractices: json['inclusiveHiringPractices'] == null
+          ? const InclusiveHiringPractices()
+          : InclusiveHiringPractices.fromJson(
+              json['inclusiveHiringPractices'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$JobModelToJson(JobModel instance) => <String, dynamic>{
@@ -76,17 +89,23 @@ JobDescription _$JobDescriptionFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           [],
-      qualifications: Qualifications.fromJson(
-          json['qualifications'] as Map<String, dynamic>),
+      qualifications: json['qualifications'] == null
+          ? const Qualifications()
+          : Qualifications.fromJson(
+              json['qualifications'] as Map<String, dynamic>),
       benefits: (json['benefits'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
-      workEnvironment: WorkEnvironment.fromJson(
-          json['workEnvironment'] as Map<String, dynamic>),
+      workEnvironment: json['workEnvironment'] == null
+          ? const WorkEnvironment()
+          : WorkEnvironment.fromJson(
+              json['workEnvironment'] as Map<String, dynamic>),
       companyOverview: json['companyOverview'] as String? ?? '',
       growthOpportunities: json['growthOpportunities'] as String? ?? '',
-      salary: Salary.fromJson(json['salary'] as Map<String, dynamic>),
+      salary: json['salary'] == null
+          ? const Salary()
+          : Salary.fromJson(json['salary'] as Map<String, dynamic>),
       applicationInstructions: json['applicationInstructions'] as String? ?? '',
       content: json['content'] as String? ?? '',
     );

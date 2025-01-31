@@ -64,32 +64,58 @@ class JobModel {
 
   final InclusiveHiringPractices inclusiveHiringPractices;
 
+  // JobModel({
+  //   this.id='',
+  //   this.companyId='',
+  //   required this.employerId,
+  //   required this.employerEmail,
+  //   required this.title,
+  //   required this.description,
+  //   required this.requirements,
+  //   required this.jobType,
+  //   required this.jobLocation,
+  //   required this.jobLocationDetails,
+  //   required this.employmentType,
+  //   required this.experienceLevel,
+  //   required this.applicationProcess,
+  //   required this.deadline,
+  //   required this.status,
+  //   required this.applicants,
+  //   required this.views,
+  //   required this.accessibilityFeatures,
+  //   required this.inclusivityStatement,
+  //   required this.specialNeeds,
+  //   required this.disabilityTypes,
+  //   required this.inclusiveHiringPractices,
+  // });
   JobModel({
-    required this.id,
-    required this.companyId,
-    required this.employerId,
-    required this.employerEmail,
-    required this.title,
-    required this.description,
-    required this.requirements,
-    required this.jobType,
-    required this.jobLocation,
-    required this.jobLocationDetails,
-    required this.employmentType,
-    required this.experienceLevel,
-    required this.applicationProcess,
-    required this.deadline,
-    required this.status,
-    required this.applicants,
-    required this.views,
-    required this.accessibilityFeatures,
-    required this.inclusivityStatement,
-    required this.specialNeeds,
-    required this.disabilityTypes,
-    required this.inclusiveHiringPractices,
+    this.id = '',
+    this.companyId='',
+    this.employerId='',
+    this.employerEmail='',
+    this.title='',
+    this.description=const JobDescription(),
+    this.requirements=const [],
+    this.jobType='',
+    this.jobLocation='',
+    this.jobLocationDetails=const JobLocationDetails(),
+    this.employmentType='',
+    this.experienceLevel='',
+    this.applicationProcess=const ApplicationProcess(),
+    this.deadline='',
+    this.status='',
+    this.applicants=const [],
+    this.views=0,
+    this.accessibilityFeatures=const AccessibilityFeatures(),
+    this.inclusivityStatement='',
+    this.specialNeeds=const SpecialNeeds(),
+    this.disabilityTypes=const DisabilityTypes(),
+    this.inclusiveHiringPractices=const InclusiveHiringPractices()
   });
 
+
   factory JobModel.fromJson(Map<String, dynamic> json) => _$JobModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$JobModelToJson(this);
 }
 
@@ -122,17 +148,17 @@ class JobDescription {
   @JsonKey(defaultValue: '')
   final String content;
 
-  JobDescription({
-    required this.roleOverview,
-    required this.responsibilities,
-    required this.qualifications,
-    required this.benefits,
-    required this.workEnvironment,
-    required this.companyOverview,
-    required this.growthOpportunities,
-    required this.salary,
-    required this.applicationInstructions,
-    required this.content,
+  const JobDescription({
+     this.roleOverview='',
+     this.responsibilities=const [],
+     this.qualifications=const Qualifications(),
+     this.benefits=const [],
+     this.workEnvironment=const WorkEnvironment(),
+     this.companyOverview='',
+     this.growthOpportunities='',
+     this.salary=const Salary(),
+     this.applicationInstructions='',
+     this.content='',
   });
 
   factory JobDescription.fromJson(Map<String, dynamic> json) => _$JobDescriptionFromJson(json);
@@ -153,11 +179,11 @@ class Qualifications {
   @JsonKey(defaultValue: [])
   final List<String> certifications;
 
-  Qualifications({
-    required this.education,
-    required this.experience,
-    required this.skills,
-    required this.certifications,
+  const Qualifications({
+     this.education='',
+     this.experience='',
+     this.skills=const [],
+     this.certifications=const [],
   });
 
   factory Qualifications.fromJson(Map<String, dynamic> json) => _$QualificationsFromJson(json);
@@ -172,9 +198,9 @@ class WorkEnvironment {
   @JsonKey(defaultValue: '')
   final String schedule;
 
-  WorkEnvironment({
-    required this.location,
-    required this.schedule,
+  const WorkEnvironment({
+     this.location='',
+     this.schedule='',
   });
 
   factory WorkEnvironment.fromJson(Map<String, dynamic> json) => _$WorkEnvironmentFromJson(json);
@@ -192,10 +218,10 @@ class Salary {
   @JsonKey(defaultValue: 0)
   final int max;
 
-  Salary({
-    required this.currency,
-    required this.min,
-    required this.max,
+  const Salary({
+     this.currency='USD',
+     this.min=0,
+     this.max=0,
   });
 
   factory Salary.fromJson(Map<String, dynamic> json) => _$SalaryFromJson(json);
@@ -216,11 +242,11 @@ class JobLocationDetails {
   @JsonKey(defaultValue: '')
   final String country;
 
-  JobLocationDetails({
-    required this.address,
-    required this.city,
-    required this.state,
-    required this.country,
+  const JobLocationDetails({
+     this.address='',
+     this.city='',
+     this.state='',
+     this.country='',
   });
 
   factory JobLocationDetails.fromJson(Map<String, dynamic> json) => _$JobLocationDetailsFromJson(json);
@@ -235,9 +261,9 @@ class ApplicationProcess {
   @JsonKey(defaultValue: '')
   final String contactEmail;
 
-  ApplicationProcess({
-    required this.steps,
-    required this.contactEmail,
+  const ApplicationProcess({
+     this.steps=const [],
+     this.contactEmail='',
   });
 
   factory ApplicationProcess.fromJson(Map<String, dynamic> json) => _$ApplicationProcessFromJson(json);
@@ -255,10 +281,10 @@ class AccessibilityFeatures {
   @JsonKey(defaultValue: '')
   final String disabilityFriendliness;
 
-  AccessibilityFeatures({
-    required this.workplaceAccommodations,
-    required this.communicationSupport,
-    required this.disabilityFriendliness,
+  const AccessibilityFeatures({
+     this.workplaceAccommodations=const [],
+     this.communicationSupport='',
+     this.disabilityFriendliness='',
   });
 
   factory AccessibilityFeatures.fromJson(Map<String, dynamic> json) => _$AccessibilityFeaturesFromJson(json);
@@ -276,10 +302,10 @@ class SpecialNeeds {
   @JsonKey(defaultValue: '')
   final String additionalSupportDetails;
 
-  SpecialNeeds({
-    required this.personalAssistanceAvailable,
-    required this.specialEquipmentProvided,
-    required this.additionalSupportDetails,
+  const SpecialNeeds({
+     this.personalAssistanceAvailable=false,
+     this.specialEquipmentProvided=false,
+     this.additionalSupportDetails='',
   });
 
   factory SpecialNeeds.fromJson(Map<String, dynamic> json) => _$SpecialNeedsFromJson(json);
@@ -291,8 +317,8 @@ class DisabilityTypes {
   @JsonKey(defaultValue: [])
   final List<String> supportedDisabilities;
 
-  DisabilityTypes({
-    required this.supportedDisabilities,
+  const DisabilityTypes({
+     this.supportedDisabilities=const[],
   });
 
   factory DisabilityTypes.fromJson(Map<String, dynamic> json) => _$DisabilityTypesFromJson(json);
@@ -307,9 +333,9 @@ class InclusiveHiringPractices {
   @JsonKey(defaultValue: [])
   final List<String> alternativeInterviewFormats;
 
-  InclusiveHiringPractices({
-    required this.blindRecruitment,
-    required this.alternativeInterviewFormats,
+  const InclusiveHiringPractices({
+     this.blindRecruitment=false,
+     this.alternativeInterviewFormats=const[],
   });
 
   factory InclusiveHiringPractices.fromJson(Map<String, dynamic> json) => _$InclusiveHiringPracticesFromJson(json);

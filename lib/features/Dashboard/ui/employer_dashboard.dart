@@ -681,8 +681,11 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           radius: 60.0,
           lineWidth: 10.0,
           percent: percentage,
+         progressColor:  Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : AppColors.lightPrimary,
+         // fillColor:  Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : AppColors.lightPrimary,
           center: Text('${(percentage * 100).toInt()}%',style: Theme.of(context).textTheme.bodySmall?.copyWith(
-           // color: AppColors.deepPurple
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : AppColors.lightPrimary
+
           ),),
          // progressColor: AppColors.primary,
         ),

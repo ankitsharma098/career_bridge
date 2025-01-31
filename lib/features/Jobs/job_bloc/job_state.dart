@@ -13,7 +13,7 @@ class JobLoaded extends JobState {
   final bool hasReachedMax;
   final int currentPage;
 
-  JobLoaded(this.jobs, this.hasReachedMax, this.currentPage);
+  JobLoaded({required this.jobs, required this.hasReachedMax, required this.currentPage});
 
 }
 

@@ -1,16 +1,21 @@
 
 
 import 'dart:math';
+import 'package:android/features/Jobs/job_create_bloc/job_create_bloc.dart';
+import 'package:android/features/Jobs/ui/create_job.dart';
 import 'package:android/features/Jobs/ui/full_job_detail.dart';
+import 'package:android/features/Jobs/ui/shimmer/posted_job_shimmer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../core/constants/colors.dart';
+import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/Job/job_model.dart';
 import '../job_bloc/job_bloc.dart';
 import '../job_stats_bloc/jobs_bloc.dart';
-import 'Job_stats_shimmer.dart';
+import 'shimmer/Job_stats_shimmer.dart';
 
 class JobStatsScreen extends StatelessWidget {
   const JobStatsScreen({Key? key}) : super(key: key);
@@ -773,93 +778,96 @@ class _JobStatsTabState extends State<JobStatsTab> {
             return Card(
               margin: EdgeInsets.only(bottom: screenSize.height * 0.01),
              elevation: 0,
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue[100],
-                  child: Text(
-                    '${index + 1}',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontWeight: FontWeight.bold,
+              child: Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue[100],
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        job['title'],
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: screenSize.width*0.04
-                          //  color: Colors.grey[800],
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          job['title'],
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: screenSize.width*0.04
+                            //  color: Colors.grey[800],
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: job['status'].toLowerCase() == 'active'
-                            ? Colors.green[50]
-                            : Colors.orange[50],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        job['status'],
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
                           color: job['status'].toLowerCase() == 'active'
-                              ? Colors.green[700]
-                              : Colors.orange[700],
-                          fontSize: screenSize.width*0.03,
-                          fontWeight: FontWeight.w500,
+                              ? Colors.green[50]
+                              : Colors.orange[50],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          job['status'],
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: job['status'].toLowerCase() == 'active'
+                                ? Colors.green[700]
+                                : Colors.orange[700],
+                            fontSize: screenSize.width*0.03,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.remove_red_eye_outlined,
-                          size: 16,
-                          // color: Colors.grey[600],
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          '${job['views']} views',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[500],
-                            fontSize: screenSize.width*0.03,
+                    ],
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.remove_red_eye_outlined,
+                            size: 16,
+                            // color: Colors.grey[600],
                           ),
-                        ),
-                        SizedBox(width: screenSize.width*0.05),
-                        Icon(
-                          Icons.people_outline,
-                          size: 16,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          '${job['applicantCount']} applicants',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[500],
-                            fontSize: screenSize.width*0.03,
+                          SizedBox(width: 4),
+                          Text(
+                            '${job['views']} views',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[500],
+                              fontSize: screenSize.width*0.03,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
+                          SizedBox(width: screenSize.width*0.05),
+                          Icon(
+                            Icons.people_outline,
+                            size: 16,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            '${job['applicantCount']} applicants',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[500],
+                              fontSize: screenSize.width*0.03,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                  ),
                 ),
               ),
             );
@@ -951,11 +959,45 @@ class PostedJobsScreen extends StatefulWidget {
 }
 
 class _PostedJobsScreenState extends State<PostedJobsScreen> {
+  final ScrollController scrollController = ScrollController();
+
   @override
   void initState() {
     BlocProvider.of<JobBloc>(context).add(FetchJobs());
+    scrollController.addListener(_onScroll);
        super.initState();
   }
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final state = context.read<JobBloc>().state;
+    if (_isBottom && state is JobLoaded && !state.hasReachedMax) {
+      BlocProvider.of<JobBloc>(context).add(LoadMoreJobs());
+    }
+
+  }
+  bool get _isBottom {
+    if (!scrollController.hasClients) return false;
+    final maxScroll = scrollController.position.maxScrollExtent;
+    final currentScroll = scrollController.offset;
+    // Load more when user has scrolled 80% of the list
+    return currentScroll >= (maxScroll * 0.8);
+  }
+ void _addNewJob(JobModel job){
+   final state = context.read<JobBloc>().state;
+  if(state is JobLoaded ){
+
+    setState(() {
+      state.jobs.insert(0, job);
+    });
+  }
+ }
+
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -993,7 +1035,12 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
         ),
         IconButton(
           icon: Icon(Icons.add_circle),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
+              create: (context) => JobCreateBloc(),
+              child: CreateJobScreen(onJobCreated:_addNewJob,),
+            ),));
+          },
           iconSize: screenSize.width * 0.08,
         ),
       ],
@@ -1001,18 +1048,38 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
   }
 
   Widget _buildJobsList(Size screenSize) {
-    return BlocBuilder<JobBloc, JobState>(
+    return BlocConsumer<JobBloc, JobState>(
+        listener: (context,state) {
+          if(state is JobError){
+            return SnackBarUtils.showRedSnackBar(state.error.toString(), context);
+          }
+        },
       builder: (context, state) {
         if (state is JobLoading) {
-          return Center(child: CircularProgressIndicator());
+          return PostedJobsShimmer();
         }
 
         if (state is JobLoaded) {
           return ListView.builder(
-            itemCount: state.jobs.length + 1,
+            controller: scrollController,
+            itemCount:  state.jobs.length + (state.hasReachedMax ? 0 : 1),
             itemBuilder: (context, index) {
-              if (index == state.jobs.length) {
-                return _buildLoadMoreButton(state, context);
+              if (index >= state.jobs.length) {
+                if (!state.hasReachedMax) {
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: LoadingAnimationWidget.progressiveDots(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          size: 20
+                      ),
+                    ),
+                  );
+                } else {
+                  return SizedBox.shrink(); // Return empty widget if reached max
+                }
               }
 
               final job = state.jobs[index];
@@ -1022,7 +1089,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
         }
 
         return Center(child: Text('No jobs found'));
-      },
+      }
     );
   }
 
@@ -1302,20 +1369,20 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
     );
   }
 
-  Widget _buildLoadMoreButton(JobLoaded state, BuildContext context) {
-    if (state.hasReachedMax) {
-      return SizedBox.shrink();
-    }
-
-    return Center(
-      child: TextButton(
-        onPressed: () {
-          context.read<JobBloc>().add(LoadMoreJobs());
-        },
-        child: Text('Load More'),
-      ),
-    );
-  }
+  // Widget _buildLoadMoreButton(JobLoaded state, BuildContext context) {
+  //   if (state.hasReachedMax) {
+  //     return SizedBox.shrink();
+  //   }
+  //
+  //   return Center(
+  //     child: TextButton(
+  //       onPressed: () {
+  //         context.read<JobBloc>().add(LoadMoreJobs());
+  //       },
+  //       child: Text('Load More'),
+  //     ),
+  //   );
+  // }
 }
 
 

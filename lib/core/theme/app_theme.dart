@@ -113,7 +113,7 @@ class AppTheme {
 
       // Card Theme
       cardTheme: CardTheme(
-        color: AppColors.lightBackground,
+       color: AppColors.lightBackground,
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),

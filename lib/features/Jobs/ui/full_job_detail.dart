@@ -14,12 +14,23 @@ class JobDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text('Job Details'),
         actions: [
+          // In JobDetailsScreen, update the edit button's onPressed:
           IconButton(
             icon: Icon(Icons.edit_outlined),
             onPressed: () {
-              // Handle edit job
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditJobScreen(job: job),
+                ),
+              );
             },
           ),
         ],
@@ -27,6 +38,7 @@ class JobDetailsScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            SizedBox(height: screenSize.height*0.01,),
             _buildHeaderSection(context, screenSize),
             _buildContentSection(context, screenSize),
           ],
@@ -38,17 +50,6 @@ class JobDetailsScreen extends StatelessWidget {
 
   Widget _buildHeaderSection(BuildContext context, Size screenSize) {
     return Card(
-      // padding: EdgeInsets.all(20),
-      // decoration: BoxDecoration(
-      //   //color: Colors.white,
-      //   boxShadow: [
-      //     BoxShadow(
-      //       color: Colors.grey.withOpacity(0.1),
-      //       spreadRadius: 1,
-      //       blurRadius: 5,
-      //     ),
-      //   ],
-      // ),
       margin: EdgeInsets.all(5),
       elevation:1,
       child: Padding(
@@ -687,5 +688,317 @@ class JobDetailsScreen extends StatelessWidget {
   String _formatDate(String dateString) {
     final date = DateTime.parse(dateString);
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+
+class EditJobScreen extends StatefulWidget {
+  final JobModel job;
+
+  const EditJobScreen({super.key, required this.job});
+
+  @override
+  State<EditJobScreen> createState() => _EditJobScreenState();
+}
+
+class _EditJobScreenState extends State<EditJobScreen> {
+  late TextEditingController titleController;
+  late TextEditingController companyOverviewController;
+  late TextEditingController roleOverviewController;
+  late TextEditingController experienceController;
+  late TextEditingController educationController;
+  late List<TextEditingController> responsibilitiesControllers;
+  late List<TextEditingController> skillsControllers;
+  late List<TextEditingController> certificationsControllers;
+  late List<TextEditingController> benefitsControllers;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeControllers();
+  }
+
+  void initializeControllers() {
+    titleController = TextEditingController(text: widget.job.title);
+    companyOverviewController = TextEditingController(text: widget.job.description.companyOverview);
+    roleOverviewController = TextEditingController(text: widget.job.description.roleOverview);
+    experienceController = TextEditingController(text: widget.job.description.qualifications.experience);
+    educationController = TextEditingController(text: widget.job.description.qualifications.education);
+
+    responsibilitiesControllers = widget.job.description.responsibilities
+        .map((r) => TextEditingController(text: r))
+        .toList();
+
+    skillsControllers = widget.job.description.qualifications.skills
+        .map((s) => TextEditingController(text: s))
+        .toList();
+
+    certificationsControllers = widget.job.description.qualifications.certifications
+        .map((c) => TextEditingController(text: c))
+        .toList();
+
+    benefitsControllers = widget.job.description.benefits
+        .map((b) => TextEditingController(text: b))
+        .toList();
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    companyOverviewController.dispose();
+    roleOverviewController.dispose();
+    experienceController.dispose();
+    educationController.dispose();
+    for (var controller in responsibilitiesControllers) {
+      controller.dispose();
+    }
+    for (var controller in skillsControllers) {
+      controller.dispose();
+    }
+    for (var controller in certificationsControllers) {
+      controller.dispose();
+    }
+    for (var controller in benefitsControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Edit Job'),
+        actions: [
+          TextButton(
+            onPressed: () => _saveJob(context),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSection(
+              context,
+              'Basic Information',
+              Column(
+                children: [
+                  _buildTextField(
+                    controller: titleController,
+                    label: 'Job Title',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: companyOverviewController,
+                    label: 'Company Overview',
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+            ),
+
+            _buildSection(
+              context,
+              'Role Details',
+              Column(
+                children: [
+                  _buildTextField(
+                    controller: roleOverviewController,
+                    label: 'Role Overview',
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDynamicList(
+                    context,
+                    'Responsibilities',
+                    responsibilitiesControllers,
+                  ),
+                ],
+              ),
+            ),
+
+            _buildSection(
+              context,
+              'Qualifications',
+              Column(
+                children: [
+                  _buildTextField(
+                    controller: educationController,
+                    label: 'Education Requirements',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: experienceController,
+                    label: 'Experience Requirements',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDynamicList(
+                    context,
+                    'Required Skills',
+                    skillsControllers,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDynamicList(
+                    context,
+                    'Certifications',
+                    certificationsControllers,
+                  ),
+                ],
+              ),
+            ),
+
+            _buildSection(
+              context,
+              'Benefits',
+              _buildDynamicList(
+                context,
+                'Benefits',
+                benefitsControllers,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection(BuildContext context, String title, Widget content) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            content,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _buildDynamicList(
+      BuildContext context,
+      String label,
+      List<TextEditingController> controllers,
+      ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                setState(() {
+                  controllers.add(TextEditingController());
+                });
+              },
+            ),
+          ],
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: controllers.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controllers[index],
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: '${label} ${index + 1}',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () {
+                      setState(() {
+                        controllers[index].dispose();
+                        controllers.removeAt(index);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _saveJob(BuildContext context) {
+    final updatedJob = {
+      'title': titleController.text,
+      'description': {
+        'companyOverview': companyOverviewController.text,
+        'roleOverview': roleOverviewController.text,
+        'responsibilities': responsibilitiesControllers
+            .map((controller) => controller.text)
+            .where((text) => text.isNotEmpty)
+            .toList(),
+        'qualifications': {
+          'education': educationController.text,
+          'experience': experienceController.text,
+          'skills': skillsControllers
+              .map((controller) => controller.text)
+              .where((text) => text.isNotEmpty)
+              .toList(),
+          'certifications': certificationsControllers
+              .map((controller) => controller.text)
+              .where((text) => text.isNotEmpty)
+              .toList(),
+        },
+        'benefits': benefitsControllers
+            .map((controller) => controller.text)
+            .where((text) => text.isNotEmpty)
+            .toList(),
+      },
+    };
+
+    // Here you would typically call your API to update the job
+    // For now, we'll just print the updated job and pop back
+    print(updatedJob);
+    Navigator.pop(context);
   }
 }
