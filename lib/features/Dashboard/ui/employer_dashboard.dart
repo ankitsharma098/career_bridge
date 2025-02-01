@@ -450,6 +450,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             // Insight Cards Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
               children: [
                 _buildEnhancedInsightCard('Total Jobs', '${overview['totalJobs'] ?? 0}', Icons.work_outline, AppColors.lightPrimary,screenSize),
                 _buildEnhancedInsightCard('Open Jobs', '${overview['openJobs'] ?? 0}', Icons.check_circle_outline, AppColors.lightSuccess,screenSize),
@@ -460,17 +461,21 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             SizedBox(height: screenSize.height*0.02),
 
             // Job Type and Location Insights
-            Row(
-             // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  child: _buildJobTypeBreakdown(employmentType,screenSize),
-                ),
-                SizedBox(width: screenSize.width*0.05,),
-                Container(
-                  child: _buildJobLocationBreakdown(jobsByLocation,screenSize),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    child: _buildJobTypeBreakdown(employmentType,screenSize),
+                  ),
+                 // SizedBox(width: screenSize.width*0.05,),
+                  Container(
+                    child: _buildJobLocationBreakdown(jobsByLocation,screenSize),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

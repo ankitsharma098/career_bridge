@@ -9,6 +9,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
 import '../../../core/constants/colors.dart';
 import '../../../core/utils/snackBarUtils.dart';
@@ -244,6 +245,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
         ),
         SizedBox(height: screenSize.height * 0.02),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _buildPieChart(
@@ -287,7 +289,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
 
       return PieChartSectionData(
         value: percentage,
-        title: percentage >= 10 ? '${percentage.toStringAsFixed(1)}%' : '',
+        title: '${percentage.toStringAsFixed(1)}%',
         titleStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
           fontSize: screenSize.width*0.025,
           fontWeight: FontWeight.w600,
@@ -638,12 +640,18 @@ class _JobStatsTabState extends State<JobStatsTab> {
                   ),
                 ),
                 Expanded(
-                  child: CustomPaint(
-                    size: Size(screenSize.width * 0.2, screenSize.width * 0.2),
-                    painter: CircularProgressPainter(
-                      percentage: accessiblePercentage / 100,
-                      color: Colors.teal[400]!,
-                    ),
+                 child : CircularPercentIndicator(
+                    radius: 50.0,
+                    lineWidth: 10.0,
+                    percent: accessiblePercentage / 100,
+                    progressColor:  Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : Colors.teal[400],
+                    // fillColor:  Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                    center: Text('${(( accessiblePercentage / 100) * 100).toStringAsFixed(1)}%',style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : Colors.teal[400],
+                      fontSize: screenSize.width*0.04
+
+                    ),),
+                    // progressColor: AppColors.primary,
                   ),
                 ),
               ],
@@ -886,76 +894,6 @@ class _JobStatsTabState extends State<JobStatsTab> {
   }
 }
 
-class CircularProgressPainter extends CustomPainter {
-  final double percentage;
-  final Color color;
-
-  CircularProgressPainter({
-    required this.percentage,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = min(size.width, size.height) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    // Background circle
-    final backgroundPaint = Paint()
-      ..color = Colors.grey[200]!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8;
-
-    // Progress arc
-    final progressPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, backgroundPaint);
-    canvas.drawArc(
-      rect,
-      -pi / 2,
-      2 * pi * percentage,
-      false,
-      progressPaint,
-    );
-
-    // Draw percentage text
-    final textSpan = TextSpan(
-      text: '${(percentage * 100).toStringAsFixed(1)}%',
-      style: TextStyle(
-        color: color,
-        fontSize: size.width * 0.2,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-
-    final textPainter = TextPainter(
-      text: textSpan,
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-    );
-
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(
-        center.dx - textPainter.width / 2,
-        center.dy - textPainter.height / 2,
-      ),
-    );
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
-}
-
-
-
-
 
 
 // posted_jobs_screen.dart
@@ -1010,22 +948,17 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    return Scaffold(
-     // backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical:screenSize.width * 0.04,horizontal: screenSize.width*0.02),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context, screenSize),
-              SizedBox(height: screenSize.height * 0.02),
-              Expanded(
-                child: _buildJobsList(screenSize),
-              ),
-            ],
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical:screenSize.width * 0.04,horizontal: screenSize.width*0.02),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context, screenSize),
+          SizedBox(height: screenSize.height * 0.02),
+          Expanded(
+            child: _buildJobsList(screenSize),
           ),
-        ),
+        ],
       ),
     );
   }

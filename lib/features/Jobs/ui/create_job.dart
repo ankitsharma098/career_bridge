@@ -17,113 +17,105 @@ class CreateJobScreen extends StatefulWidget {
 class _CreateJobScreenState extends State<CreateJobScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  final skillCategories = {
+    'Technical Skills': [
+      'Flutter', 'React', 'Node.js', 'Python', 'JavaScript', 'SQL', 'AWS', 'Docker',
+      'Java', 'C++', 'iOS Development', 'Android Development', 'Machine Learning',
+      'Data Analysis', 'DevOps', 'Cloud Computing'
+    ],
+    'Soft Skills': [
+      'Communication', 'Leadership', 'Team Management', 'Problem Solving',
+      'Critical Thinking', 'Time Management', 'Adaptability', 'Creativity',
+      'Emotional Intelligence', 'Conflict Resolution', 'Decision Making'
+    ],
+    'Language Skills': [
+      'English', 'Hindi', 'Spanish', 'French', 'German', 'Chinese', 'Japanese',
+      'Sign Language'
+    ],
+    'Business Skills': [
+      'Project Management', 'Strategic Planning', 'Business Analysis',
+      'Marketing', 'Sales', 'Customer Service', 'Negotiation',
+      'Financial Planning', 'Risk Management'
+    ],
+    'Industry-Specific Skills': [
+      'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail',
+      'Hospitality', 'Construction', 'Automotive', 'Agriculture'
+    ]
+  };
+  final _deadlineController = TextEditingController();
+  DateTime? _deadline;
+  String _selectedSkillCategory = 'Technical Skills';
+  final _customSkillController = TextEditingController();
+
   // Basic Information Controllers
   final _titleController = TextEditingController();
-  final _roleOverviewController = TextEditingController();
-  final _contentController = TextEditingController();
+  final _overviewController = TextEditingController();
 
   // Location Controllers
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _countryController = TextEditingController();
-
   // Salary Controllers
   final _salaryMinController = TextEditingController();
   final _salaryMaxController = TextEditingController();
 
-  // Additional Information Controllers
-  final _companyOverviewController = TextEditingController();
-  final _growthOpportunitiesController = TextEditingController();
-  final _applicationInstructionsController = TextEditingController();
-  final _additionalSupportDetailsController = TextEditingController();
-  final _inclusivityStatementController = TextEditingController();
+  // Accommodation Controllers
+  final _workspaceAccommodationsController = TextEditingController();
+  final _interviewAccommodationsController = TextEditingController();
 
   // Lists for multiple selections
   List<String> selectedSkills = [];
   List<String> selectedResponsibilities = [];
+  List<String> selectedQualifications = [];
   List<String> selectedBenefits = [];
-  List<String> selectedRequirements = [];
-  List<String> selectedWorkplaceAccommodations = [];
+  List<String> selectedFacilityAccessibility = [];
   List<String> selectedSupportedDisabilities = [];
-  List<String> selectedAlternativeInterviewFormats = [];
 
   // Dropdown selections
-  String selectedJobType = 'Full-time';
-  String selectedJobLocation = 'Onsite';
-  String selectedEmploymentType = 'Permanent';
+  String locationType = 'Onsite';
+  String selectedEmploymentType = 'Full-time';
   String selectedExperienceLevel = 'Freshers';
-  String selectedCommunicationSupport = 'Text-based Communication';
-  String selectedDisabilityFriendliness = 'Commitment to Inclusion';
-
-  // Boolean selections
-  bool personalAssistanceAvailable = false;
-  bool specialEquipmentProvided = false;
-  bool blindRecruitment = false;
 
   // Date
   DateTime? deadline;
 
   // Predefined lists from schema
-  final jobTypes = ['Full-time', 'Part-time', 'Internship', 'Contract'];
-  final jobLocations = ['Onsite', 'Remote', 'Hybrid'];
-  final employmentTypes = ['Permanent', 'Temporary', 'Freelance', 'Consultant'];
+  final employmentTypes = [
+    'Full-time',
+    'Part-time',
+    'Internship',
+    'Contract',
+    'Permanent',
+    'Temporary',
+    'Freelance'
+  ];
+
+  final locationTypes = ['Onsite', 'Remote', 'Hybrid'];
+
   final experienceLevels = ['Freshers', 'Intermediate', 'Professional'];
 
-  final workplaceAccommodations = [
-    'Wheelchair Accessible',
-    'Sign Language Interpreter',
-    'Assistive Technology',
-    'Flexible Work Hours',
-    'Remote Work Options',
-    'Adaptive Equipment',
-    'Screen Reader Compatible',
-    'Braille Resources',
-    'Quiet Work Spaces',
-    'Ergonomic Workstation'
+  final facilityAccessibilityOptions = [
+    'Wheelchair Access', 'Elevator Access', 'Accessible Parking', 'Accessible Restrooms'
   ];
 
-  final communicationSupports = [
-    'Text-based Communication',
-    'Visual Communication',
-    'Sign Language Support',
-    'Closed Captioning',
-    'Screen Reader Friendly'
-  ];
-
-  final disabilityFriendlinessOptions = [
-    'Fully Accessible',
-    'Partially Accessible',
-    'Commitment to Inclusion',
-    'Adaptive Workplace'
-  ];
-
-  final supportedDisabilities = [
+  final supportedDisabilityTypes = [
     'Physical Disabilities',
     'Visual Impairments',
     'Hearing Impairments',
-    'Neurodivergent Conditions',
     'Cognitive Disabilities',
-    'Mental Health Conditions'
+    'Neurological Conditions',
+    'Other Disabilities'
   ];
-
-  final alternativeInterviewFormats = [
-    'Written Interviews',
-    'Video Interviews',
-    'Alternative Communication Methods'
-  ];
-
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Create New Job',
-        ),
+        title: const Text('Create New Job'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -131,8 +123,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
         listener: (context, state) {
           if (state is JobCreationSuccess) {
             widget.onJobCreated(state.job);
-            SnackBarUtils.showGreenSnackBar('Jog Posted successfully', context);
-        //    Navigator.pop(context);
+            SnackBarUtils.showGreenSnackBar('Job Posted successfully', context);
+            Navigator.pop(context);
           } else if (state is JobCreationError) {
             SnackBarUtils.showRedSnackBar(state.error, context);
           }
@@ -148,12 +140,13 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildBasicInformationSection(screenSize),
-                      _buildJobDetailsSection(screenSize),
+                      _buildResponsibilitiesSection(screenSize),
+                      _buildQualificationsSection(screenSize),
+                      _buildSkillsSection(screenSize),
                       _buildLocationSection(screenSize),
                       _buildCompensationSection(screenSize),
-                      _buildQualificationsSection(screenSize),
-                      _buildAccessibilitySection(screenSize),
-                      _buildInclusiveHiringSection(screenSize),
+                      _buildAccommodationsSection(screenSize),
+                      _buildDeadlineSection(screenSize),
                       _buildSubmitButton(screenSize, state),
                     ],
                   ),
@@ -162,7 +155,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
               if (state is JobCreationLoading)
                 Container(
                   color: Colors.black.withOpacity(0.3),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: const Center(child: CircularProgressIndicator()),
                 ),
             ],
           );
@@ -176,27 +169,18 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle(context, screenSize, 'Basic Information', Icons.info_outline),
-        SizedBox(height: screenSize.height * 0.02),
         _buildTextField(
           controller: _titleController,
           label: 'Job Title',
           hint: 'e.g., Senior Software Engineer',
           screenSize: screenSize,
         ),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildDropdown(
-          value: selectedJobType,
-          items: jobTypes,
-          label: 'Job Type',
-          onChanged: (value) => setState(() => selectedJobType = value!),
-          screenSize: screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildDropdown(
-          value: selectedJobLocation,
-          items: jobLocations,
-          label: 'Job Location',
-          onChanged: (value) => setState(() => selectedJobLocation = value!),
+        SizedBox(height: screenSize.height * 0.01),
+        _buildTextField(
+          controller: _overviewController, // New controller for overview
+          label: 'Overview',
+          hint: 'Brief overview of the position',
+          maxLines: 3,
           screenSize: screenSize,
         ),
         SizedBox(height: screenSize.height * 0.02),
@@ -207,48 +191,167 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           onChanged: (value) => setState(() => selectedEmploymentType = value!),
           screenSize: screenSize,
         ),
+        SizedBox(height: screenSize.height * 0.02),
+        _buildDropdown(
+          value: selectedExperienceLevel,
+          items: experienceLevels,
+          label: 'Experience Level',
+          onChanged: (value) => setState(() => selectedExperienceLevel = value!),
+          screenSize: screenSize,
+        ),
       ],
     );
   }
 
-  Widget _buildJobDetailsSection(Size screenSize) {
+
+  Widget _buildQualificationsSection(Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: screenSize.height * 0.03),
-        _buildSectionTitle(context, screenSize, 'Job Details', Icons.work_outline),
         SizedBox(height: screenSize.height * 0.02),
-        _buildTextField(
-          controller: _roleOverviewController,
-          label: 'Role Overview',
-          hint: 'Describe the role and its importance',
-          maxLines: 3,
-          screenSize: screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildTextField(
-          controller: _contentController,
-          label: 'Detailed Content',
-          hint: 'Provide comprehensive information about the role',
-          maxLines: 5,
-          screenSize: screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
+        _buildSectionTitle(context, screenSize, 'Qualifications', Icons.school_outlined),
         _buildChipInputSection(
-          'Key Responsibilities',
+          '',
+          'Add Qualifications',
+          selectedQualifications,
+              (value) => setState(() => selectedQualifications.add(value)),
+          screenSize,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResponsibilitiesSection(Size screenSize) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: screenSize.height * 0.02),
+        _buildSectionTitle(context, screenSize, 'Responsibilities', Icons.work),
+        _buildChipInputSection(
+          '',
           'Add responsibility',
           selectedResponsibilities,
               (value) => setState(() => selectedResponsibilities.add(value)),
           screenSize,
         ),
+      ],
+    );
+  }
+
+  Widget _buildSkillsSection(Size screenSize) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SizedBox(height: screenSize.height * 0.02),
-        _buildChipInputSection(
-          'Requirements',
-          'Add requirement',
-          selectedRequirements,
-              (value) => setState(() => selectedRequirements.add(value)),
-          screenSize,
+        _buildSectionTitle(context, screenSize, 'Skills Required', Icons.psychology),
+        SizedBox(height: screenSize.height * 0.02),
+
+        // Skill category dropdown
+        _buildDropdown(
+          value: _selectedSkillCategory,
+          items: skillCategories.keys.toList(),
+          label: 'Skill Category',
+          onChanged: (value) => setState(() => _selectedSkillCategory = value!),
+          screenSize: screenSize,
         ),
+
+        SizedBox(height: screenSize.height * 0.02),
+
+        // Skills from selected category
+        Text(
+          'Available Skills',
+          style: TextStyle(
+            fontSize: screenSize.width * 0.04,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: screenSize.height * 0.01),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: skillCategories[_selectedSkillCategory]!.map((skill) {
+            final isSelected = selectedSkills.contains(skill);
+            return FilterChip(
+              label: Text(skill),
+              selected: isSelected,
+              onSelected: (bool selected) {
+                setState(() {
+                  if (selected) {
+                    selectedSkills.add(skill);
+                  } else {
+                    selectedSkills.remove(skill);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+
+        // Custom skill input
+        SizedBox(height: screenSize.height * 0.02),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _customSkillController,
+                decoration: InputDecoration(
+                  labelText: 'Add Custom Skill',
+                  hintText: 'Enter a custom skill',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    setState(() {
+                      selectedSkills.add(value);
+                      _customSkillController.clear();
+                    });
+                  }
+                },
+              ),
+            ),
+            SizedBox(width: screenSize.width * 0.02),
+            ElevatedButton(
+              onPressed: () {
+                if (_customSkillController.text.isNotEmpty) {
+                  setState(() {
+                    selectedSkills.add(_customSkillController.text);
+                    _customSkillController.clear();
+                  });
+                }
+              },
+              child: Text('Add'),
+            ),
+          ],
+        ),
+
+        // Selected Skills Display
+        if (selectedSkills.isNotEmpty) ...[
+          SizedBox(height: screenSize.height * 0.02),
+          Text(
+            'Selected Skills',
+            style: TextStyle(
+              fontSize: screenSize.width * 0.04,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: screenSize.height * 0.01),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: selectedSkills.map((skill) {
+              return Chip(
+                label: Text(skill),
+                onDeleted: () {
+                  setState(() {
+                    selectedSkills.remove(skill);
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ],
       ],
     );
   }
@@ -257,16 +360,24 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: screenSize.height * 0.03),
+        SizedBox(height: screenSize.height * 0.02),
         _buildSectionTitle(context, screenSize, 'Location Details', Icons.location_on_outlined),
         SizedBox(height: screenSize.height * 0.02),
+        _buildDropdown(
+          value: locationType,
+          items: ['Onsite', 'Remote', 'Hybrid'],
+          label: 'Location Type',
+          onChanged: (value) => setState(() => locationType = value!),
+          screenSize: screenSize,
+        ),
+        SizedBox(height: screenSize.height * 0.01),
         _buildTextField(
           controller: _addressController,
           label: 'Address',
           hint: 'Enter complete address',
           screenSize: screenSize,
         ),
-        SizedBox(height: screenSize.height * 0.02),
+        SizedBox(height: screenSize.height * 0.01),
         Row(
           children: [
             Expanded(
@@ -288,13 +399,14 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             ),
           ],
         ),
-        SizedBox(height: screenSize.height * 0.02),
+        SizedBox(height: screenSize.height * 0.01),
         _buildTextField(
           controller: _countryController,
           label: 'Country',
           hint: 'Enter country',
           screenSize: screenSize,
         ),
+        SizedBox(height: screenSize.height * 0.02),
       ],
     );
   }
@@ -341,124 +453,101 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     );
   }
 
-  Widget _buildQualificationsSection(Size screenSize) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: screenSize.height * 0.03),
-        _buildSectionTitle(context, screenSize, 'Qualifications', Icons.school_outlined),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildDropdown(
-          value: selectedExperienceLevel,
-          items: experienceLevels,
-          label: 'Experience Level',
-          onChanged: (value) => setState(() => selectedExperienceLevel = value!),
-          screenSize: screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildMultiSelect(
-          'Required Skills',
-          selectedSkills,
-          ['Flutter', 'React', 'Node.js', 'Python', 'JavaScript', 'SQL', 'AWS', 'Docker'],
-          screenSize,
-        ),
-      ],
-    );
-  }
 
-  Widget _buildAccessibilitySection(Size screenSize) {
+  Widget _buildAccommodationsSection(Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: screenSize.height * 0.03),
-        _buildSectionTitle(context, screenSize, 'Accessibility Features', Icons.accessibility_new),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildMultiSelect(
-          'Workplace Accommodations',
-          selectedWorkplaceAccommodations,
-          workplaceAccommodations,
-          screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildDropdown(
-          value: selectedCommunicationSupport,
-          items: communicationSupports,
-          label: 'Communication Support',
-          onChanged: (value) => setState(() => selectedCommunicationSupport = value!),
-          screenSize: screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildDropdown(
-          value: selectedDisabilityFriendliness,
-          items: disabilityFriendlinessOptions,
-          label: 'Disability Friendliness',
-          onChanged: (value) => setState(() => selectedDisabilityFriendliness = value!),
-          screenSize: screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
-        _buildMultiSelect(
-          'Supported Disabilities',
-          selectedSupportedDisabilities,
-          supportedDisabilities,
-          screenSize,
-        ),
-        SizedBox(height: screenSize.height * 0.02),
+        _buildSectionTitle(context, screenSize, 'Accommodations & Accessibility', Icons.accessibility_new),
+        SizedBox(height: screenSize.height * 0.01),
+
+        // Workspace Accommodations
         _buildTextField(
-          controller: _inclusivityStatementController,
-          label: 'Inclusivity Statement',
-          hint: 'Enter your company\'s inclusivity statement',
+          controller: _workspaceAccommodationsController,
+          label: 'Workspace Accommodations',
+          hint: 'Describe available workplace accommodations',
           maxLines: 3,
           screenSize: screenSize,
         ),
+        SizedBox(height: screenSize.height * 0.01),
+
+        // Interview Accommodations
+        _buildTextField(
+          controller: _interviewAccommodationsController,
+          label: 'Interview Accommodations',
+          hint: 'Describe available interview accommodations',
+          maxLines: 3,
+          screenSize: screenSize,
+        ),
+        SizedBox(height: screenSize.height * 0.02),
+
+        // Facility Accessibility
+        _buildMultiSelect(
+          'Facility Accessibility',
+          selectedFacilityAccessibility,
+          facilityAccessibilityOptions,
+          screenSize,
+        ),
+        SizedBox(height: screenSize.height * 0.02),
+
+        // Supported Disabilities
+        _buildMultiSelect(
+          'Supported Disabilities',
+          selectedSupportedDisabilities,
+          supportedDisabilityTypes,
+          screenSize,
+        ),
       ],
     );
   }
 
-  Widget _buildInclusiveHiringSection(Size screenSize) {
+  Widget _buildDeadlineSection(Size screenSize) {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: screenSize.height * 0.03),
-          _buildSectionTitle(context, screenSize, 'Inclusive Hiring Practices', Icons.diversity_3),
-          SizedBox(height: screenSize.height * 0.02),
-          _buildSwitchListTile(
-          'Blind Recruitment',
-          'Hide candidate personal information during initial screening',
-          blindRecruitment,
-          (value) => setState(() => blindRecruitment = value),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: screenSize.height * 0.02),
+        _buildSectionTitle(context, screenSize, 'Application Deadline', Icons.calendar_today),
+        SizedBox(height: screenSize.height * 0.01),
+        InkWell(
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: _deadline ?? DateTime.now(),
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(Duration(days: 365)),
+            );
+            if (picked != null) {
+              setState(() {
+                _deadline = picked;
+                _deadlineController.text = "${picked.day}/${picked.month}/${picked.year}";
+              });
+            }
+          },
+          child: AbsorbPointer(
+            child: TextFormField(
+              controller: _deadlineController,
+              decoration: InputDecoration(
+                labelText: 'Application Deadline',
+                hintText: 'Select deadline',
+                suffixIcon: Icon(Icons.calendar_today),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please select an application deadline';
+                }
+                return null;
+              },
+            ),
           ),
-          _buildSwitchListTile(
-          'Personal Assistance Available',
-          'Provide personal assistance during the hiring process',
-            personalAssistanceAvailable,
-                (value) => setState(() => personalAssistanceAvailable = value),
-          ),
-          _buildSwitchListTile(
-            'Special Equipment Provided',
-            'Provide special equipment during the hiring process',
-            specialEquipmentProvided,
-                (value) => setState(() => specialEquipmentProvided = value),
-          ),
-          SizedBox(height: screenSize.height * 0.02),
-          _buildMultiSelect(
-            'Alternative Interview Formats',
-            selectedAlternativeInterviewFormats,
-            alternativeInterviewFormats,
-            screenSize,
-          ),
-          SizedBox(height: screenSize.height * 0.02),
-          _buildTextField(
-            controller: _additionalSupportDetailsController,
-            label: 'Additional Support Details',
-            hint: 'Describe any additional support available',
-            maxLines: 3,
-            screenSize: screenSize,
-          ),
-          SizedBox(height: screenSize.height * 0.02),
-          _buildDatePicker(screenSize),
-        ],
+        ),
+      ],
     );
   }
+
 
   Widget _buildSubmitButton(Size screenSize, JobCreateState state) {
     return Padding(
@@ -469,59 +558,40 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             : () {
 
           if (_formKey.currentState!.validate()) {
+            final jobData = {
+              'title': _titleController.text,
+              'overview': _overviewController.text,
+              'employmentType': selectedEmploymentType,
+              'experienceLevel': selectedExperienceLevel,
+              'responsibilities': selectedResponsibilities,
+              'qualifications': selectedQualifications,
+              'skills': selectedSkills,
+              'location': {
+                'type': locationType,
+                'city': _cityController.text,
+                'state': _stateController.text,
+                'country': _countryController.text,
+                "facilityAccessibility":selectedFacilityAccessibility,
+              },
+              'salary': {
+                'currency': 'Rupees',
+                'min': int.parse(_salaryMinController.text),
+                'max': int.parse(_salaryMaxController.text),
+              },
+              'benefits': selectedBenefits,
+              'workspaceAccommodations': _workspaceAccommodationsController.text,
+              'interviewAccommodations': _interviewAccommodationsController.text,
+              'disabilityTypes': {
+                'supportedDisabilities': selectedSupportedDisabilities,
+              },
+              'deadline': _deadline?.toIso8601String() ?? '',
+            };
+
             context.read<JobCreateBloc>().add(
               SubmitJobEvent(
-                job: {
-                  'title': _titleController.text,
-                  'description': {
-                    'roleOverview': _roleOverviewController.text,
-                    'content': _contentController.text,
-                    'responsibilities': selectedResponsibilities,
-                    'qualifications': {
-                      'skills': selectedSkills,
-                    },
-                    'benefits': selectedBenefits,
-                    'companyOverview': _companyOverviewController.text,
-                    'growthOpportunities': _growthOpportunitiesController.text,
-                    'salary': {
-                      'min': double.parse(_salaryMinController.text),
-                      'max': double.parse(_salaryMaxController.text),
-                    },
-                    'applicationInstructions': _applicationInstructionsController.text,
-                  },
-                  'requirements': selectedRequirements,
-                  'jobType': selectedJobType,
-                  'jobLocation': selectedJobLocation,
-                  'jobLocationDetails': {
-                    'address': _addressController.text,
-                    'city': _cityController.text,
-                    'state': _stateController.text,
-                    'country': _countryController.text,
-                  },
-                  'employmentType': selectedEmploymentType,
-                  'experienceLevel': selectedExperienceLevel,
-                  'deadline': deadline?.toIso8601String(),
-                  'accessibilityFeatures': {
-                    'workplaceAccommodations': selectedWorkplaceAccommodations,
-                    'communicationSupport': selectedCommunicationSupport,
-                    'disabilityFriendliness': selectedDisabilityFriendliness,
-                  },
-                  'inclusivityStatement': _inclusivityStatementController.text,
-                  'specialNeeds': {
-                    'personalAssistanceAvailable': personalAssistanceAvailable,
-                    'specialEquipmentProvided': specialEquipmentProvided,
-                    'additionalSupportDetails': _additionalSupportDetailsController.text,
-                  },
-                  'disabilityTypes': {
-                    'supportedDisabilities': selectedSupportedDisabilities,
-                  },
-                  'inclusiveHiringPractices': {
-                    'blindRecruitment': blindRecruitment,
-                    'alternativeInterviewFormats': selectedAlternativeInterviewFormats,
-                  },
-                },
+                job: jobData,
               ),
-            );
+           );
           }
         },
         style: ElevatedButton.styleFrom(
@@ -622,13 +692,13 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        label.isNotEmpty ?Text(
           label,
           style: TextStyle(
             fontSize: screenSize.width * 0.04,
             fontWeight: FontWeight.bold,
           ),
-        ),
+        ):SizedBox(height: 0,),
         SizedBox(height: screenSize.height * 0.01),
         Row(
           children: [
@@ -720,85 +790,24 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     );
   }
 
-  Widget _buildSwitchListTile(
-      String title,
-      String subtitle,
-      bool value,
-      Function(bool) onChanged,
-      ) {
-    return SwitchListTile(
-      title: Text(title),
-      subtitle: Text(subtitle),
-      value: value,
-      onChanged: onChanged,
-    );
-  }
 
-  Widget _buildDatePicker(Size screenSize) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Application Deadline',
-          style: TextStyle(
-            fontSize: screenSize.width * 0.04,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: screenSize.height * 0.01),
-        InkWell(
-          onTap: () async {
-            final DateTime? picked = await showDatePicker(
-              context: context,
-              initialDate: deadline ?? DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(Duration(days: 365)),
-            );
-            if (picked != null) {
-              setState(() {
-                deadline = picked;
-              });
-            }
-          },
-          child: Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  deadline == null
-                      ? 'Select Deadline'
-                      : '${deadline!.day}/${deadline!.month}/${deadline!.year}',
-                ),
-                Icon(Icons.calendar_today),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _roleOverviewController.dispose();
-    _contentController.dispose();
-    _addressController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _countryController.dispose();
-    _salaryMinController.dispose();
-    _salaryMaxController.dispose();
-    _companyOverviewController.dispose();
-    _growthOpportunitiesController.dispose();
-    _applicationInstructionsController.dispose();
-    _additionalSupportDetailsController.dispose();
-    _inclusivityStatementController.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _titleController.dispose();
+  //   _roleOverviewController.dispose();
+  //   _contentController.dispose();
+  //   _addressController.dispose();
+  //   _cityController.dispose();
+  //   _stateController.dispose();
+  //   _countryController.dispose();
+  //   _salaryMinController.dispose();
+  //   _salaryMaxController.dispose();
+  //   _companyOverviewController.dispose();
+  //   _growthOpportunitiesController.dispose();
+  //   _applicationInstructionsController.dispose();
+  //   _additionalSupportDetailsController.dispose();
+  //   _inclusivityStatementController.dispose();
+  //   super.dispose();
+  // }
 }
