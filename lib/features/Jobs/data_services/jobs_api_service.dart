@@ -17,7 +17,7 @@ class JobApiService {
       if(accessToken==null || accessToken.isEmpty){
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('http://13.60.19.132:8000/employer/job-stats',
+      final response = await dio.get('${AppConstants.baseUrl}/employer/job-stats',
       options:  Options(
         headers: {
           'Authorization':'Bearer $accessToken'

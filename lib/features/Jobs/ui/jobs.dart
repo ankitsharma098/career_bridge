@@ -1,6 +1,8 @@
 
 
 import 'dart:math';
+import 'package:android/features/Applications/bloc/applications_bloc.dart';
+import 'package:android/features/Applications/ui/applications.dart';
 import 'package:android/features/Jobs/job_create_bloc/job_create_bloc.dart';
 import 'package:android/features/Jobs/ui/create_job.dart';
 import 'package:android/features/Jobs/ui/full_job_detail.dart';
@@ -1031,31 +1033,37 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
               );
             }
 
-            return ListView.builder(
-              controller: scrollController,
-              itemCount: state.jobs.length + (state.hasReachedMax ? 0 : 1),
-              itemBuilder: (context, index) {
-                if (index >= state.jobs.length) {
-                  if (!state.hasReachedMax && state.jobs.isNotEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: LoadingAnimationWidget.progressiveDots(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? AppColors.darkPrimary
-                                : AppColors.lightPrimary,
-                            size: 20
-                        ),
-                      ),
-                    );
-                  } else {
-                    return SizedBox.shrink();
-                  }
-                }
+            return RefreshIndicator(
 
-                final job = state.jobs[index];
-                return _buildJobCard(job, screenSize, context);
+              onRefresh: () async{
+                BlocProvider.of<JobBloc>(context).add(FetchJobs());
               },
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: state.jobs.length + (state.hasReachedMax ? 0 : 1),
+                itemBuilder: (context, index) {
+                  if (index >= state.jobs.length) {
+                    if (!state.hasReachedMax && state.jobs.isNotEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: LoadingAnimationWidget.progressiveDots(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.darkPrimary
+                                  : AppColors.lightPrimary,
+                              size: 20
+                          ),
+                        ),
+                      );
+                    } else {
+                      return SizedBox.shrink();
+                    }
+                  }
+
+                  final job = state.jobs[index];
+                  return _buildJobCard(job, screenSize, context);
+                },
+              ),
             );
           }
 
@@ -1289,7 +1297,10 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          // Navigate to applicants list
+                         Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
+                          create: (context) => ApplicationsBloc(),
+                          child: ApplicationsScreen(jobId: job.id,),
+                        ),));
                         },
                         icon: Icon(Icons.people,color: AppColors.lightDivider,),
                         label: Text('${job.applicants.length} Applicants'),
@@ -1375,20 +1386,6 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
     );
   }
 
-  // Widget _buildLoadMoreButton(JobLoaded state, BuildContext context) {
-  //   if (state.hasReachedMax) {
-  //     return SizedBox.shrink();
-  //   }
-  //
-  //   return Center(
-  //     child: TextButton(
-  //       onPressed: () {
-  //         context.read<JobBloc>().add(LoadMoreJobs());
-  //       },
-  //       child: Text('Load More'),
-  //     ),
-  //   );
-  // }
 }
 
 

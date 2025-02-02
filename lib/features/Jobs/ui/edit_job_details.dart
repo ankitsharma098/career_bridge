@@ -621,6 +621,7 @@ class _EditJobScreenState extends State<EditJobScreen> {
                 'city': cityController.text,
                 'state': stateController.text,
                 'country': countryController.text,
+                'address':addressController.text,
                 "facilityAccessibility":selectedFacilityAccessibility,
               },
               'salary': {

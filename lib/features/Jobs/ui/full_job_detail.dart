@@ -217,7 +217,6 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   }
 
   Widget _buildResponsibilitiesSection(BuildContext context) {
-    print("responsibilities ${currentJob.responsibilities}");
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: EdgeInsets.only(bottom: 24),
@@ -374,6 +373,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   }
 
   Widget _buildWorkEnvironmentSection(BuildContext context) {
+    print("addres ${widget.job.location.address}");
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: EdgeInsets.only(bottom: 24),
