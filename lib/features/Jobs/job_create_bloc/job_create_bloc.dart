@@ -13,9 +13,9 @@ class JobCreateBloc extends Bloc<JobCreateEvent, JobCreateState> {
   }
 
   Future<void>_onSubmitJobEvent(SubmitJobEvent event, Emitter<JobCreateState> emit)async {
-    emit(JobCreationLoading());
     try {
-     
+      emit(JobCreationLoading());
+
       JobModel job = await apiService.createJob(event.job);
       // await Future.delayed(Duration(seconds: 2)); // Simulated API call
       emit(JobCreationSuccess(job: job));

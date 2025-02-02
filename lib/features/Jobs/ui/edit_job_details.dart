@@ -1,21 +1,66 @@
-import 'package:android/core/utils/snackBarUtils.dart';
-import 'package:android/data/models/Job/job_model.dart';
-import 'package:android/features/Jobs/job_create_bloc/job_create_bloc.dart';
+import 'package:android/features/Jobs/job_update_bloc/job_update_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-// Previous JobCreationEvent, JobCreationState, and JobCreationBloc remain the same
+import '../../../core/constants/colors.dart';
+import '../../../core/utils/snackBarUtils.dart';
+import '../../../data/models/Job/job_model.dart';
 
-class CreateJobScreen extends StatefulWidget {
-  final Function(JobModel) onJobCreated;
-  const CreateJobScreen({super.key, required this.onJobCreated});
+class EditJobScreen extends StatefulWidget {
+  final JobModel job;
+  final Function(JobModel) onJobUpdated;
+  const EditJobScreen({super.key, required this.job, required this.onJobUpdated});
 
   @override
-  State<CreateJobScreen> createState() => _CreateJobScreenState();
+  State<EditJobScreen> createState() => _EditJobScreenState();
 }
 
-class _CreateJobScreenState extends State<CreateJobScreen> {
+class _EditJobScreenState extends State<EditJobScreen> {
+
   final _formKey = GlobalKey<FormState>();
+
+  late TextEditingController titleController;
+  late TextEditingController overviewController;
+  late TextEditingController addressController;
+  late TextEditingController cityController;
+  late TextEditingController stateController;
+  late TextEditingController countryController;
+  late TextEditingController salaryMinController;
+  late TextEditingController salaryMaxController;
+  late TextEditingController workspaceAccommodationsController;
+  late TextEditingController interviewAccommodationsController;
+  late TextEditingController _deadlineController;
+   late DateTime? deadline;
+
+  late String locationType;
+  late String selectedEmploymentType;
+  late String selectedExperienceLevel;
+
+  late List<String> selectedSkills;
+  late List<String> selectedResponsibilities;
+  late List<String> selectedQualifications;
+  late List<String> selectedBenefits;
+  late List<String> selectedFacilityAccessibility;
+
+  late  List<String> selectedSupportedDisabilities;
+
+  String _selectedSkillCategory = 'Technical Skills';
+  final _customSkillController = TextEditingController();
+  // Predefined lists from schema
+  final employmentTypes = [
+    'Full-time',
+    'Part-time',
+    'Internship',
+    'Contract',
+    'Permanent',
+    'Temporary',
+    'Freelance'
+  ];
+
+  final locationTypes = ['Onsite', 'Remote', 'Hybrid'];
+
+  final experienceLevels = ['Freshers', 'Intermediate', 'Professional'];
 
   final skillCategories = {
     'Technical Skills': [
@@ -42,58 +87,6 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       'Hospitality', 'Construction', 'Automotive', 'Agriculture'
     ]
   };
-  final _deadlineController = TextEditingController();
-  DateTime? _deadline;
-  String _selectedSkillCategory = 'Technical Skills';
-  final _customSkillController = TextEditingController();
-
-  // Basic Information Controllers
-  final _titleController = TextEditingController();
-  final _overviewController = TextEditingController();
-
-  // Location Controllers
-  final _addressController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _countryController = TextEditingController();
-  // Salary Controllers
-  final _salaryMinController = TextEditingController();
-  final _salaryMaxController = TextEditingController();
-
-  // Accommodation Controllers
-  final _workspaceAccommodationsController = TextEditingController();
-  final _interviewAccommodationsController = TextEditingController();
-
-  // Lists for multiple selections
-  List<String> selectedSkills = [];
-  List<String> selectedResponsibilities = [];
-  List<String> selectedQualifications = [];
-  List<String> selectedBenefits = [];
-  List<String> selectedFacilityAccessibility = [];
-  List<String> selectedSupportedDisabilities = [];
-
-  // Dropdown selections
-  String locationType = 'Onsite';
-  String selectedEmploymentType = 'Full-time';
-  String selectedExperienceLevel = 'Freshers';
-
-  // Date
-  DateTime? deadline;
-
-  // Predefined lists from schema
-  final employmentTypes = [
-    'Full-time',
-    'Part-time',
-    'Internship',
-    'Contract',
-    'Permanent',
-    'Temporary',
-    'Freelance'
-  ];
-
-  final locationTypes = ['Onsite', 'Remote', 'Hybrid'];
-
-  final experienceLevels = ['Freshers', 'Intermediate', 'Professional'];
 
   final facilityAccessibilityOptions = [
     'Wheelchair Access', 'Elevator Access', 'Accessible Parking', 'Accessible Restrooms'
@@ -107,58 +100,115 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     'Neurological Conditions',
     'Other Disabilities'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    titleController = TextEditingController(text: widget.job.title);
+    overviewController = TextEditingController(text: widget.job.overview);
+    addressController = TextEditingController(text: widget.job.location.address);
+    cityController = TextEditingController(text: widget.job.location.city);
+    stateController = TextEditingController(text: widget.job.location.state);
+    countryController = TextEditingController(text: widget.job.location.country);
+    salaryMinController = TextEditingController(text: widget.job.salary.min.toString());
+    salaryMaxController = TextEditingController(text: widget.job.salary.max.toString());
+    workspaceAccommodationsController = TextEditingController(text: widget.job.workspaceAccommodations);
+    interviewAccommodationsController = TextEditingController(text: widget.job.interviewAccommodations);
+    _deadlineController = TextEditingController(text:widget.job.deadline.toString() );
+    locationType=widget.job.location.type;
+    selectedEmploymentType=widget.job.employmentType;
+    selectedExperienceLevel=widget.job.experienceLevel;
+    selectedSkills=widget.job.skills;
+    selectedResponsibilities=widget.job.responsibilities;
+    selectedQualifications=widget.job.qualifications;
+    selectedBenefits=widget.job.benefits;
+    selectedFacilityAccessibility=widget.job.location.facilityAccessibility;
+    selectedSupportedDisabilities=widget.job.disabilityTypes.supportedDisabilities;
+    try {
+      deadline = DateTime.parse(widget.job.deadline);
+      _deadlineController.text = "${deadline!.day}/${deadline!.month}/${deadline!.year}";
+    } catch (e) {
+      deadline = DateTime.now().add(Duration(days: 7)); // Default to 7 days from now
+      _deadlineController.text = "${deadline!.day}/${deadline!.month}/${deadline!.year}";
+    }
+  }
+  
+  @override
+  void dispose() {
+    titleController.dispose();
+    overviewController.dispose();
+    addressController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    countryController.dispose();
+    salaryMinController.dispose();
+    salaryMaxController.dispose();
+    workspaceAccommodationsController.dispose();
+    interviewAccommodationsController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    print("JobId ${widget.job.id}");
     final screenSize = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create New Job'),
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Text('Edit Job'),
+        actions: [
+          TextButton(
+            onPressed: _saveJob,
+            child: Text('Save'),
+          ),
+        ],
       ),
-      body: BlocConsumer<JobCreateBloc, JobCreateState>(
+      body: BlocConsumer<JobUpdateBloc, JobUpdateState>(
         listener: (context, state) {
-          if (state is JobCreationSuccess) {
-            widget.onJobCreated(state.job);
-            SnackBarUtils.showGreenSnackBar('Job Posted successfully', context);
+          if (state is JobUpdateSuccess) {
+
+            SnackBarUtils.showGreenSnackBar('Job Updated successfully', context);
+            widget.onJobUpdated(state.job);
             Navigator.pop(context);
-          } else if (state is JobCreationError) {
+          } else if (state is JobUpdateError) {
             SnackBarUtils.showRedSnackBar(state.error, context);
           }
         },
         builder: (context, state) {
           return Stack(
-            children: [
-              SingleChildScrollView(
-                padding: EdgeInsets.all(screenSize.width * 0.04),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildBasicInformationSection(screenSize),
-                      _buildResponsibilitiesSection(screenSize),
-                      _buildQualificationsSection(screenSize),
-                      _buildSkillsSection(screenSize),
-                      _buildLocationSection(screenSize),
-                      _buildCompensationSection(screenSize),
-                      _buildAccommodationsSection(screenSize),
-                      _buildDeadlineSection(screenSize),
-                      _buildSubmitButton(screenSize, state),
-                    ],
+              children: [
+                SingleChildScrollView(
+                  padding: EdgeInsets.all(screenSize.width * 0.04),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBasicInformationSection(screenSize),
+                        _buildResponsibilitiesSection(screenSize),
+                        _buildQualificationsSection(screenSize),
+                        _buildSkillsSection(screenSize),
+                        _buildLocationSection(screenSize),
+                        _buildCompensationSection(screenSize),
+                        _buildAccommodationsSection(screenSize),
+                        _buildDeadlineSection(screenSize),
+                        _buildUpdateButton(screenSize, state),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              if (state is JobCreationLoading)
-                Container(
-                  color: Colors.black.withOpacity(0.3),
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-            ],
-          );
+                if (state is JobUpdateLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),),
+                  ),
+              ],
+            );
+
         },
       ),
     );
@@ -169,28 +219,29 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle(context, screenSize, 'Basic Information', Icons.info_outline),
+        SizedBox(height: screenSize.height*0.015,),
         _buildTextField(
-          controller: _titleController,
+          controller: titleController,
           label: 'Job Title',
           hint: 'e.g., Senior Software Engineer',
           screenSize: screenSize,
         ),
         SizedBox(height: screenSize.height * 0.01),
         _buildTextField(
-          controller: _overviewController, // New controller for overview
+          controller: overviewController,
           label: 'Overview',
           hint: 'Brief overview of the position',
-          maxLines: 3,
           screenSize: screenSize,
+          maxLines: 3,
         ),
         SizedBox(height: screenSize.height * 0.02),
-        _buildDropdown(
-          value: selectedEmploymentType,
-          items: employmentTypes,
-          label: 'Employment Type',
-          onChanged: (value) => setState(() => selectedEmploymentType = value!),
-          screenSize: screenSize,
-        ),
+      _buildDropdown(
+        value: selectedEmploymentType,
+        items: employmentTypes,
+        label: 'Employment Type',
+        onChanged: (value) => setState(() => selectedEmploymentType = value!),
+        screenSize: screenSize,
+      ),
         SizedBox(height: screenSize.height * 0.02),
         _buildDropdown(
           value: selectedExperienceLevel,
@@ -220,6 +271,9 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     );
   }
 
+
+
+
   Widget _buildQualificationsSection(Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +282,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
         _buildSectionTitle(context, screenSize, 'Qualifications', Icons.school_outlined),
         _buildChipInputSection(
           '',
-          'Add Qualifications',
+          'Add qualification',
           selectedQualifications,
               (value) => setState(() => selectedQualifications.add(value)),
           screenSize,
@@ -236,8 +290,6 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       ],
     );
   }
-
-
 
   Widget _buildSkillsSection(Size screenSize) {
     return Column(
@@ -373,7 +425,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
         ),
         SizedBox(height: screenSize.height * 0.01),
         _buildTextField(
-          controller: _addressController,
+          controller: addressController,
           label: 'Address',
           hint: 'Enter complete address',
           screenSize: screenSize,
@@ -383,7 +435,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           children: [
             Expanded(
               child: _buildTextField(
-                controller: _cityController,
+                controller: cityController,
                 label: 'City',
                 hint: 'Enter city',
                 screenSize: screenSize,
@@ -392,7 +444,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             SizedBox(width: screenSize.width * 0.02),
             Expanded(
               child: _buildTextField(
-                controller: _stateController,
+                controller: stateController,
                 label: 'State',
                 hint: 'Enter state',
                 screenSize: screenSize,
@@ -402,7 +454,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
         ),
         SizedBox(height: screenSize.height * 0.01),
         _buildTextField(
-          controller: _countryController,
+          controller: cityController,
           label: 'Country',
           hint: 'Enter country',
           screenSize: screenSize,
@@ -423,7 +475,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           children: [
             Expanded(
               child: _buildTextField(
-                controller: _salaryMinController,
+                controller: salaryMinController,
                 label: 'Min Salary (Rupees)',
                 hint: '0',
                 keyboardType: TextInputType.number,
@@ -433,7 +485,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             SizedBox(width: screenSize.width * 0.02),
             Expanded(
               child: _buildTextField(
-                controller: _salaryMaxController,
+                controller: salaryMaxController,
                 label: 'Max Salary (Rupees)',
                 hint: '0',
                 keyboardType: TextInputType.number,
@@ -454,7 +506,6 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     );
   }
 
-
   Widget _buildAccommodationsSection(Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,7 +516,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
 
         // Workspace Accommodations
         _buildTextField(
-          controller: _workspaceAccommodationsController,
+          controller: workspaceAccommodationsController,
           label: 'Workspace Accommodations',
           hint: 'Describe available workplace accommodations',
           maxLines: 3,
@@ -475,7 +526,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
 
         // Interview Accommodations
         _buildTextField(
-          controller: _interviewAccommodationsController,
+          controller: interviewAccommodationsController,
           label: 'Interview Accommodations',
           hint: 'Describe available interview accommodations',
           maxLines: 3,
@@ -514,13 +565,13 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           onTap: () async {
             final DateTime? picked = await showDatePicker(
               context: context,
-              initialDate: _deadline ?? DateTime.now(),
+              initialDate: deadline ?? DateTime.now(),
               firstDate: DateTime.now(),
               lastDate: DateTime.now().add(Duration(days: 365)),
             );
             if (picked != null) {
               setState(() {
-                _deadline = picked;
+                deadline = picked;
                 _deadlineController.text = "${picked.day}/${picked.month}/${picked.year}";
               });
             }
@@ -549,19 +600,17 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     );
   }
 
-
-  Widget _buildSubmitButton(Size screenSize, JobCreateState state) {
+  Widget _buildUpdateButton(Size screenSize, JobUpdateState state) {
+    print(state);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.03),
       child: ElevatedButton(
-        onPressed: state is JobCreationLoading
-            ? null
-            : () {
+        onPressed: () {
 
           if (_formKey.currentState!.validate()) {
             final jobData = {
-              'title': _titleController.text,
-              'overview': _overviewController.text,
+              'title': titleController.text,
+              'overview': overviewController.text,
               'employmentType': selectedEmploymentType,
               'experienceLevel': selectedExperienceLevel,
               'responsibilities': selectedResponsibilities,
@@ -569,30 +618,29 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
               'skills': selectedSkills,
               'location': {
                 'type': locationType,
-                'city': _cityController.text,
-                'state': _stateController.text,
-                'country': _countryController.text,
+                'city': cityController.text,
+                'state': stateController.text,
+                'country': countryController.text,
                 "facilityAccessibility":selectedFacilityAccessibility,
               },
               'salary': {
                 'currency': 'Rupees',
-                'min': int.parse(_salaryMinController.text),
-                'max': int.parse(_salaryMaxController.text),
+                'min': int.parse(salaryMinController.text),
+                'max': int.parse(salaryMaxController.text),
               },
               'benefits': selectedBenefits,
-              'workspaceAccommodations': _workspaceAccommodationsController.text,
-              'interviewAccommodations': _interviewAccommodationsController.text,
+              'workspaceAccommodations': workspaceAccommodationsController.text,
+              'interviewAccommodations': interviewAccommodationsController.text,
               'disabilityTypes': {
                 'supportedDisabilities': selectedSupportedDisabilities,
               },
-              'deadline': _deadline?.toIso8601String() ?? '',
+              'deadline': deadline!.toIso8601String(),
             };
 
-            context.read<JobCreateBloc>().add(
-              SubmitJobEvent(
-                job: jobData,
-              ),
-           );
+         //   JobModel job = JobModel.fromJson(jobData);
+
+           print("JodUpdate data $jobData");
+            BlocProvider.of<JobUpdateBloc>(context).add(UpdateJobEvent(job: jobData, jobId: widget.job.id));
           }
         },
         style: ElevatedButton.styleFrom(
@@ -602,7 +650,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           ),
         ),
         child: Text(
-          'Create Job',
+          'Update Job',
           style: TextStyle(
             fontSize: screenSize.width * 0.04,
             fontWeight: FontWeight.bold,
@@ -611,6 +659,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       ),
     );
   }
+
+
 
   Widget _buildSectionTitle(BuildContext context, Size screenSize, String title, IconData icon) {
     return Row(
@@ -627,6 +677,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       ],
     );
   }
+
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -653,31 +704,6 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
         }
         return null;
       },
-    );
-  }
-
-  Widget _buildDropdown({
-    required String value,
-    required List<String> items,
-    required String label,
-    required Function(String?) onChanged,
-    required Size screenSize,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      items: items.map((String item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
     );
   }
 
@@ -791,24 +817,47 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     );
   }
 
+  Widget _buildDropdown({
+    required String value,
+    required List<String> items,
+    required String label,
+    required Function(String?) onChanged,
+    required Size screenSize,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((String item) {
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Text(item),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
 
 
-  // @override
-  // void dispose() {
-  //   _titleController.dispose();
-  //   _roleOverviewController.dispose();
-  //   _contentController.dispose();
-  //   _addressController.dispose();
-  //   _cityController.dispose();
-  //   _stateController.dispose();
-  //   _countryController.dispose();
-  //   _salaryMinController.dispose();
-  //   _salaryMaxController.dispose();
-  //   _companyOverviewController.dispose();
-  //   _growthOpportunitiesController.dispose();
-  //   _applicationInstructionsController.dispose();
-  //   _additionalSupportDetailsController.dispose();
-  //   _inclusivityStatementController.dispose();
-  //   super.dispose();
-  // }
+  Future<void> _saveJob() async {
+    // Create updated job model
+    final updatedJob = JobModel(
+      // Map all the updated fields here
+    );
+
+    try {
+      // Save logic here
+      Navigator.pop(context, updatedJob);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving job: $e')),
+      );
+    }
+
+  }
+
 }

@@ -147,5 +147,54 @@ class JobApiService {
 
   }
 
+  Future<bool> updateJob(Map<String,dynamic> updatedJob, String jobId) async {
+
+    try{
+
+      print("Update job call");
+      String? accessToken = await HiveUtils.getAccessToken();
+      if(accessToken==null || accessToken.isEmpty){
+        throw Exception("Access Token not found");
+      }
+
+      final response = await dio.put("${AppConstants.baseUrl}/employer/$jobId/update",
+          options: Options(
+            headers: {
+              'Authorization':'Bearer $accessToken'
+            },
+          ),
+          data: updatedJob
+      );
+
+      if(response.statusCode==200){
+
+
+       // Map<String,dynamic> createJob=Map<String,dynamic>.from(response.data['job']);
+
+        bool success = response.data['status'] ?? false;
+
+        print("response.data ${response.data}");
+        //JobModel job=JobModel.fromJson(updatedJob);
+        print("success ------------------------------------------------------ $success");
+
+        return success;
+      }else {
+        throw Exception('Failed to Update Job');
+      }
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
   
 }

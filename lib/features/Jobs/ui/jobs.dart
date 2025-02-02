@@ -1092,7 +1092,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
   }
 
   Widget _buildJobCard(JobModel job, Size screenSize, BuildContext context) {
-    return Card(
+     return  Card(
       elevation: 2,
       child: Column(
         children: [
@@ -1124,8 +1124,8 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                            fontSize: screenSize.width*0.04
+                              color: Colors.grey[600],
+                              fontSize: screenSize.width*0.04
                           ),
                         ),
                       ],
@@ -1186,8 +1186,8 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                     Text(
                       'Deadline: ${_formatDate(job.deadline)}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[500],
-                        fontSize: screenSize.width*0.04
+                          color: Colors.grey[500],
+                          fontSize: screenSize.width*0.04
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1208,24 +1208,24 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                   children: job.responsibilities
                       .take(2) // Show only first 2 responsibilities
                       .map((resp) => Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Icon(Icons.check_circle,
-                               size: 16,
-                            ),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Icon(Icons.check_circle,
+                          size: 16,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          resp,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: screenSize.width*0.035
                           ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              resp,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: screenSize.width*0.035
-                              ),
-                            ),
-                          ),
-                        ],
-                      ))
+                        ),
+                      ),
+                    ],
+                  ))
                       .toList(),
                 ),
 
@@ -1239,16 +1239,16 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                       .take(3) // Show only first 3 skills
                       .map((skill) => Card(
                     margin: EdgeInsets.all(0),
-                   color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSecondary.withOpacity(0.1):AppColors.lightDeepPurple.withOpacity(0.1),
+                    color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSecondary.withOpacity(0.1):AppColors.lightDeepPurple.withOpacity(0.1),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     elevation: 0,
                     child: Padding(
                       padding:   EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: Text(
-                        skill,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: screenSize.width*0.035,
-                        )
+                          skill,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: screenSize.width*0.035,
+                          )
                       ),
                     ),
                   ))
@@ -1263,16 +1263,24 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
-                         Navigator.push(context, MaterialPageRoute(builder: (context) => JobDetailsScreen(job: job),));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => JobDetailsScreen(job: job ,
+                            onJobUpdated: (updatedJob) {
+                              // Update the job in the list
+                              //   setState(() {
+                              //       BlocProvider.of<JobBloc>(context).add(FetchJobs());
+                              //
+                              //   });
+                            },
+
+                          )));
                         },
                         icon: Icon(Icons.description_outlined),
                         label: Text('View Full Details',style: Theme.of(context).textTheme.bodySmall?.copyWith(
-
-                         // color: Theme.of(context).brightness == Brightness.dark
+                          // color: Theme.of(context).brightness == Brightness.dark
                         ),),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).brightness == Brightness.dark ?AppColors.darkPrimary.withOpacity(0.1):AppColors.lightDisabled,
-                        // foregroundColor: AppColors.lightPrimary,
+                          // foregroundColor: AppColors.lightPrimary,
                           padding: EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -1300,6 +1308,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
         ],
       ),
     );
+
   }
 
   Widget _buildInfoPill(BuildContext context, IconData icon, String text) {
