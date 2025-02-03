@@ -63,10 +63,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: _isDarkMode ? AppTheme.darkTheme(context) :  AppTheme.lightTheme(context),
 
-      home: isLoading ?  Scaffold(body: Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),)):isLoggedIn ? BlocProvider(
-        create: (context) => EmployerDashboardBloc(),
-        child: EmployerDashboardScreen(isDarkMode: _isDarkMode, onThemeToggle:toggleTheme,),
-      ) :
+      home: isLoading ?  Scaffold(body: Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),)):isLoggedIn ? EmployerDashboardScreen(isDarkMode: _isDarkMode, onThemeToggle:toggleTheme,) :
       BlocProvider(
         create: (context) => LoginBloc(),
         child: LoginScreen(isDarkMode: _isDarkMode, onThemeToggle:toggleTheme),
