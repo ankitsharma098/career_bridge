@@ -23,13 +23,14 @@ class JobApplicationResponse {
 
 @JsonSerializable()
 class Application {
-  @JsonKey(name: '_id')
+  @JsonKey(name: '_id',defaultValue: '')
   final String id;
 
   @JsonKey(defaultValue: 'pending')
   final String status;
 
-  final DateTime appliedDate;
+  @JsonKey(defaultValue: '')
+  final String appliedDate;
 
   @JsonKey(defaultValue: '')
   final String resume;
@@ -44,14 +45,14 @@ class Application {
   final CandidateInfo candidateInfo;
 
   Application({
-    required this.id,
+     this.appliedDate='',
+     this.id='',
     this.status = 'pending',
-    required this.appliedDate,
     this.resume = '',
      this.contactInfo=const ContactInfo(),
     this.isFresher = true,
      this.experience= const [],
-    required this.candidateInfo,
+     this.candidateInfo=const CandidateInfo(),
   });
 
   factory Application.fromJson(Map<String, dynamic> json) =>
@@ -112,7 +113,7 @@ class Experience {
 
 @JsonSerializable()
 class CandidateInfo {
-  @JsonKey(name: '_id')
+  @JsonKey(name: '_id',defaultValue: '')
   final String id;
 
   @JsonKey(defaultValue: '')
@@ -127,7 +128,7 @@ class CandidateInfo {
   final List<String> skills;
 
   const CandidateInfo({
-    required this.id,
+     this.id='',
     this.fullName = '',
     this.email = '',
     this.profilePic,

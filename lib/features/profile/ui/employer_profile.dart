@@ -54,7 +54,33 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
             BlocProvider.of<ProfileBloc>(context).add(FetchProfileData());
           },);
         }
-        return Container();
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: screenSize.width * 0.15,
+                color: Colors.grey,
+              ),
+              SizedBox(height: screenSize.height * 0.02),
+              Text(
+                'Something went wrong',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: screenSize.height * 0.01),
+              Text(
+                'Please try again later',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+        );
       },
 );
   }

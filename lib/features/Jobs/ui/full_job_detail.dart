@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/colors.dart';
 import '../../../data/models/Job/job_model.dart';
+import '../../Applications/bloc/applications_bloc.dart';
+import '../../Applications/ui/applications.dart';
 import 'edit_job_details.dart';
 
 class JobDetailsScreen extends StatefulWidget {
@@ -493,7 +495,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Handle view applicants
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
+                    create: (context) => ApplicationsBloc(),
+                    child: ApplicationsScreen(jobId: currentJob.id,),
+                  ),));
                 },
                 icon: Icon(Icons.people, color: Colors.white),
                 label: Text('View ${currentJob.applicants.length} Applicants'),

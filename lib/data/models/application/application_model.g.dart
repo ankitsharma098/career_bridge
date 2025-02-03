@@ -24,25 +24,29 @@ Map<String, dynamic> _$JobApplicationResponseToJson(
     };
 
 Application _$ApplicationFromJson(Map<String, dynamic> json) => Application(
-      id: json['_id'] as String,
+      appliedDate: json['appliedDate'] as String? ?? '',
+      id: json['_id'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
-      appliedDate: DateTime.parse(json['appliedDate'] as String),
       resume: json['resume'] as String? ?? '',
-      contactInfo:
-          ContactInfo.fromJson(json['contactInfo'] as Map<String, dynamic>),
+      contactInfo: json['contactInfo'] == null
+          ? const ContactInfo()
+          : ContactInfo.fromJson(json['contactInfo'] as Map<String, dynamic>),
       isFresher: json['isFresher'] as bool? ?? true,
-      experience: (json['experience'] as List<dynamic>)
-          .map((e) => Experience.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      candidateInfo:
-          CandidateInfo.fromJson(json['candidateInfo'] as Map<String, dynamic>),
+      experience: (json['experience'] as List<dynamic>?)
+              ?.map((e) => Experience.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      candidateInfo: json['candidateInfo'] == null
+          ? const CandidateInfo()
+          : CandidateInfo.fromJson(
+              json['candidateInfo'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ApplicationToJson(Application instance) =>
     <String, dynamic>{
       '_id': instance.id,
       'status': instance.status,
-      'appliedDate': instance.appliedDate.toIso8601String(),
+      'appliedDate': instance.appliedDate,
       'resume': instance.resume,
       'contactInfo': instance.contactInfo,
       'isFresher': instance.isFresher,
@@ -62,7 +66,7 @@ Map<String, dynamic> _$ContactInfoToJson(ContactInfo instance) =>
     };
 
 Experience _$ExperienceFromJson(Map<String, dynamic> json) => Experience(
-      id: json['_id'] as String,
+      id: json['_id'] as String? ?? '',
       designation: json['designation'] as String? ?? '',
       company: json['company'] as String? ?? '',
       duration: json['duration'] as String? ?? '',
@@ -80,7 +84,7 @@ Map<String, dynamic> _$ExperienceToJson(Experience instance) =>
 
 CandidateInfo _$CandidateInfoFromJson(Map<String, dynamic> json) =>
     CandidateInfo(
-      id: json['_id'] as String,
+      id: json['_id'] as String? ?? '',
       fullName: json['fullName'] as String? ?? '',
       email: json['email'] as String? ?? '',
       profilePic: json['profilePic'] as String?,

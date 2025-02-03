@@ -13,15 +13,16 @@ class FetchApplications extends ApplicationsEvent {
 
 class UpdateApplicationStatus extends ApplicationsEvent {
   final String applicationId;
+  final String jobId;
   final String newStatus;
 
-  UpdateApplicationStatus(this.applicationId, this.newStatus);
+  UpdateApplicationStatus(this.applicationId, this.newStatus, this.jobId);
 
 }
 
 class RemoveApplication extends ApplicationsEvent {
   final String applicationId;
-
-  RemoveApplication(this.applicationId);
+  final String jobId;
+  RemoveApplication(this.applicationId, this.jobId);
 
 }

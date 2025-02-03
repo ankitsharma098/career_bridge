@@ -16,6 +16,12 @@ class ApplicationLoaded extends ApplicationsState {
 
 }
 
+class ApplicationStatusChangedSuccess extends ApplicationsState {
+
+  final String message;
+
+  ApplicationStatusChangedSuccess(this.message);
+}
 class ApplicationError extends ApplicationsState {
 
   final String error;

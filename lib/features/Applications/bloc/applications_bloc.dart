@@ -36,8 +36,15 @@ class ApplicationsBloc extends Bloc<ApplicationsEvent, ApplicationsState> {
       Emitter<ApplicationsState> emit,
       ) async {
     try {
-      //await repository.updateStatus(event.applicationId, event.newStatus);
-      //add(FetchApplications());
+
+      bool success = await apiService.updateApplicationStatus(event.applicationId, event.newStatus);
+      if(success){
+
+        emit(ApplicationStatusChangedSuccess("Status ${event.newStatus} Changed Successfully"));
+        add(FetchApplications(jobId: event.jobId));
+      }else{
+        emit(ApplicationError( error:"Failed to change the Status"));
+      }
     } catch (e) {
       emit(ApplicationError( error: e.toString()));
     }
@@ -48,8 +55,14 @@ class ApplicationsBloc extends Bloc<ApplicationsEvent, ApplicationsState> {
       Emitter<ApplicationsState> emit,
       ) async {
     try {
-      //await repository.removeApplication(event.applicationId);
-    //  add(FetchApplications());
+      bool success = await apiService.removeApplicants(event.applicationId);
+      if(success){
+
+        emit(ApplicationStatusChangedSuccess("Application Removed Successfully"));
+        add(FetchApplications(jobId: event.jobId));
+      }else{
+        emit(ApplicationError( error:"Failed to change the Status"));
+      }
     } catch (e) {
       emit(ApplicationError( error: e.toString()));
     }
