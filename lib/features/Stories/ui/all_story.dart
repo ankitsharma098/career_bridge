@@ -1,10 +1,13 @@
+import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/features/Stories/create_story_bloc/create_story_bloc.dart';
+import 'package:android/features/Stories/ui/shimmers/all_story_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../core/constants/colors.dart';
+import '../../../core/utils/image_viewer.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/story/story_model.dart';
 import '../bloc/story_bloc.dart';
@@ -104,11 +107,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
       },
       builder: (context, state) {
         if (state is StoryLoadingState) {
-          return Center(child: LoadingAnimationWidget.hexagonDots(color:  AppColors.lightPrimary, size: 20));
-        }
-
-        if (state is StoryErrorState) {
-          return Center(child: Text(state.error));
+          return StoriesShimmerScreen();
         }
 
         if (state is StoryLoadedState) {
@@ -224,9 +223,85 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
   Widget _buildStoryCard(StoryModel story, Size screenSize,
       BuildContext context) {
-    final screenSize = MediaQuery
-        .of(context)
-        .size;
+    Widget _buildMediaCarousel() {
+      if (story.mediaUrls.isEmpty) return SizedBox.shrink();
+
+      // Extract URLs for full-screen viewer
+      final mediaUrls = story.mediaUrls.map((media) => media.url).toList();
+
+      return story.mediaUrls.length > 1
+          ? SizedBox(
+              height: screenSize.height * 0.25,
+              child: PageView.builder(
+                itemCount: story.mediaUrls.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenImageViewer(
+                            imageUrls: mediaUrls,
+                            initialIndex: index,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Image.network(
+                      story.mediaUrls[index].url,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.error);
+                      },
+                    ),
+                  );
+                },
+              ),
+            )
+          : GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => FullScreenImageViewer(
+                      imageUrls: mediaUrls,
+                    ),
+                  ),
+                );
+              },
+              child: SizedBox(
+                height: screenSize.height * 0.25,
+                width: double.infinity,
+                child: Image.network(
+                  story.mediaUrls.first.url,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(Icons.error);
+                  },
+                ),
+              ),
+      );
+    }
     final date = DateTime.parse(story.createdAt);
     return Card(
      // margin: EdgeInsets.all(screenSize.width * 0.03),
@@ -267,14 +342,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
           // Media (if available)
           if (story.mediaUrls.isNotEmpty)
-            Container(
-              height: screenSize.height * 0.25,
-              width: double.infinity,
-              child: Image.network(
-                story.mediaUrls.first.url,
-                fit: BoxFit.cover,
-              ),
-            ),
+            _buildMediaCarousel(),
 
           // Content Preview
           Padding(

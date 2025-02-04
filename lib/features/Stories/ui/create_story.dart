@@ -1,9 +1,12 @@
 import 'dart:io';
 
+import 'package:android/core/utils/snackBarUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+import '../../../core/constants/colors.dart';
 import '../../../data/models/story/story_model.dart';
 import '../create_story_bloc/create_story_bloc.dart';
 
@@ -26,230 +29,505 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     'achievement'
   ];
   String _selectedCategory = 'success-story';
-  List<String> _tags = [];
+  List<String> selectedTags = [];
+  List<XFile> _selectedImages = [];
 
   @override
   Widget build(BuildContext context) {
+    Size screenSize = MediaQuery.of(context).size;
     return BlocConsumer<StoryCreationBloc, StoryCreationState>(
       listener: (context, state) {
         if (state is StoryCreationSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Story created successfully!')),
-          );
-          Navigator.pop(context);
-        } else if (state is StoryCreationError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error)),
-          );
+          SnackBarUtils.showGreenSnackBar("Story Created Successfully", context);
+        //  Navigator.pop(context);
+        }
+        else if (state is StoryCreationError) {
+          SnackBarUtils.showRedSnackBar("Failed to create a Story", context);
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Create Story'),
-            actions: [
-              if (state is! StoryCreationLoading)
-                TextButton(
-                  onPressed: _submitForm,
-                  child: Text('Post'),
-                ),
-            ],
+        if(state is StoryCreationLoading){
+          return  Scaffold(body: Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),));
+        }
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Create New Job'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            body: _buildForm(context, state,screenSize),
           ),
-          body: _buildForm(context, state),
         );
       },
     );
   }
 
-  Widget _buildForm(BuildContext context, StoryCreationState state) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value?.isEmpty ?? true) {
-                  return 'Please enter a title';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              controller: _contentController,
-              decoration: InputDecoration(
-                labelText: 'Content',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 5,
-              validator: (value) {
-                if (value?.isEmpty ?? true) {
-                  return 'Please enter content';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 16),
-            _buildMediaUpload(context, state),
-            SizedBox(height: 16),
-            _buildCategoryDropdown(),
-            SizedBox(height: 16),
-            _buildTagsInput(context),
+  Widget _buildForm(BuildContext context, StoryCreationState state, Size screenSize) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            theme.scaffoldBackgroundColor,
+            theme.scaffoldBackgroundColor.withOpacity(0.9),
           ],
+        ),
+      ),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader(context, screenSize, 'Story Title', Icons.title),
+              const SizedBox(height: 10),
+              _buildEnhancedTextField(
+                controller: _titleController,
+                hint: 'Write an engaging title',
+                prefixIcon: Icons.edit_note_outlined,
+              ),
+
+              const SizedBox(height: 20),
+              _buildSectionHeader(context, screenSize, 'Story Content', Icons.description),
+              const SizedBox(height: 10),
+              _buildEnhancedTextField(
+                controller: _contentController,
+                hint: 'Share your story...',
+                maxLines: 5,
+                prefixIcon: Icons.article_outlined,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Media Upload with Enhanced Design
+              _buildMediaUploadSection(context, state, screenSize),
+
+              const SizedBox(height: 20),
+
+              // Category Dropdown
+              _buildSectionHeader(context, screenSize, 'Story Category', Icons.category),
+              const SizedBox(height: 10),
+              _buildEnhancedDropdown(
+                value: _selectedCategory,
+                items: _categories,
+                onChanged: (value) => setState(() => _selectedCategory = value!),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tags Section
+              _buildTagSection(screenSize),
+
+              const SizedBox(height: 20),
+
+              // Submit Button
+              _buildSubmitButton(screenSize, state),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMediaUpload(BuildContext context, StoryCreationState state) {
-    File? mediaFile = state is StoryCreationEditing ? state.mediaFile : null;
+  Widget _buildSectionHeader(BuildContext context, Size screenSize, String title, IconData icon) {
+    final theme = Theme.of(context);
+
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 24,
+          color: theme.primaryColor,
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.primaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMediaUploadSection(BuildContext context, StoryCreationState state, Size screenSize) {
+    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Media', style: Theme.of(context).textTheme.titleMedium),
-        SizedBox(height: 8),
-        InkWell(
-          onTap: () => _pickImage(context),
+        _buildSectionHeader(context, screenSize, 'Add Media', Icons.image),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: _pickMultipleImages,
           child: Container(
             height: 200,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowColor.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(
+                color: theme.primaryColor.withOpacity(0.3),
+                width: 1.5,
+              ),
             ),
-            child: mediaFile != null
-                ? Image.file(mediaFile, fit: BoxFit.cover)
-                : Center(
-              child: Icon(Icons.add_photo_alternate, size: 50),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.cloud_upload_outlined,
+                    size: 60,
+                    color: theme.primaryColor.withOpacity(0.7),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Tap to upload images',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
+        const SizedBox(height: 10),
+        // Display selected images
+        _buildSelectedImagesGrid(theme),
       ],
     );
   }
-
-  Widget _buildCategoryDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _selectedCategory,
-      decoration: InputDecoration(
-        labelText: 'Category',
-        border: OutlineInputBorder(),
-      ),
-      items: _categories.map((category) {
-        return DropdownMenuItem(
-          value: category,
-          child: Text(category.replaceAll('-', ' ').toTitleCase()),
+  Widget _buildSelectedImagesGrid(ThemeData theme) {
+    return _selectedImages.isEmpty
+        ? const SizedBox.shrink()
+        : GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemCount: _selectedImages.length,
+          itemBuilder: (context, index) {
+            return Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: DecorationImage(
+                      image: FileImage(File(_selectedImages[index].path)),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () => _removeImage(index),
+                    child: Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error.withOpacity(0.7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        color: theme.colorScheme.onError,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
-      }).toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedCategory = value!;
-        });
-      },
-    );
   }
 
-  Widget _buildTagsInput(BuildContext context) {
+  Future<void> _pickMultipleImages() async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile> images = await picker.pickMultiImage();
+
+    setState(() {
+      // Limit to 6 images or adjust as needed
+      _selectedImages.addAll(
+          images.take(6 - _selectedImages.length)
+      );
+    });
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+
+  Widget _buildTagSection(Size screenSize) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tags', style: Theme.of(context).textTheme.titleMedium),
-        SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          children: [
-            ..._tags.map((tag) => Chip(
-              label: Text(tag),
-              onDeleted: () {
-                setState(() {
-                  _tags.remove(tag);
-                });
-                context.read<StoryCreationBloc>().add(UpdateTagsEvent(_tags));
-              },
-            )),
-            ActionChip(
-              label: Icon(Icons.add),
-              onPressed: () => _showAddTagDialog(context),
-            ),
-          ],
+        SizedBox(height: screenSize.height * 0.02),
+        _buildSectionTitle(context, screenSize, 'Tags', Icons.work),
+        _buildChipInputSection(
+          '',
+          'Add Tags',
+          selectedTags,
+              (value) => setState(() => selectedTags.add(value)),
+          screenSize,
         ),
       ],
     );
   }
 
-  Future<void> _pickImage(BuildContext context) async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
-      context.read<StoryCreationBloc>().add(
-        UpdateMediaEvent(File(image.path)),
-      );
-    }
-  }
 
-  Future<void> _showAddTagDialog(BuildContext context) async {
-    final TextEditingController tagController = TextEditingController();
+  Widget _buildSubmitButton(Size screenSize, StoryCreationState state) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.03),
+      child: ElevatedButton(
+        onPressed: state is StoryCreationLoading
+            ? null
+            : () {
 
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add Tag'),
-        content: TextField(
-          controller: tagController,
-          decoration: InputDecoration(hintText: 'Enter tag'),
+          if (_formKey.currentState!.validate()) {
+
+            Map<String,dynamic> story ={
+              'title':_titleController.text,
+              "content":_contentController.text,
+              'category':_selectedCategory,
+              "tags":selectedTags,
+              'images':_selectedImages.map((images)=>images.path).toList(),
+            };
+            print("Story $story");
+
+            BlocProvider.of<StoryCreationBloc>(context).add(
+              SubmitStoryEvent(
+                  story: story
+
+              ),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(double.infinity, screenSize.height * 0.06),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+        child: Text(
+          'Create Story',
+          style: TextStyle(
+            fontSize: screenSize.width * 0.04,
+            fontWeight: FontWeight.bold,
           ),
-          TextButton(
-            onPressed: () {
-              if (tagController.text.isNotEmpty) {
-                setState(() {
-                  _tags.add(tagController.text.toLowerCase());
-                });
-                context.read<StoryCreationBloc>().add(UpdateTagsEvent(_tags));
-                Navigator.pop(context);
-              }
-            },
-            child: Text('Add'),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  void _submitForm() {
-    if (_formKey.currentState?.validate() ?? false) {
-      context.read<StoryCreationBloc>().add(
-        SubmitStoryEvent(
-          title: _titleController.text,
-          content: _contentController.text,
-          mediaFile: context.read<StoryCreationBloc>().state is StoryCreationEditing
-              ? (context.read<StoryCreationBloc>().state as StoryCreationEditing).mediaFile
-              : null,
-          tags: _tags,
-          category: _selectedCategory,
+
+  Widget _buildSectionTitle(BuildContext context, Size screenSize, String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: screenSize.width * 0.06),
+        SizedBox(width: screenSize.width * 0.02),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: screenSize.width * 0.045,
+          ),
         ),
-      );
-    }
+      ],
+    );
   }
+
+  Widget _buildEnhancedTextField({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+    IconData? prefixIcon,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        style: theme.textTheme.bodyMedium,
+        decoration: InputDecoration(
+          hintText: hint,
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: theme.primaryColor) : null,
+          filled: true,
+          fillColor: theme.cardColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: theme.primaryColor, width: 2),
+          ),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'This field is required';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildEnhancedDropdown({
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: theme.cardColor,
+          prefixIcon: Icon(Icons.category_outlined, color: theme.primaryColor),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: theme.primaryColor, width: 2),
+          ),
+        ),
+        dropdownColor: theme.cardColor,
+        items: items.map((String item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(
+              item,
+              style: theme.textTheme.bodyMedium,
+            ),
+          );
+        }).toList(),
+        onChanged: onChanged,
+        icon: Icon(Icons.arrow_drop_down, color: theme.primaryColor),
+        style: theme.textTheme.bodyMedium,
+      ),
+    );
+  }
+
+  Widget _buildChipInputSection(
+      String label,
+      String hint,
+      List<String> selectedItems,
+      Function(String) onAdd,
+      Size screenSize,
+      ) {
+    final TextEditingController controller = TextEditingController();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        label.isNotEmpty ?Text(
+          label,
+          style: TextStyle(
+            fontSize: screenSize.width * 0.04,
+            fontWeight: FontWeight.bold,
+          ),
+        ):SizedBox(height: 0,),
+        SizedBox(height: screenSize.height * 0.01),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    onAdd(value);
+                    controller.clear();
+                  }
+                },
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  onAdd(controller.text);
+                  controller.clear();
+                }
+              },
+            ),
+          ],
+        ),
+        SizedBox(height: screenSize.height * 0.01),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: selectedItems.map((item) {
+            return Chip(
+              label: Text(item),
+              onDeleted: () {
+                setState(() {
+                  selectedItems.remove(item);
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+
+
 }
 
-extension StringExtension on String {
-  String toTitleCase() {
-    return split(' ')
-        .map((word) => word[0].toUpperCase() + word.substring(1))
-        .join(' ');
-  }
-}
+

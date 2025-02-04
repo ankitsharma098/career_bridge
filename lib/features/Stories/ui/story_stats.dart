@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/constants/colors.dart';
 import '../../Jobs/ui/shimmer/Job_stats_shimmer.dart';
-import 'mystory_shimmer.dart';
+import 'shimmers/mystory_shimmer.dart';
 
 
 class StoryStatsTab extends StatefulWidget {

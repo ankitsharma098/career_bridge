@@ -23,64 +23,66 @@ class CustomErrorScreen extends StatelessWidget {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Lottie Animation (requires lottie package)
-              Lottie.asset(
-                'assets/animations/error.json', // You'll need to add this
-                width: 250,
-                height: 250,
-                fit: BoxFit.contain,
-              ),
-      
-              const SizedBox(height: 24),
-      
-              // Error Title
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red.shade700,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Lottie Animation (requires lottie package)
+                Lottie.asset(
+                  'assets/animations/error.json', // You'll need to add this
+                  width: 250,
+                  height: 250,
+                  fit: BoxFit.contain,
                 ),
-                textAlign: TextAlign.center,
-              ),
-      
-              const SizedBox(height: 16),
-      
-              // Error Message
-              Text(
-                message,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade700,
+
+                const SizedBox(height: 24),
+
+                // Error Title
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade700,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-      
-              const SizedBox(height: 32),
-      
-              // Retry Button
-              if (onRetry != null)
-                ElevatedButton.icon(
-                  onPressed: onRetry,
-                  icon: Icon(icon ?? Icons.refresh),
-                  label: Text(buttonText ?? 'Retry'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade500,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+
+                const SizedBox(height: 16),
+
+                // Error Message
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 32),
+
+                // Retry Button
+                if (onRetry != null)
+                  ElevatedButton.icon(
+                    onPressed: onRetry,
+                    icon: Icon(icon ?? Icons.refresh),
+                    label: Text(buttonText ?? 'Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade500,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

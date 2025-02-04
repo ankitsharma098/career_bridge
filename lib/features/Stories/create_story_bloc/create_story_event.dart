@@ -6,38 +6,14 @@ abstract class StoryCreationEvent extends Equatable {
 }
 
 class SubmitStoryEvent extends StoryCreationEvent {
-  final String title;
-  final String content;
-  final File? mediaFile;
-  final List<String> tags;
-  final String category;
+  // final String title;
+  // final String content;
+  // final File? mediaFile;
+  // final List<String> tags;
+  // final String category;
+  final Map<String,dynamic> story;
 
-  SubmitStoryEvent({
-    required this.title,
-    required this.content,
-    this.mediaFile,
-    required this.tags,
-    required this.category,
-  });
-
+  SubmitStoryEvent({required this.story});
   @override
-  List<Object?> get props => [title, content, mediaFile, tags, category];
-}
-
-class UpdateMediaEvent extends StoryCreationEvent {
-  final File mediaFile;
-
-  UpdateMediaEvent(this.mediaFile);
-
-  @override
-  List<Object> get props => [mediaFile];
-}
-
-class UpdateTagsEvent extends StoryCreationEvent {
-  final List<String> tags;
-
-  UpdateTagsEvent(this.tags);
-
-  @override
-  List<Object> get props => [tags];
+  List<Object?> get props => [story];
 }
