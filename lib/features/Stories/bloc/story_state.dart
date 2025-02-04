@@ -14,8 +14,12 @@ class StoryLoadingState extends StoryState {}
 
 class StoryLoadedState extends StoryState {
   final List<StoryModel> stories;
+  final bool hasReachedMax;
+  final int currentPage;
 
-  const StoryLoadedState(this.stories);
+  const StoryLoadedState({required this.stories, required this.hasReachedMax, required this.currentPage});
+
+
 
   @override
   List<Object> get props => [stories];

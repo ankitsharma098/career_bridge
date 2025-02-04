@@ -4,6 +4,7 @@ import 'package:android/data/models/company/company_model.dart';
 import 'package:android/data/models/employer/employer_model.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/Stories/bloc/story_bloc.dart';
+import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
@@ -16,7 +17,8 @@ import 'package:percent_indicator/percent_indicator.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../Jobs/ui/jobs.dart';
-import '../../Stories/ui/story.dart';
+import '../../Stories/ui/all_story.dart';
+import '../../Stories/ui/story_stats.dart';
 import '../../profile/ui/employer_profile.dart';
 import 'dashboard_stats.dart';
 import 'employer_dashboard_shimmer.dart';
@@ -291,13 +293,16 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               icon: Icons.web_stories,
               title: 'My Stories',
               onTap: () {
-                // Navigator.pop(context);
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => BlogMessagesScreen(), // You'll need to create this screen
-                //   ),
-                // );
+                //Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                      create: (context) => StoryStatsBloc(),
+                      child: StoryStatsTab(),
+                    ), // You'll need to create this screen
+                  ),
+                );
               },
             ),
             _buildDrawerItem(
