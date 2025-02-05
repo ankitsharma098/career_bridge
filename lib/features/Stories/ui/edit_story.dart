@@ -11,27 +11,38 @@ import '../../../core/constants/colors.dart';
 import '../../../data/models/story/story_model.dart';
 import '../create_story_bloc/create_story_bloc.dart';
 
-class CreateStoryScreen extends StatefulWidget {
-  final Function(StoryModel) onStoryCreated;
-  const CreateStoryScreen({super.key ,required this.onStoryCreated});
+class EditStoryScreen extends StatefulWidget {
+  final Function(StoryModel) onStoryEdited;
+  final StoryModel story;
+  const EditStoryScreen({super.key ,required this.onStoryEdited, required this.story});
 
   @override
-  State<CreateStoryScreen> createState() => _CreateStoryScreenState();
+  State<EditStoryScreen> createState() => _EditStoryScreenState();
 }
 
-class _CreateStoryScreenState extends State<CreateStoryScreen> {
+class _EditStoryScreenState extends State<EditStoryScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
   final List<String> _categories = [
     'success-story',
     'challenge',
     'inspiration',
     'achievement'
   ];
-  String _selectedCategory = 'success-story';
-  List<String> selectedTags = [];
-  List<XFile> _selectedImages = [];
+  late String _selectedCategory;
+  late List<String> selectedTags;
+  late List<XFile> _selectedImages;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController=TextEditingController(text: widget.story.title);
+   _contentController=TextEditingController(text: widget.story.content);
+   _selectedCategory=widget.story.category;
+   selectedTags=widget.story.tags;
+   _selectedImages = [];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +50,11 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     return BlocConsumer<StoryCreationBloc, StoryCreationState>(
       listener: (context, state) {
         if (state is StoryCreationSuccess) {
-          widget.onStoryCreated(state.story);
-          SnackBarUtils.showGreenSnackBar("Story Created Successfully", context);
+          widget.onStoryEdited(state.story);
+          SnackBarUtils.showGreenSnackBar("Story Updated Successfully", context);
           Navigator.pop(context);
-        }
-        else if (state is StoryCreationError) {
-          SnackBarUtils.showRedSnackBar("Failed to create a Story", context);
+        } else if (state is StoryCreationError) {
+          SnackBarUtils.showRedSnackBar("Failed to Update Story", context);
         }
       },
       builder: (context, state) {
@@ -55,7 +65,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('Create New Story'),
+              title: const Text('Edit your Story'),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new),
                 onPressed: () => Navigator.pop(context),
@@ -220,49 +230,49 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     return _selectedImages.isEmpty
         ? const SizedBox.shrink()
         : GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-          ),
-          itemCount: _selectedImages.length,
-          itemBuilder: (context, index) {
-            return Stack(
-              children: [
-                Container(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemCount: _selectedImages.length,
+      itemBuilder: (context, index) {
+        return Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: DecorationImage(
+                  image: FileImage(File(_selectedImages[index].path)),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: () => _removeImage(index),
+                child: Container(
+                  margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: FileImage(File(_selectedImages[index].path)),
-                      fit: BoxFit.cover,
-                    ),
+                    color: theme.colorScheme.error.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    color: theme.colorScheme.onError,
+                    size: 20,
                   ),
                 ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () => _removeImage(index),
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.error.withOpacity(0.7),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        color: theme.colorScheme.onError,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
+              ),
+            ),
+          ],
         );
+      },
+    );
   }
 
   Future<void> _pickMultipleImages() async {
@@ -310,22 +320,20 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         onPressed: state is StoryCreationLoading
             ? null
             : () {
-
           if (_formKey.currentState!.validate()) {
-
-            Map<String,dynamic> story ={
-              'title':_titleController.text,
-              "content":_contentController.text,
-              'category':_selectedCategory,
-              "tags":jsonEncode(selectedTags),
-              'images':_selectedImages.map((images)=>images.path).toList(),
+            Map<String, dynamic> story = {
+              'title': _titleController.text,
+              'content': _contentController.text,
+              'category': _selectedCategory,
+              'tags': jsonEncode(selectedTags),
+              'images': _selectedImages.map((image) => image.path).toList(),
             };
-            print("Story $story");
 
             BlocProvider.of<StoryCreationBloc>(context).add(
               SubmitStoryEvent(
-                  story: story, isEditing: false, storyId:'',
-
+                story: story,
+                isEditing: true, storyId: widget.story.id, // Since this is edit screen
+                // storyId: widget.story.id, // Pass the story ID for editing
               ),
             );
           }
@@ -337,7 +345,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           ),
         ),
         child: Text(
-          'Create Story',
+          'Update Story', // Changed from 'Create Story' to 'Update Story'
           style: TextStyle(
             fontSize: screenSize.width * 0.04,
             fontWeight: FontWeight.bold,

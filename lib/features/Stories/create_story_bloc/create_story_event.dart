@@ -12,8 +12,12 @@ class SubmitStoryEvent extends StoryCreationEvent {
   // final List<String> tags;
   // final String category;
   final Map<String,dynamic> story;
+  final bool isEditing; // Add this
+  final String storyId;
 
-  SubmitStoryEvent({required this.story});
+  SubmitStoryEvent( {required this.storyId, required this.isEditing, required this.story});
   @override
   List<Object?> get props => [story];
 }
+
+

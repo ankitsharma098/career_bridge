@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/colors.dart';
+import '../../../core/utils/image_viewer.dart';
 import '../../Jobs/ui/shimmer/Job_stats_shimmer.dart';
 import 'shimmers/mystory_shimmer.dart';
 
@@ -236,97 +237,64 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
         children: [
           // User Info
           ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
               backgroundImage: NetworkImage(story.hostDetails.profilePic),
             ),
             title: Text(story.hostDetails.name),
             subtitle: Text(
               DateFormat('MMM dd, yyyy').format(date),
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey[600]),
             ),
+            trailing: _buildEditButton(story, context),
           ),
 
-          // Title
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenSize.width * 0.04,
-              vertical: screenSize.height * 0.01,
-            ),
-            child: Text(
-              story.title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          // // Title
+          // Padding(
+          //   padding: EdgeInsets.symmetric(
+          //     horizontal: screenSize.width * 0.04,
+          //     vertical: screenSize.height * 0.01,
+          //   ),
+          //   child: Text(
+          //     story.title,
+          //     style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          //       fontWeight: FontWeight.bold,
+          //     ),
+          //   ),
+          // ),
 
           // Media (if available)
-          if (story.mediaUrls.isNotEmpty)
-            Container(
-              height: screenSize.height * 0.25,
-              width: double.infinity,
-              child: Image.network(
-                story.mediaUrls.first.url,
-                fit: BoxFit.cover,
-              ),
-            ),
-
-          // Content Preview
+          if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
           Padding(
-            padding: EdgeInsets.all(screenSize.width * 0.04),
-            child: Text(
-              story.content,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          // Tags
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
-            child: Row(
-              children: story.tags.map((tag) =>
-                  Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: Chip(
-                      label: Text('#$tag'),
-                      backgroundColor: AppColors.lightDeepPurple.withOpacity(0.1),
-                    ),
-                  ),
-              ).toList(),
-            ),
-          ),
-
-          // Interaction Buttons
-          Padding(
-            padding: EdgeInsets.all(screenSize.width * 0.04),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InteractionButton(
-                  icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
-                  count: story.likesCount,
-                  color: story.isLiked ? Colors.red : null,
-                  onTap: () {
-                    // => context.read<StoriesBloc>().add(LikeStory(story.id))
-                  },
+                Text(
+                  story.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: screenSize.width * 0.045,
+                  ),
                 ),
-                _InteractionButton(
-                  icon: Icons.comment_outlined,
-                  count: story.commentsCount,
-                ),
-                _InteractionButton(
-                  icon: Icons.remove_red_eye_outlined,
-                  count: story.views,
-                ),
-                _InteractionButton(
-                  icon: Icons.share_outlined,
-                  count: story.sharesCount,
+                SizedBox(height: 8),
+                Text(
+                  story.content,
+                  // maxLines: 6,
+                  // overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: screenSize.width * 0.035,
+                    color: Colors.grey[700],
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
           ),
+          // Content Preview
+          _buildTags(story, screenSize),
+          Divider(height: 1),
+          _buildInteractionBar(story, screenSize),
         ],
       ),
     );
@@ -366,31 +334,145 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
       ),
     );
   }
-}
+  Widget _buildEditButton(StoryModel story, BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
+      onPressed: () {
+        // Add your edit functionality here
+        // Navigate to edit screen or show edit dialog
+      },
+    );
+  }
+  Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
+    return Container(
+      height: screenSize.height * 0.25,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: story.mediaUrls.length > 1
+            ? PageView.builder(
+          itemCount: story.mediaUrls.length,
+          itemBuilder: (context, index) => _buildMediaItem(
+            story.mediaUrls[index].url,
+            story.mediaUrls.map((m) => m.url).toList(),
+            index,
+            screenSize,
+          ),
+        )
+            : _buildMediaItem(
+          story.mediaUrls.first.url,
+          story.mediaUrls.map((m) => m.url).toList(),
+          0,
+          screenSize,
+        ),
+      ),
+    );
+  }
 
-class _InteractionButton extends StatelessWidget {
-  final IconData icon;
-  final int count;
-  final Color? color;
-  final VoidCallback? onTap;
+  Widget _buildMediaItem(String url, List<String> allUrls, int index, Size screenSize) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenImageViewer(
+            imageUrls: allUrls,
+            initialIndex: index,
+          ),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+        ),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+        ),
+      ),
+    );
+  }
 
-  const _InteractionButton({
-    required this.icon,
-    required this.count,
-    this.color,
-    this.onTap,
-  });
+  Widget _buildTags(StoryModel story, Size screenSize) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: story.tags.map((tag) => Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: Chip(
+            label: Text('#$tag'),
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+            labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+          ),
+        )).toList(),
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildInteractionBar(StoryModel story, Size screenSize) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildInteractionButton(
+            icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
+            count: story.likesCount,
+            color: story.isLiked ? Colors.red : null,
+            onTap: () {},
+          ),
+          _buildInteractionButton(
+            icon: Icons.comment_outlined,
+            count: story.commentsCount,
+            onTap: () {},
+          ),
+          _buildInteractionButton(
+            icon: Icons.remove_red_eye_outlined,
+            count: story.views,
+          ),
+          _buildInteractionButton(
+            icon: Icons.share_outlined,
+            count: story.sharesCount,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInteractionButton({
+    required IconData icon,
+    required int count,
+    Color? color,
+    VoidCallback? onTap,
+  }) {
     return InkWell(
       onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          SizedBox(width: 4),
-          Text('$count'),
-        ],
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color ?? Colors.grey[600]),
+            SizedBox(width: 4),
+            Text(
+              '$count',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

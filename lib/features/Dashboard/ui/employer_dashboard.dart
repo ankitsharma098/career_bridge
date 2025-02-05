@@ -176,7 +176,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           ),
           BlocProvider(
             create: (context) => StoryBloc(),
-            child: StoriesScreen(),
+            child: StoriesScreen(employerId: employerData!.id,),
           )
         ],
       ),

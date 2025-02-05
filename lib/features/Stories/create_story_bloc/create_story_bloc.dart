@@ -14,6 +14,7 @@ class StoryCreationBloc extends Bloc<StoryCreationEvent, StoryCreationState> {
   StoryApiService apiService = StoryApiService();
   StoryCreationBloc() : super(StoryCreationInitial()) {
     on<SubmitStoryEvent>(_onSubmitStory);
+
   }
 
   Future<void> _onSubmitStory(
@@ -22,14 +23,18 @@ class StoryCreationBloc extends Bloc<StoryCreationEvent, StoryCreationState> {
       ) async {
     emit(StoryCreationLoading());
     try {
-     
-      StoryModel story= await apiService.createStory(event.story);
-      
+     StoryModel story;
+     if(event.isEditing){
+       story = await apiService.updateStory(event.story,event.storyId);
+     }else {
+        story = await apiService.createStory(event.story);
+     }
       emit(StoryCreationSuccess(story: story));
     } catch (e) {
       emit(StoryCreationError(e.toString()));
     }
   }
+
 }
 
 

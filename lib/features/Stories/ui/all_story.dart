@@ -1,5 +1,3 @@
-import 'package:android/core/utils/customErrorUtils.dart';
-import 'package:android/features/Stories/create_story_bloc/create_story_bloc.dart';
 import 'package:android/features/Stories/ui/shimmers/all_story_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,10 +9,13 @@ import '../../../core/utils/image_viewer.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/story/story_model.dart';
 import '../bloc/story_bloc.dart';
+import '../create_story_bloc/create_story_bloc.dart';
 import 'create_story.dart';
+import 'edit_story.dart';
 
 class StoriesScreen extends StatefulWidget {
-  const StoriesScreen({super.key});
+  const StoriesScreen({super.key, required this.employerId});
+  final String employerId;
 
   @override
   State<StoriesScreen> createState() => _StoriesScreenState();
@@ -22,82 +23,98 @@ class StoriesScreen extends StatefulWidget {
 
 class _StoriesScreenState extends State<StoriesScreen> {
   final ScrollController scrollController = ScrollController();
+
   @override
   void initState() {
     BlocProvider.of<StoryBloc>(context).add(FetchStoriesEvent());
     scrollController.addListener(_onScroll);
     super.initState();
   }
+
   @override
   void dispose() {
     scrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll(){
-    final state =context.read<StoryBloc>().state;
-    if(_isBottom && state is StoryLoadedState && !state.hasReachedMax){
+  void _onScroll() {
+    final state = context.read<StoryBloc>().state;
+    if (_isBottom && state is StoryLoadedState && !state.hasReachedMax) {
       BlocProvider.of<StoryBloc>(context).add(LoadMoreStories());
     }
-
   }
+
   bool get _isBottom {
     if (!scrollController.hasClients) return false;
     final maxScroll = scrollController.position.maxScrollExtent;
     final currentScroll = scrollController.offset;
-    // Load more when user has scrolled 80% of the list
     return currentScroll >= (maxScroll * 0.8);
   }
+
   @override
   Widget build(BuildContext context) {
-    Size screenSize = MediaQuery
-        .of(context)
-        .size;
+    Size screenSize = MediaQuery.of(context).size;
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: screenSize.width * 0.04,
-          horizontal: screenSize.width * 0.02),
+      padding: EdgeInsets.symmetric(
+        vertical: screenSize.width * 0.04,
+        horizontal: screenSize.width * 0.02,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(context, screenSize),
           SizedBox(height: screenSize.height * 0.02),
-          Expanded(
-            child: _buildStoryList(screenSize),
-          ),
+          Expanded(child: _buildStoryList(screenSize)),
         ],
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context, Size screenSize) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Posted Story',
-          style: Theme
-              .of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(
-            fontSize: screenSize.width * 0.06,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Posted Stories',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontSize: screenSize.width * 0.06,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
-        IconButton(
-          icon: Icon(Icons.add_circle),
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
-              create: (context) => StoryCreationBloc(),
-              child: CreateStoryScreen(onStoryCreated: (StoryModel ) {  },),
-            ),));
-          },
-          iconSize: screenSize.width * 0.08,
-        ),
-      ],
+          AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            child: IconButton(
+              icon: Icon(Icons.add_circle, color: Theme.of(context).primaryColor),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                      create: (context) => StoryCreationBloc(),
+                      child: CreateStoryScreen(
+                        onStoryCreated: (StoryModel story) {
+                          final state = context.read<StoryBloc>().state;
+                          if (state is StoryLoadedState) {
+                            setState(() {
+                              state.stories.insert(0, story);
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+              iconSize: screenSize.width * 0.08,
+            ),
+          ),
+        ],
+      ),
     );
   }
-
   Widget _buildStoryList(Size screenSize) {
     return BlocConsumer<StoryBloc, StoryState>(
       listener: (context, state) {
@@ -221,192 +238,201 @@ class _StoriesScreenState extends State<StoriesScreen> {
     );
   }
 
-  Widget _buildStoryCard(StoryModel story, Size screenSize,
-      BuildContext context) {
-    Widget _buildMediaCarousel() {
-      if (story.mediaUrls.isEmpty) return SizedBox.shrink();
-
-      // Extract URLs for full-screen viewer
-      final mediaUrls = story.mediaUrls.map((media) => media.url).toList();
-
-      return story.mediaUrls.length > 1
-          ? SizedBox(
-              height: screenSize.height * 0.25,
-              child: PageView.builder(
-                itemCount: story.mediaUrls.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => FullScreenImageViewer(
-                            imageUrls: mediaUrls,
-                            initialIndex: index,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Image.network(
-                      story.mediaUrls[index].url,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.error);
-                      },
-                    ),
-                  );
-                },
-              ),
-            )
-          : GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImageViewer(
-                      imageUrls: mediaUrls,
-                    ),
-                  ),
-                );
-              },
-              child: SizedBox(
-                height: screenSize.height * 0.25,
-                width: double.infinity,
-                child: Image.network(
-                  story.mediaUrls.first.url,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                            : null,
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(Icons.error);
-                  },
-                ),
-              ),
-      );
-    }
+  Widget _buildStoryCard(StoryModel story, Size screenSize, BuildContext context) {
     final date = DateTime.parse(story.createdAt);
+    final isOwner = story.hostDetails.id == widget.employerId;
+
     return Card(
-     // margin: EdgeInsets.all(screenSize.width * 0.03),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User Info
           ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
+              radius: screenSize.width * 0.05,
               backgroundImage: NetworkImage(story.hostDetails.profilePic),
             ),
-            title: Text(story.hostDetails.name),
+            title: Text(
+              story.hostDetails.name,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Text(
               DateFormat('MMM dd, yyyy').format(date),
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey[600]),
             ),
+            trailing: isOwner ? _buildEditButton(story, context) : null,
           ),
-
-          // Title
+          if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenSize.width * 0.04,
-              vertical: screenSize.height * 0.01,
-            ),
-            child: Text(
-              story.title,
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          // Media (if available)
-          if (story.mediaUrls.isNotEmpty)
-            _buildMediaCarousel(),
-
-          // Content Preview
-          Padding(
-            padding: EdgeInsets.all(screenSize.width * 0.04),
-            child: Text(
-              story.content,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          // Tags
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
-            child: Row(
-              children: story.tags.map((tag) =>
-                  Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: Chip(
-                      label: Text('#$tag'),
-                      backgroundColor: AppColors.lightDeepPurple.withOpacity(
-                          0.1),
-                    ),
-                  ),
-              ).toList(),
-            ),
-          ),
-
-          // Interaction Buttons
-          Padding(
-            padding: EdgeInsets.all(screenSize.width * 0.04),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                interactionButton(
-                  icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
-                  count: story.likesCount,
-                  color: story.isLiked ? Colors.red : null,
-                  onTap: () {
-                    // => context.read<StoriesBloc>().add(LikeStory(story.id))
-                  },
+                Text(
+                  story.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: screenSize.width * 0.045,
+                  ),
                 ),
-                interactionButton(
-                  icon: Icons.comment_outlined,
-                  count: story.commentsCount, onTap: () {},
-                ),
-                interactionButton(
-                  icon: Icons.remove_red_eye_outlined,
-                  count: story.views,
-                ),
-                interactionButton(
-                  icon: Icons.share_outlined,
-                  count: story.sharesCount,
+                SizedBox(height: 8),
+                Text(
+                  story.content,
+                 // maxLines: 6,
+                 // overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: screenSize.width * 0.035,
+                    color: Colors.grey[700],
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
+          ),
+          _buildTags(story, screenSize),
+          Divider(height: 1),
+          _buildInteractionBar(story, screenSize),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditButton(StoryModel story, BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BlocProvider(
+              create: (context) => StoryCreationBloc(),
+              child: EditStoryScreen(
+                onStoryEdited: (StoryModel story) {
+                  final state = context.read<StoryBloc>().state;
+                  if (state is StoryLoadedState) {
+                    setState(() {
+                      state.stories.insert(0, story);
+                    });
+                  }
+                }, story: story,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
+    return Container(
+      height: screenSize.height * 0.25,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: story.mediaUrls.length > 1
+            ? PageView.builder(
+          itemCount: story.mediaUrls.length,
+          itemBuilder: (context, index) => _buildMediaItem(
+            story.mediaUrls[index].url,
+            story.mediaUrls.map((m) => m.url).toList(),
+            index,
+            screenSize,
+          ),
+        )
+            : _buildMediaItem(
+          story.mediaUrls.first.url,
+          story.mediaUrls.map((m) => m.url).toList(),
+          0,
+          screenSize,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaItem(String url, List<String> allUrls, int index, Size screenSize) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenImageViewer(
+            imageUrls: allUrls,
+            initialIndex: index,
+          ),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+        ),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTags(StoryModel story, Size screenSize) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: story.tags.map((tag) => Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: Chip(
+            label: Text('#$tag'),
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+            labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+          ),
+        )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildInteractionBar(StoryModel story, Size screenSize) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildInteractionButton(
+            icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
+            count: story.likesCount,
+            color: story.isLiked ? Colors.red : null,
+            onTap: () {},
+          ),
+          _buildInteractionButton(
+            icon: Icons.comment_outlined,
+            count: story.commentsCount,
+            onTap: () {},
+          ),
+          _buildInteractionButton(
+            icon: Icons.remove_red_eye_outlined,
+            count: story.views,
+          ),
+          _buildInteractionButton(
+            icon: Icons.share_outlined,
+            count: story.sharesCount,
           ),
         ],
       ),
     );
   }
 
-  Widget interactionButton({
+  Widget _buildInteractionButton({
     required IconData icon,
     required int count,
     Color? color,
@@ -414,15 +440,23 @@ class _StoriesScreenState extends State<StoriesScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          SizedBox(width: 4),
-          Text('$count'),
-        ],
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color ?? Colors.grey[600]),
+            SizedBox(width: 4),
+            Text(
+              '$count',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-

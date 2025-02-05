@@ -30,20 +30,12 @@ class StoryCreationError extends StoryCreationState {
 }
 
 class StoryCreationEditing extends StoryCreationState {
-  final String title;
-  final String content;
-  final File? mediaFile;
-  final List<String> tags;
-  final String category;
+  final StoryModel story;
 
-  StoryCreationEditing({
-    required this.title,
-    required this.content,
-    this.mediaFile,
-    required this.tags,
-    required this.category,
-  });
+  StoryCreationEditing(
+    this.story
+  );
 
   @override
-  List<Object?> get props => [title, content, mediaFile, tags, category];
+  List<Object?> get props => [story];
 }

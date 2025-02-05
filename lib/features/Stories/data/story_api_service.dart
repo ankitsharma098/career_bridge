@@ -1,31 +1,15 @@
 
 
+import 'dart:io';
 import 'package:android/core/constants/app_constants.dart';
 import 'package:android/core/utils/hiveUtils.dart';
-import 'package:android/data/models/Job/job_model.dart';
-import 'package:android/data/models/application/application_model.dart';
 import 'package:android/data/models/story/story_model.dart';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 
 class StoryApiService {
 
-  final dio = Dio()
-    ..options = BaseOptions(
-      baseUrl: AppConstants.baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      sendTimeout: const Duration(seconds: 30),
-      headers: {
-        'Accept': 'application/json',
-      },
-      validateStatus: (status) => status! < 500,
-    )
-    ..interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      requestHeader: true,
-      responseHeader: true,
-    ));
+  final dio = Dio();
 
 
   Future<List<StoryModel>> fetchStories(int page) async{
@@ -129,86 +113,232 @@ class StoryApiService {
     }
   }
 
-  Future<StoryModel> createStory(Map<String,dynamic> story)async{
-
-    try{
-
+  Future<StoryModel> createStory(Map<String, dynamic> story) async {
+    try {
       String? accessToken = await HiveUtils.getAccessToken();
-
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
 
-      print("createStory api");
-
-
+      // Create form data with basic story information
       FormData formData = FormData.fromMap({
-        "title":story["title"],
-        'content':story['content'],
-        'category':story['category'],
-        'tags':story['tags'],
+        "title": story["title"],
+        'content': story['content'],
+        'category': story['category'],
+        'tags': story['tags'],
       });
 
-      List<String> imagePaths=story['images'] ?? [];
+      // Handle images
+      List<String> imagePaths = story['images'] ?? [];
       if (imagePaths.length > 5) {
         throw Exception("Maximum 5 files allowed");
       }
 
-      for(int i=0;i<imagePaths.length;i++){
-        String extension = imagePaths[i].split('.').last;
-        formData.files.add(MapEntry('media', await MultipartFile.fromFile(imagePaths[i],  filename: 'file$i.$extension')));
+      // Add files to form data with proper MIME type
+      for (int i = 0; i < imagePaths.length; i++) {
+        File imageFile = File(imagePaths[i]);
+        if (!await imageFile.exists()) {
+          throw Exception("Image file not found: ${imagePaths[i]}");
+        }
+
+        String extension = imagePaths[i].split('.').last.toLowerCase();
+        String mimeType;
+
+        // Set correct MIME type based on file extension
+        switch (extension) {
+          case 'jpg':
+          case 'jpeg':
+            mimeType = 'image/jpeg';
+            break;
+          case 'png':
+            mimeType = 'image/png';
+            break;
+          case 'gif':
+            mimeType = 'image/gif';
+            break;
+          case 'pdf':
+            mimeType = 'application/pdf';
+            break;
+          case 'doc':
+            mimeType = 'application/msword';
+            break;
+          case 'docx':
+            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            break;
+          default:
+            throw Exception('Unsupported file type: $extension');
+        }
+
+        formData.files.add(
+            MapEntry('media',
+                await MultipartFile.fromFile(
+                    imagePaths[i],
+                    filename: 'file$i.$extension',
+                    contentType: MediaType.parse(mimeType)
+                )
+            )
+        );
       }
-      print("formData $formData");
 
-      final response = await dio.post('${AppConstants.baseUrl}/stories/create',
-        options:  Options(
+      // Make the request with reasonable timeouts
+      final response = await dio.post(
+          '${AppConstants.baseUrl}/stories/create',
+          options: Options(
             headers: {
-              'Authorization':'Bearer $accessToken',
-             // 'Content-Type': 'multipart/form-data',
+              'Authorization': 'Bearer $accessToken',
             },
-
-        ),
+            sendTimeout: const Duration(minutes: 2),
+            receiveTimeout: const Duration(minutes: 2),
+            contentType: 'multipart/form-data',
+          ),
           onSendProgress: (sent, total) {
-            final progress = (sent / total * 100).toStringAsFixed(2);
-            print('Upload Progress---------------------------------------: $progress%');
+            if (total != -1) {
+              final progress = (sent / total * 100).toStringAsFixed(2);
+              print('Upload Progress: $progress%');
+            }
           },
-        data: formData
+          data: formData
       );
 
-      print("Response status code: ${response.statusCode}");
-      print("Response data: ${response.data}");
-
       if (response.statusCode == 201) {
-
-        Map<String,dynamic> rawStory=Map<String,dynamic>.from(response.data['story']);
-
-        StoryModel story = StoryModel.fromJson(rawStory);
-
-        print("stories $rawStory");
-        return story;
-      }else{
-        throw Exception('Failed to create a story  ${response.statusMessage}');
+        Map<String, dynamic> rawStory = Map<String, dynamic>.from(response.data['story']);
+        return StoryModel.fromJson(rawStory);
+      } else {
+        throw Exception('Failed to create story: ${response.statusMessage}');
       }
 
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       print("DioException details:");
       print("Status code: ${e.response?.statusCode}");
       print("Error response: ${e.response?.data}");
       print("Error type: ${e.type}");
       print("Error message: ${e.message}");
-      if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
-        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+
+      if (e.type == DioExceptionType.connectionTimeout) {
+        throw Exception('Upload timed out. Please check your internet connection.');
+      } else if (e.response != null) {
+        throw Exception(e.response?.data['message'] ?? "An error occurred");
+      } else {
+        throw Exception('Network error occurred: ${e.message}');
       }
-      else{
-        print("Error sending request: ${e.message}");
-        throw Exception('Network error occurred');
-      }
-    }
-    catch(e){
+    } catch (e) {
       print("Error: $e");
-      throw Exception('An unexpected error occurred');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+
+  Future<StoryModel> updateStory(Map<String, dynamic> story,String storyId) async {
+    try {
+      String? accessToken = await HiveUtils.getAccessToken();
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception("AccessToken not found");
+      }
+
+      // Create form data with basic story information
+      FormData formData = FormData.fromMap({
+        "title": story["title"],
+        'content': story['content'],
+        'category': story['category'],
+        'tags': story['tags'],
+      });
+
+      // Handle images
+      List<String> imagePaths = story['images'] ?? [];
+      if (imagePaths.length > 5) {
+        throw Exception("Maximum 5 files allowed");
+      }
+
+      // Add files to form data with proper MIME type
+      for (int i = 0; i < imagePaths.length; i++) {
+        File imageFile = File(imagePaths[i]);
+        if (!await imageFile.exists()) {
+          throw Exception("Image file not found: ${imagePaths[i]}");
+        }
+
+        String extension = imagePaths[i].split('.').last.toLowerCase();
+        String mimeType;
+
+        // Set correct MIME type based on file extension
+        switch (extension) {
+          case 'jpg':
+          case 'jpeg':
+            mimeType = 'image/jpeg';
+            break;
+          case 'png':
+            mimeType = 'image/png';
+            break;
+          case 'gif':
+            mimeType = 'image/gif';
+            break;
+          case 'pdf':
+            mimeType = 'application/pdf';
+            break;
+          case 'doc':
+            mimeType = 'application/msword';
+            break;
+          case 'docx':
+            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            break;
+          default:
+            throw Exception('Unsupported file type: $extension');
+        }
+
+        formData.files.add(
+            MapEntry('media',
+                await MultipartFile.fromFile(
+                    imagePaths[i],
+                    filename: 'file$i.$extension',
+                    contentType: MediaType.parse(mimeType)
+                )
+            )
+        );
+      }
+
+      // Make the request with reasonable timeouts
+      final response = await dio.post(
+          '${AppConstants.baseUrl}/stories/update/$storyId',
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $accessToken',
+            },
+            sendTimeout: const Duration(minutes: 2),
+            receiveTimeout: const Duration(minutes: 2),
+            contentType: 'multipart/form-data',
+          ),
+          onSendProgress: (sent, total) {
+            if (total != -1) {
+              final progress = (sent / total * 100).toStringAsFixed(2);
+              print('Upload Progress: $progress%');
+            }
+          },
+          data: formData
+      );
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> rawStory = Map<String, dynamic>.from(response.data['story']);
+        return StoryModel.fromJson(rawStory);
+      } else {
+        throw Exception('Failed to update story: ${response.statusMessage}');
+      }
+
+    } on DioException catch (e) {
+      print("DioException details:");
+      print("Status code: ${e.response?.statusCode}");
+      print("Error response: ${e.response?.data}");
+      print("Error type: ${e.type}");
+      print("Error message: ${e.message}");
+
+      if (e.type == DioExceptionType.connectionTimeout) {
+        throw Exception('Upload timed out. Please check your internet connection.');
+      } else if (e.response != null) {
+        throw Exception(e.response?.data['message'] ?? "An error occurred");
+      } else {
+        throw Exception('Network error occurred: ${e.message}');
+      }
+    } catch (e) {
+      print("Error: $e");
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
