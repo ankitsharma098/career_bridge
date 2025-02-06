@@ -10,23 +10,24 @@ import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/story/story_model.dart';
 import '../bloc/story_bloc.dart';
 import '../create_story_bloc/create_story_bloc.dart';
+import '../stats_bloc/story_stats_bloc.dart';
 import 'create_story.dart';
 import 'edit_story.dart';
 
-class StoriesScreen extends StatefulWidget {
-  const StoriesScreen({super.key, required this.employerId});
-  final String employerId;
+class MyStoriesScreen extends StatefulWidget {
+  const MyStoriesScreen({super.key});
+
 
   @override
-  State<StoriesScreen> createState() => _StoriesScreenState();
+  State<MyStoriesScreen> createState() => _MyStoriesScreenState();
 }
 
-class _StoriesScreenState extends State<StoriesScreen> {
+class _MyStoriesScreenState extends State<MyStoriesScreen> {
   final ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
-    BlocProvider.of<StoryBloc>(context).add(FetchStoriesEvent());
+    BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryEvent(isMyStory: true));
     scrollController.addListener(_onScroll);
     super.initState();
   }
@@ -38,9 +39,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
   }
 
   void _onScroll() {
-    final state = context.read<StoryBloc>().state;
-    if (_isBottom && state is StoryLoadedState && !state.hasReachedMax) {
-      BlocProvider.of<StoryBloc>(context).add(LoadMoreStories());
+    final state = context.read<StoryStatsBloc>().state;
+    if (_isBottom && state is StoryLoaded && !state.hasReachedMax) {
+      BlocProvider.of<StoryStatsBloc>(context).add(LoadMoreStoriesEvent(isMyStory: true));
     }
   }
 
@@ -54,80 +55,42 @@ class _StoriesScreenState extends State<StoriesScreen> {
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        vertical: screenSize.width * 0.04,
-        horizontal: screenSize.width * 0.02,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(context, screenSize),
-          SizedBox(height: screenSize.height * 0.02),
-          Expanded(child: _buildStoryList(screenSize)),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        title: Text("My Stories"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context),
+        ),),
+      body: Padding(
+        padding: EdgeInsets.symmetric(
+          vertical: screenSize.width * 0.04,
+          horizontal: screenSize.width * 0.02,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildStoryList(screenSize)),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, Size screenSize) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Posted Stories',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: screenSize.width * 0.06,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-            ),
-          ),
-          AnimatedContainer(
-            duration: Duration(milliseconds: 200),
-            child: IconButton(
-              icon: Icon(Icons.add_circle, color: Theme.of(context).primaryColor),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BlocProvider(
-                      create: (context) => StoryCreationBloc(),
-                      child: CreateStoryScreen(
-                        onStoryCreated: (StoryModel story) {
-                          final state = context.read<StoryBloc>().state;
-                          if (state is StoryLoadedState) {
-                            setState(() {
-                              state.stories.insert(0, story);
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
-              iconSize: screenSize.width * 0.08,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
   Widget _buildStoryList(Size screenSize) {
-    return BlocConsumer<StoryBloc, StoryState>(
+    return BlocConsumer<StoryStatsBloc, StoryStatsState>(
       listener: (context, state) {
-        if (state is StoryErrorState) {
+        if (state is StoryStatsError) {
           return SnackBarUtils.showRedSnackBar(state.error.toString(), context);
         }
       },
       builder: (context, state) {
-        if (state is StoryLoadingState) {
+        if (state is StoryStatsLoading) {
           return StoriesShimmerScreen();
         }
 
-        if (state is StoryLoadedState) {
+        if (state is StoryLoaded) {
           if (state.stories.isEmpty) {
             return Center(
               child: Column(
@@ -167,7 +130,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
           }
           return RefreshIndicator(
             onRefresh: () async {
-              BlocProvider.of<StoryBloc>(context).add(FetchStoriesEvent());
+              BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryEvent(isMyStory: true));
             },
             child: ListView.builder(
               controller: scrollController,
@@ -240,7 +203,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
   Widget _buildStoryCard(StoryModel story, Size screenSize, BuildContext context) {
     final date = DateTime.parse(story.createdAt);
-    final isOwner = story.hostDetails.id == widget.employerId;
+
 
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -263,7 +226,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
               DateFormat('MMM dd, yyyy').format(date),
               style: TextStyle(color: Colors.grey[600]),
             ),
-            trailing: isOwner ? _buildEditButton(story, context) : null,
+            trailing:_buildEditButton(story, context),
           ),
           if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
           Padding(
@@ -281,8 +244,8 @@ class _StoriesScreenState extends State<StoriesScreen> {
                 SizedBox(height: 8),
                 Text(
                   story.content,
-                 // maxLines: 6,
-                 // overflow: TextOverflow.ellipsis,
+                  // maxLines: 6,
+                  // overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: screenSize.width * 0.035,
                     color: Colors.grey[700],

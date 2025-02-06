@@ -1,6 +1,7 @@
 import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/story/story_model.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
+import 'package:android/features/Stories/ui/saved_stories.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -8,13 +9,17 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/utils/image_viewer.dart';
 import '../../Jobs/ui/shimmer/Job_stats_shimmer.dart';
+import '../create_story_bloc/create_story_bloc.dart';
+import 'edit_story.dart';
+import 'my_stories.dart';
 import 'shimmers/mystory_shimmer.dart';
 
 
 class StoryStatsTab extends StatefulWidget {
 
+  final String employerId;
   const StoryStatsTab({
-    super.key,
+    super.key, required this.employerId,
   });
 
   @override
@@ -167,19 +172,35 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
       crossAxisSpacing: screenSize.width * 0.03,
       childAspectRatio: 1.5,
       children: [
-        _statsCard(
-          'Total Stories',
-          metrics['totalStories'].toString(),
-          Icons.auto_stories,
-          Colors.blue,
-          screenSize,
+        InkWell(
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
+              create: (context) => StoryStatsBloc(),
+              child: MyStoriesScreen(),
+            ),));
+          },
+          child: _statsCard(
+            'Total Stories',
+            metrics['totalStories'].toString(),
+            Icons.auto_stories,
+            Colors.blue,
+            screenSize,
+          ),
         ),
-        _statsCard(
-          'Saved Stories',
-          metrics['savedStories'].toString(),
-          Icons.bookmark,
-          Colors.green,
-          screenSize,
+        InkWell(
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
+              create: (context) => StoryStatsBloc(),
+              child: SavedStoriesScreen(employerId: widget.employerId,),
+            ),));
+          },
+          child: _statsCard(
+            'Saved Stories',
+            metrics['savedStories'].toString(),
+            Icons.bookmark,
+            Colors.green,
+            screenSize,
+          ),
         ),
         _statsCard(
           'Total Views',
@@ -338,11 +359,28 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
     return IconButton(
       icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
       onPressed: () {
-        // Add your edit functionality here
-        // Navigate to edit screen or show edit dialog
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BlocProvider(
+              create: (context) => StoryCreationBloc(),
+              child: EditStoryScreen(
+                onStoryEdited: (StoryModel story) {
+                  // final state = context.read<StoryBloc>().state;
+                  // if (state is StoryLoadedState) {
+                  //   setState(() {
+                  //     state.stories.insert(0, story);
+                  //   });
+                  // }
+                }, story: story,
+              ),
+            ),
+          ),
+        );
       },
     );
   }
+  
   Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
     return Container(
       height: screenSize.height * 0.25,

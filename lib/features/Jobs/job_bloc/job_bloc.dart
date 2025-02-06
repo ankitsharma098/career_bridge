@@ -23,8 +23,9 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       emit(JobLoading());
       List<JobModel> jobs = await apiService.fetchPostedJobs(1);
 
-
-      emit(JobLoaded(jobs: jobs, hasReachedMax: false, currentPage: 1));
+      final int pageSize = 10; // Adjust this to match your API's page size
+      bool hasReachedMax = jobs.length < pageSize;
+      emit(JobLoaded(jobs: jobs, hasReachedMax: hasReachedMax, currentPage: 1));
 
 
     }catch(e){

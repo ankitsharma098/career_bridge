@@ -15,6 +15,7 @@ class StoryCreationBloc extends Bloc<StoryCreationEvent, StoryCreationState> {
   StoryCreationBloc() : super(StoryCreationInitial()) {
     on<SubmitStoryEvent>(_onSubmitStory);
 
+
   }
 
   Future<void> _onSubmitStory(

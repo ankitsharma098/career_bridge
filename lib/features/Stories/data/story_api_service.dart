@@ -34,14 +34,109 @@ class StoryApiService {
 
         List<Map<String,dynamic>> rawStories=List<Map<String,dynamic>>.from(response.data['stories']);
 
-       // Map<String,dynamic> pagination=Map<String,dynamic>.from(response.data['pagination']);
+        print("raw response $rawStories");
+        List<StoryModel> stories = rawStories
+            .map((json) => StoryModel.fromJson(json))
+            .toList();
+
+        print("stories $StoryModel");
+        return stories;
+      }else{
+        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+        throw Exception('Failed to Load stories ${response.statusMessage}');
+      }
 
 
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
+
+  Future<List<StoryModel>> fetchMyStories(int page) async{
+
+    try{
+      print("fetchMyStories api");
+
+      String? accessToken = await HiveUtils.getAccessToken();
+
+      if(accessToken==null || accessToken.isEmpty){
+        throw Exception("AccessToken not found");
+      }
+      final response = await dio.get('${AppConstants.baseUrl}/stories/myStories?page=$page',
+        options:  Options(
+            headers: {
+              'Authorization':'Bearer $accessToken'
+            }
+        ),
+      );
+
+      if (response.statusCode == 200) {
+
+        List<Map<String,dynamic>> rawStories=List<Map<String,dynamic>>.from(response.data['myStories']);
 
         print("raw response $rawStories");
         List<StoryModel> stories = rawStories
             .map((json) => StoryModel.fromJson(json))
             .toList();
+
+        print("stories $StoryModel");
+        return stories;
+      }else{
+        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+        throw Exception('Failed to Load stories ${response.statusMessage}');
+      }
+
+
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
+  Future<List<StoryModel>> fetchSavedStories(int page) async{
+
+    try{
+      print("fetchSavedStories api");
+
+      String? accessToken = await HiveUtils.getAccessToken();
+
+      if(accessToken==null || accessToken.isEmpty){
+        throw Exception("AccessToken not found");
+      }
+      final response = await dio.get('${AppConstants.baseUrl}/stories/savedStories?page=$page',
+        options:  Options(
+            headers: {
+              'Authorization':'Bearer $accessToken'
+            }
+        ),
+      );
+
+      if (response.statusCode == 200) {
+
+        List<Map<String,dynamic>> rawStories=List<Map<String,dynamic>>.from(response.data['savedStories']);
+
+        print("raw response $rawStories");
+        List<StoryModel> stories = rawStories.map((json) => StoryModel.fromJson(json)).toList();
 
         print("stories $StoryModel");
         return stories;
@@ -240,8 +335,13 @@ class StoryApiService {
         "title": story["title"],
         'content': story['content'],
         'category': story['category'],
+        'keepMediaIds':story['keepMediaIds'],
         'tags': story['tags'],
       });
+
+
+      print("story formData$formData");
+      print("story $story");
 
       // Handle images
       List<String> imagePaths = story['images'] ?? [];
@@ -296,7 +396,7 @@ class StoryApiService {
       }
 
       // Make the request with reasonable timeouts
-      final response = await dio.post(
+      final response = await dio.put(
           '${AppConstants.baseUrl}/stories/update/$storyId',
           options: Options(
             headers: {

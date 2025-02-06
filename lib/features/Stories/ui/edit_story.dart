@@ -33,6 +33,7 @@ class _EditStoryScreenState extends State<EditStoryScreen> {
   late String _selectedCategory;
   late List<String> selectedTags;
   late List<XFile> _selectedImages;
+  List<String> keepMediaObjectId=[];
 
   @override
   void initState() {
@@ -42,8 +43,21 @@ class _EditStoryScreenState extends State<EditStoryScreen> {
    _selectedCategory=widget.story.category;
    selectedTags=widget.story.tags;
    _selectedImages = [];
+   keepMediaObjectId=widget.story.mediaUrls.map((media)=>media.id).toList();
   }
-
+  void _removeImage(String? mediaId, bool isExisting) {
+    setState(() {
+      if (isExisting && mediaId != null) {
+        keepMediaObjectId.remove(mediaId);
+      } else {
+        // For new images, we'll need the index
+        int index = _selectedImages.indexWhere((img) => img.path == mediaId);
+        if (index != -1) {
+          _selectedImages.removeAt(index);
+        }
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
@@ -51,7 +65,7 @@ class _EditStoryScreenState extends State<EditStoryScreen> {
       listener: (context, state) {
         if (state is StoryCreationSuccess) {
           widget.onStoryEdited(state.story);
-          SnackBarUtils.showGreenSnackBar("Story Updated Successfully", context);
+          SnackBarUtils.showGreenSnackBar("Story Updated Successfully Please Refresh Page", context);
           Navigator.pop(context);
         } else if (state is StoryCreationError) {
           SnackBarUtils.showRedSnackBar("Failed to Update Story", context);
@@ -226,52 +240,89 @@ class _EditStoryScreenState extends State<EditStoryScreen> {
       ],
     );
   }
+
   Widget _buildSelectedImagesGrid(ThemeData theme) {
-    return _selectedImages.isEmpty
-        ? const SizedBox.shrink()
-        : GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: _selectedImages.length,
-      itemBuilder: (context, index) {
-        return Stack(
-          children: [
-            Container(
+    return Column(
+      children: [
+        // Display existing media
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemCount: widget.story.mediaUrls.length + _selectedImages.length,
+          itemBuilder: (context, index) {
+            // Show existing images first
+            if (index < widget.story.mediaUrls.length) {
+              final media = widget.story.mediaUrls[index];
+              if (!keepMediaObjectId.contains(media.id)) {
+                return const SizedBox.shrink();
+              }
+
+              return _buildImageTile(
+                imageProvider: NetworkImage(media.url),
+                onRemove: () => _removeImage(media.id, true),
+                theme: theme,
+              );
+            }
+            // Then show newly selected images
+            else {
+              final newIndex = index - widget.story.mediaUrls.length;
+              if (newIndex >= _selectedImages.length) {
+                return const SizedBox.shrink();
+              }
+
+              return _buildImageTile(
+                imageProvider: FileImage(File(_selectedImages[newIndex].path)),
+                onRemove: () => _removeImage(_selectedImages[newIndex].path, false),
+                theme: theme,
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageTile({
+    required ImageProvider imageProvider,
+    required VoidCallback onRemove,
+    required ThemeData theme,
+  }) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            image: DecorationImage(
+              image: imageProvider,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              margin: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                image: DecorationImage(
-                  image: FileImage(File(_selectedImages[index].path)),
-                  fit: BoxFit.cover,
-                ),
+                color: theme.colorScheme.error.withOpacity(0.7),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.close,
+                color: theme.colorScheme.onError,
+                size: 20,
               ),
             ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: () => _removeImage(index),
-                child: Container(
-                  margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.error.withOpacity(0.7),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.close,
-                    color: theme.colorScheme.onError,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
@@ -284,12 +335,6 @@ class _EditStoryScreenState extends State<EditStoryScreen> {
       _selectedImages.addAll(
           images.take(6 - _selectedImages.length)
       );
-    });
-  }
-
-  void _removeImage(int index) {
-    setState(() {
-      _selectedImages.removeAt(index);
     });
   }
 
@@ -326,6 +371,7 @@ class _EditStoryScreenState extends State<EditStoryScreen> {
               'content': _contentController.text,
               'category': _selectedCategory,
               'tags': jsonEncode(selectedTags),
+              'keepMediaIds': jsonEncode(keepMediaObjectId),
               'images': _selectedImages.map((image) => image.path).toList(),
             };
 

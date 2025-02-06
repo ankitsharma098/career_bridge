@@ -8,6 +8,7 @@ abstract class StoryEvent extends Equatable {
 }
 
 class FetchStoriesEvent extends StoryEvent {}
+
 class LoadMoreStories extends StoryEvent {}
 
 class LikeStoryEvent extends StoryEvent {

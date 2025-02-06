@@ -50,13 +50,13 @@ Map<String, dynamic> _$StoryModelToJson(StoryModel instance) =>
 
 MediaUrl _$MediaUrlFromJson(Map<String, dynamic> json) => MediaUrl(
       url: json['url'] as String? ?? '',
-      type: json['type'] as String? ?? '',
+      publicId: json['publicId'] as String? ?? '',
       id: json['_id'] as String? ?? '',
     );
 
 Map<String, dynamic> _$MediaUrlToJson(MediaUrl instance) => <String, dynamic>{
       'url': instance.url,
-      'type': instance.type,
+      'type': instance.publicId,
       '_id': instance.id,
     };
 

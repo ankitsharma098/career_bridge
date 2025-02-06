@@ -75,14 +75,14 @@ class MediaUrl {
   final String url;
 
   @JsonKey(defaultValue: '')
-  final String type;
+  final String publicId;
 
   @JsonKey(name: '_id', defaultValue: '')
   final String id;
 
   MediaUrl({
     this.url = '',
-    this.type = '',
+    this.publicId = '',
     this.id = '',
   });
 

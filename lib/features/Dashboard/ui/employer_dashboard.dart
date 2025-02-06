@@ -299,7 +299,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => StoryStatsBloc(),
-                      child: StoryStatsTab(),
+                      child: StoryStatsTab(employerId: employerData!.id,),
                     ), // You'll need to create this screen
                   ),
                 );

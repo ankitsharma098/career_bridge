@@ -16,6 +16,16 @@ class StoryStatsLoaded extends StoryStatsState {
 
 
 }
+class StoryLoaded extends StoryStatsState {
+
+  final List<StoryModel> stories;
+  final bool hasReachedMax;
+  final int currentPage;
+
+  StoryLoaded({required this.stories, required this.hasReachedMax, required this.currentPage});
+
+
+}
 
 class StoryStatsError extends StoryStatsState {
 

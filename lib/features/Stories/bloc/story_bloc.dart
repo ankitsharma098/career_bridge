@@ -15,6 +15,7 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     on<FetchStoriesEvent>(_onFetchStories);
     on<LoadMoreStories>(_onLoadMoreStories);
     on<LikeStoryEvent>(_onLikeStory);
+
   }
 
   Future<void> _onFetchStories(
@@ -25,8 +26,9 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     try {
 
       List<StoryModel> stories =await apiService.fetchStories(1);
-
-      emit(StoryLoadedState(stories: stories, hasReachedMax: false, currentPage: 1));
+      final int pageSize = 10; // Adjust this to match your API's page size
+      bool hasReachedMax = stories.length < pageSize;
+      emit(StoryLoadedState(stories: stories, hasReachedMax: hasReachedMax, currentPage: 1));
     } catch (e) {
       emit(StoryErrorState(e.toString()));
     }
