@@ -27,6 +27,13 @@ class StoryLoaded extends StoryStatsState {
 
 }
 
+class StorySuccess extends StoryStatsState{
+
+  final String message;
+
+  StorySuccess({required this.message});
+
+}
 class StoryStatsError extends StoryStatsState {
 
   final String error;

@@ -11,10 +11,9 @@ class FetchStoriesEvent extends StoryEvent {}
 
 class LoadMoreStories extends StoryEvent {}
 
-class LikeStoryEvent extends StoryEvent {
+class ToggleStoryLikeEvent extends StoryEvent {
   final String storyId;
-
-  const LikeStoryEvent(this.storyId);
+  const ToggleStoryLikeEvent(this.storyId);
 
   @override
   List<Object> get props => [storyId];

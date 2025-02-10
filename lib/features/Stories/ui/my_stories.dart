@@ -84,11 +84,17 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
         if (state is StoryStatsError) {
           return SnackBarUtils.showRedSnackBar(state.error.toString(), context);
         }
+        if(state is StorySuccess) {
+
+          return SnackBarUtils.showGreenSnackBar(state.message, context);
+        }
       },
       builder: (context, state) {
         if (state is StoryStatsLoading) {
           return StoriesShimmerScreen();
         }
+
+
 
         if (state is StoryLoaded) {
           if (state.stories.isEmpty) {
@@ -226,7 +232,15 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
               DateFormat('MMM dd, yyyy').format(date),
               style: TextStyle(color: Colors.grey[600]),
             ),
-            trailing:_buildEditButton(story, context),
+            trailing:SizedBox(
+              width: screenSize.width*0.25,
+              child: Row(
+                children: [
+                  _buildEditButton(story, context),
+                  _buildDeleteButton(story.id, context),
+                ],
+              ),
+            )
           ),
           if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
           Padding(
@@ -265,7 +279,7 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
 
   Widget _buildEditButton(StoryModel story, BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
+      icon: Icon(Icons.edit),
       onPressed: () {
         Navigator.push(
           context,
@@ -288,6 +302,15 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
       },
     );
   }
+  Widget _buildDeleteButton(String storyId, BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.delete,color: Colors.red,),
+      onPressed: () {
+        BlocProvider.of<StoryStatsBloc>(context).add(DeleteStory(storyId: storyId));
+      },
+    );
+  }
+
 
   Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
     return Container(

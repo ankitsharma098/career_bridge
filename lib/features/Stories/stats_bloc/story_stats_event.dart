@@ -10,6 +10,16 @@ class FetchStoryEvent extends StoryStatsEvent{
 
   FetchStoryEvent({required this.isMyStory});
 }
+
+class DeleteStory extends StoryStatsEvent{
+
+  final String storyId;
+
+  DeleteStory({required this.storyId});
+
+
+}
+
 class LoadMoreStoriesEvent extends StoryStatsEvent {
 
   final bool isMyStory;

@@ -55,13 +55,47 @@ class StoryModel {
     this.tags = const [],
     this.category = '',
     this.views = 0,
-     this.createdAt='',
-     this.hostDetails=const HostDetails(),
+    this.createdAt = '',
+    this.hostDetails = const HostDetails(),
     this.isLiked = false,
     this.likesCount = 0,
     this.commentsCount = 0,
     this.sharesCount = 0,
   });
+
+  StoryModel copyWith({
+    String? id,
+    String? userType,
+    String? title,
+    String? content,
+    List<MediaUrl>? mediaUrls,
+    List<String>? tags,
+    String? category,
+    int? views,
+    String? createdAt,
+    HostDetails? hostDetails,
+    bool? isLiked,
+    int? likesCount,
+    int? commentsCount,
+    int? sharesCount,
+  }) {
+    return StoryModel(
+      id: id ?? this.id,
+      userType: userType ?? this.userType,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      mediaUrls: mediaUrls ?? this.mediaUrls,
+      tags: tags ?? this.tags,
+      category: category ?? this.category,
+      views: views ?? this.views,
+      createdAt: createdAt ?? this.createdAt,
+      hostDetails: hostDetails ?? this.hostDetails,
+      isLiked: isLiked ?? this.isLiked,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      sharesCount: sharesCount ?? this.sharesCount,
+    );
+  }
 
   factory StoryModel.fromJson(Map<String, dynamic> json) =>
       _$StoryModelFromJson(json);
@@ -86,6 +120,18 @@ class MediaUrl {
     this.id = '',
   });
 
+  MediaUrl copyWith({
+    String? url,
+    String? publicId,
+    String? id,
+  }) {
+    return MediaUrl(
+      url: url ?? this.url,
+      publicId: publicId ?? this.publicId,
+      id: id ?? this.id,
+    );
+  }
+
   factory MediaUrl.fromJson(Map<String, dynamic> json) =>
       _$MediaUrlFromJson(json);
 
@@ -108,6 +154,18 @@ class HostDetails {
     this.name = '',
     this.profilePic = '',
   });
+
+  HostDetails copyWith({
+    String? id,
+    String? name,
+    String? profilePic,
+  }) {
+    return HostDetails(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      profilePic: profilePic ?? this.profilePic,
+    );
+  }
 
   factory HostDetails.fromJson(Map<String, dynamic> json) =>
       _$HostDetailsFromJson(json);

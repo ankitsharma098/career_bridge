@@ -14,7 +14,7 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
    StoryBloc() : super(StoryInitialState()) {
     on<FetchStoriesEvent>(_onFetchStories);
     on<LoadMoreStories>(_onLoadMoreStories);
-    on<LikeStoryEvent>(_onLikeStory);
+    on<ToggleStoryLikeEvent>(_onToggleStoryLikeEvent);
 
   }
 
@@ -60,35 +60,47 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
         }
       }
     }
-
-
-    Future<void> _onLikeStory(
-        LikeStoryEvent event,
-        Emitter<StoryState> emit
-        ) async {
-      if (state is StoryLoadedState) {
-        try {
-          //await repository.likeStory(event.storyId);
-          // Refresh stories after like
-          add(FetchStoriesEvent());
-        } catch (e) {
-          emit(StoryErrorState(e.toString()));
-        }
-      }
-    }
   }
 
-
-  Future<void> _onLikeStory(
-      LikeStoryEvent event,
-      Emitter<StoryState> emit
-      ) async {
+  Future<void> _onToggleStoryLikeEvent(ToggleStoryLikeEvent event, Emitter<StoryState> emit) async {
     if (state is StoryLoadedState) {
+      final currentState = state as StoryLoadedState;
       try {
-        //await repository.likeStory(event.storyId);
-        // Refresh stories after like
-        add(FetchStoriesEvent());
+        // First update the UI optimistically
+        final optimisticStories = currentState.stories.map((story) {
+          if (story.id == event.storyId) {
+            return story.copyWith(
+              isLiked: !story.isLiked,
+              likesCount: story.isLiked ? story.likesCount - 1 : story.likesCount + 1,
+            );
+          }
+          return story;
+        }).toList();
+
+        emit(StoryLoadedState(
+            stories: optimisticStories,
+            hasReachedMax: currentState.hasReachedMax,
+            currentPage: currentState.currentPage
+        ));
+
+        // Then make the API call
+        final success = await apiService.likedStory(event.storyId);
+
+        if (!success) {
+          // If the API call fails, revert the optimistic update
+          emit(StoryLoadedState(
+              stories: currentState.stories,
+              hasReachedMax: currentState.hasReachedMax,
+              currentPage: currentState.currentPage
+          ));
+        }
       } catch (e) {
+        // If there's an error, revert to the original state
+        emit(StoryLoadedState(
+            stories: currentState.stories,
+            hasReachedMax: currentState.hasReachedMax,
+            currentPage: currentState.currentPage
+        ));
         emit(StoryErrorState(e.toString()));
       }
     }

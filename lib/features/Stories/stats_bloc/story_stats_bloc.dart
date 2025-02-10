@@ -13,6 +13,7 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
     on<FetchStoryStats>(_onFetchStoryStats);
     on<FetchStoryEvent>(_onFetchStoryEvent);
     on<LoadMoreStoriesEvent>(_onLoadMoreStoriesEvent);
+    on<DeleteStory>(_onDeleteStory);
   }
 
   Future<void> _onFetchStoryStats(FetchStoryStats event, Emitter<StoryStatsState> emit) async {
@@ -58,6 +59,7 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
   Future<void> _onLoadMoreStoriesEvent(LoadMoreStoriesEvent events, Emitter<StoryStatsState> emit) async {
     final currentState = state;
     if (currentState is StoryLoaded) {
+
       if (!currentState.hasReachedMax) {
         try {
           List<StoryModel> newStories;
@@ -91,4 +93,26 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
 
 
 }
+
+  Future<void> _onDeleteStory(DeleteStory event , Emitter<StoryStatsState> emit) async {
+
+    try{
+      emit(StoryStatsLoading());
+
+
+      bool success= await apiService.deleteStory(event.storyId);
+
+      if(success) {
+        emit(StorySuccess(message: 'Story deleted successfully'));
+      }else{
+        emit(StoryStatsError(error: "Failed to delete story"));
+      }
+      add(FetchStoryEvent(isMyStory: true));
+
+    }catch(e){
+
+      emit(StoryStatsError(error: e.toString()));
+    }
+
+  }
 }

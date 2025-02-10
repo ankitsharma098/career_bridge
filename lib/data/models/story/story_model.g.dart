@@ -56,7 +56,7 @@ MediaUrl _$MediaUrlFromJson(Map<String, dynamic> json) => MediaUrl(
 
 Map<String, dynamic> _$MediaUrlToJson(MediaUrl instance) => <String, dynamic>{
       'url': instance.url,
-      'type': instance.publicId,
+      'publicId': instance.publicId,
       '_id': instance.id,
     };
 

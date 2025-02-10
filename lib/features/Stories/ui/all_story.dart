@@ -1,3 +1,4 @@
+import 'package:android/features/Stories/ui/reaction_screen.dart';
 import 'package:android/features/Stories/ui/shimmers/all_story_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +11,8 @@ import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/story/story_model.dart';
 import '../bloc/story_bloc.dart';
 import '../create_story_bloc/create_story_bloc.dart';
+import '../data/story_api_service.dart';
+import '../reaction_bloc/story_reaction_bloc.dart';
 import 'create_story.dart';
 import 'edit_story.dart';
 
@@ -294,7 +297,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
           ),
           _buildTags(story, screenSize),
           Divider(height: 1),
-          _buildInteractionBar(story, screenSize),
+          _buildReactionsCountBar(story),
+          const Divider(height: 1),
+          _buildBottomBar(story),
         ],
       ),
     );
@@ -402,31 +407,93 @@ class _StoriesScreenState extends State<StoriesScreen> {
     );
   }
 
-  Widget _buildInteractionBar(StoryModel story, Size screenSize) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+
+  Widget _buildReactionsCountBar(StoryModel story) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BlocProvider(
+              create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+              child: StoryReactionsScreen(
+                story: story,
+                employerId: widget.employerId,
+              ),
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            // Like indicators
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    story.isLiked ? Icons.favorite : Icons.thumb_up,
+                    size: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            Text('${story.likesCount} likes'),
+            const Spacer(),
+            Text('${story.commentsCount} comments'),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildBottomBar(StoryModel story) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildInteractionButton(
             icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
-            count: story.likesCount,
-            color: story.isLiked ? Colors.red : null,
-            onTap: () {},
+            label: 'Like',
+            color: story.isLiked ? Theme.of(context).primaryColor : null,
+            onTap: () => context.read<StoryBloc>().add(
+              ToggleStoryLikeEvent(story.id),
+            ),
           ),
           _buildInteractionButton(
             icon: Icons.comment_outlined,
-            count: story.commentsCount,
-            onTap: () {},
+            label: 'Comment',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                    child: StoryReactionsScreen(
+                      story: story,
+                      employerId: widget.employerId,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-          _buildInteractionButton(
-            icon: Icons.remove_red_eye_outlined,
-            count: story.views,
-          ),
-          _buildInteractionButton(
-            icon: Icons.share_outlined,
-            count: story.sharesCount,
-          ),
+          // ... other buttons
         ],
       ),
     );
@@ -434,26 +501,19 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
   Widget _buildInteractionButton({
     required IconData icon,
-    required int count,
+    required String label,
+    required VoidCallback onTap,
     Color? color,
-    VoidCallback? onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: color ?? Colors.grey[600]),
-            SizedBox(width: 4),
-            Text(
-              '$count',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 4),
+            Text(label),
           ],
         ),
       ),
