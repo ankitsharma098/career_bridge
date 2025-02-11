@@ -1,12 +1,7 @@
 part of 'story_bloc.dart';
 
 // States
-abstract class StoryState extends Equatable {
-  const StoryState();
-
-  @override
-  List<Object> get props => [];
-}
+sealed class StoryState {}
 
 class StoryInitialState extends StoryState {}
 
@@ -17,19 +12,14 @@ class StoryLoadedState extends StoryState {
   final bool hasReachedMax;
   final int currentPage;
 
-  const StoryLoadedState({required this.stories, required this.hasReachedMax, required this.currentPage});
+  StoryLoadedState({required this.stories, required this.hasReachedMax, required this.currentPage});
 
 
-
-  @override
-  List<Object> get props => [stories];
 }
 
 class StoryErrorState extends StoryState {
   final String error;
 
-  const StoryErrorState(this.error);
+   StoryErrorState(this.error);
 
-  @override
-  List<Object> get props => [error];
 }

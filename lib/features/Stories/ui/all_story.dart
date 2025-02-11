@@ -26,7 +26,7 @@ class StoriesScreen extends StatefulWidget {
 
 class _StoriesScreenState extends State<StoriesScreen> {
   final ScrollController scrollController = ScrollController();
-
+  bool _isLoadingMore = false;
   @override
   void initState() {
     BlocProvider.of<StoryBloc>(context).add(FetchStoriesEvent());
@@ -41,8 +41,11 @@ class _StoriesScreenState extends State<StoriesScreen> {
   }
 
   void _onScroll() {
+    if (_isLoadingMore) return;  // Skip if already loading
+
     final state = context.read<StoryBloc>().state;
     if (_isBottom && state is StoryLoadedState && !state.hasReachedMax) {
+      _isLoadingMore = true;  // Set flag before loading
       BlocProvider.of<StoryBloc>(context).add(LoadMoreStories());
     }
   }
@@ -51,7 +54,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
     if (!scrollController.hasClients) return false;
     final maxScroll = scrollController.position.maxScrollExtent;
     final currentScroll = scrollController.offset;
-    return currentScroll >= (maxScroll * 0.8);
+    return currentScroll >= (maxScroll * 0.9);
   }
 
   @override
@@ -122,8 +125,10 @@ class _StoriesScreenState extends State<StoriesScreen> {
     return BlocConsumer<StoryBloc, StoryState>(
       listener: (context, state) {
         if (state is StoryErrorState) {
+          _isLoadingMore = false;
           return SnackBarUtils.showRedSnackBar(state.error.toString(), context);
         }
+
       },
       builder: (context, state) {
         if (state is StoryLoadingState) {
@@ -131,6 +136,8 @@ class _StoriesScreenState extends State<StoriesScreen> {
         }
 
         if (state is StoryLoadedState) {
+
+          print("has readed ${state.hasReachedMax}");
           if (state.stories.isEmpty) {
             return Center(
               child: Column(
@@ -176,15 +183,14 @@ class _StoriesScreenState extends State<StoriesScreen> {
               controller: scrollController,
               itemCount: state.stories.length + (state.hasReachedMax ? 0 : 1),
               itemBuilder: (context, index) {
+
                 if (index >= state.stories.length) {
                   if (!state.hasReachedMax && state.stories.isNotEmpty) {
                     return Center(
                       child: Padding(
                         padding: EdgeInsets.all(16),
                         child: LoadingAnimationWidget.progressiveDots(
-                            color: Theme
-                                .of(context)
-                                .brightness == Brightness.dark
+                            color: Theme.of(context).brightness == Brightness.dark
                                 ? AppColors.darkPrimary
                                 : AppColors.lightPrimary,
                             size: 20
@@ -195,6 +201,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     return SizedBox.shrink();
                   }
                 }
+
                 final story = state.stories[index];
                 return _buildStoryCard(story, screenSize, context);
               },

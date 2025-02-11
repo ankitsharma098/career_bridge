@@ -1,3 +1,4 @@
+import 'package:android/core/utils/snackBarUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -24,9 +25,17 @@ class StoryReactionsScreen extends StatefulWidget {
 
 class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
   final TextEditingController _commentController = TextEditingController();
+  String? _editingCommentId;
 
+  void _cancelEditing() {
+    setState(() {
+      _editingCommentId = null;
+      _commentController.clear();
+    });
+  }
   @override
   Widget build(BuildContext context) {
+    Size screenSize = MediaQuery.of(context).size;
     print("Reloading");
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -48,9 +57,10 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
       body: BlocConsumer<StoryReactionBloc, StoryReactionState>(
         listener: (context, state) {
           if (state is ReactionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+          SnackBarUtils.showRedSnackBar(state.message, context);
+          if (_editingCommentId != null) {
+            _cancelEditing();
+          }
           }
         },
         builder: (context, state) {
@@ -68,7 +78,7 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                         _buildStoryCard(),
                         _buildInteractionBar(state),
                         _buildLikesSection(state.likes),
-                        _buildCommentsSection(state.comments),
+                        _buildCommentsSection(state.comments,screenSize),
                       ],
                     ),
                   ),
@@ -307,7 +317,7 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
     );
   }
 
-  Widget _buildCommentsSection(List<Map<String, dynamic>> comments) {
+  Widget _buildCommentsSection(List<Map<String, dynamic>> comments,Size screenSize) {
     if (comments.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -345,11 +355,13 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
             itemBuilder: (context, index) {
               final comment = comments[index];
               final timestamp = DateTime.parse(comment['timestamp']);
+              final isEditing = _editingCommentId == comment['_id'];
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     CircleAvatar(
                       radius: 20,
@@ -363,28 +375,91 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                           Row(
                             children: [
                               Text(
-                                comment['user']['name'],
+                                comment['user']['name'] ?? "Name",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                DateFormat.yMMMd().add_jm().format(timestamp),
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
+                              SizedBox(
+                                width: screenSize.width*0.32,
+                                child: Text(
+                                  DateFormat.yMMMd().add_jm().format(timestamp),
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            comment['text'],
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+                          if (isEditing)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _commentController,
+                                    decoration: InputDecoration(
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.check, color: Colors.green),
+                                  onPressed: () {
+                                    _submitComment();
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close, color: Colors.red),
+                                  onPressed: _cancelEditing,
+                                ),
+                              ],
+                            )
+                          else
+                            Text(
+                              comment['text'] ?? "text",
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                         ],
                       ),
                     ),
+                    if (!isEditing && comment["user"]["_id"] == widget.employerId)
+                     Row(
+                       children: [
+                         SizedBox(
+                           width: screenSize.width*0.1,
+                           child: IconButton(
+                             icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
+                             onPressed: () {
+
+                              setState(() {
+                                    _commentController.text = comment['text'];
+                                    _editingCommentId = comment['_id'];
+                                  });
+
+                             },
+                           ),
+                         ),
+                         SizedBox(
+                           width: screenSize.width*0.1,
+                           child: IconButton(
+                             icon: Icon(Icons.delete, color: Colors.red),
+                             onPressed: () {
+                               context.read<StoryReactionBloc>().add(
+                                 CommentDelete(
+                                   storyId: widget.story.id,
+                                   commentId: comment["_id"],
+                                 ),
+                               );
+                             },
+                           ),
+                         ),
+
+                       ],
+                     )
                   ],
                 ),
               );
@@ -395,7 +470,10 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
     );
   }
 
+// Remove or hide the bottom input field when editing
   Widget _buildCommentInput() {
+    if (_editingCommentId != null) return SizedBox.shrink();
+
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(
@@ -419,7 +497,7 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
             child: TextField(
               controller: _commentController,
               decoration: InputDecoration(
-                hintText: 'Add a comment...',
+                hintText: 'Add comment...',
                 hintStyle: TextStyle(color: Colors.grey[600]),
                 border: border,
                 enabledBorder: border,
@@ -452,9 +530,23 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
       ),
     );
   }
-
   void _submitComment() {
-    if (_commentController.text.isNotEmpty) {
+    if (_commentController.text.isEmpty) return;
+
+    if (_editingCommentId != null) {
+      context.read<StoryReactionBloc>().add(
+        PostCommentUpdate(
+          storyId: widget.story.id,
+          commentId: _editingCommentId!,
+          comment: _commentController.text,
+        ),
+      );
+      // Clear editing state
+      setState(() {
+        _editingCommentId = null;
+        _commentController.clear();
+      });
+    } else {
       context.read<StoryReactionBloc>().add(
         PostCommentEvent(
           widget.story.id,
@@ -464,6 +556,7 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
       _commentController.clear();
     }
   }
+
 
 
 

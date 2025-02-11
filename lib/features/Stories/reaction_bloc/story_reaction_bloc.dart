@@ -13,6 +13,8 @@ class StoryReactionBloc extends Bloc<StoryReactionEvent, StoryReactionState> {
   StoryReactionBloc() : super(ReactionInitial()) {
     on<FetchReactionsEvent>(_onFetchReactions);
     on<PostCommentEvent>(_onPostComment);
+    on<PostCommentUpdate>(_onPostCommentUpdate);
+    on<CommentDelete>(_onCommentDelete);
   }
 
   Future<void> _onFetchReactions(
@@ -69,5 +71,71 @@ class StoryReactionBloc extends Bloc<StoryReactionEvent, StoryReactionState> {
             emit(ReactionError(e.toString()));
       }
     }
+  }
+
+  Future<void>_onPostCommentUpdate(PostCommentUpdate event,Emitter<StoryReactionState> emit) async{
+
+    if(state is ReactionLoaded){
+      final currentState = state as ReactionLoaded;
+
+      try {
+
+        Map<String,dynamic> updatedComment = await apiService.updateComment(event.storyId,event.commentId,event.comment);
+
+        print("new comment $updatedComment");
+        List<Map<String, dynamic>> updatedComments = currentState.comments.map((comment) {
+          if (comment["_id"] == event.commentId) {
+            return {...comment, ...updatedComment};  // Merge the updated comment data
+          }
+          return comment;
+        }).toList();
+
+
+        emit(ReactionLoaded(likes: currentState.likes, comments: updatedComments, pagination: currentState.pagination
+
+        ));
+
+        //  add(FetchReactionsEvent(event.storyId)); // Refresh the reactions
+      } catch (e) {
+        emit(ReactionLoaded(likes: currentState.likes, comments: currentState.comments, pagination: currentState.pagination));
+
+        emit(ReactionError(e.toString()));
+      }
+    }
+
+  }
+
+
+  Future<void>_onCommentDelete(CommentDelete event,Emitter<StoryReactionState> emit) async{
+
+    if(state is ReactionLoaded){
+      final currentState = state as ReactionLoaded;
+
+      try {
+
+        bool success = await apiService.deleteComment(event.storyId,event.commentId);
+
+        print("new comment $success");
+        if (success) {
+          List<Map<String, dynamic>> updatedComments = currentState.comments
+              .where((comment) => comment["_id"] != event.commentId)
+              .toList();
+
+          emit(ReactionLoaded(
+              likes: currentState.likes,
+              comments: updatedComments,
+              pagination: currentState.pagination
+          ));
+        }else{
+          emit(ReactionLoaded(likes: currentState.likes, comments: currentState.comments, pagination: currentState.pagination));
+
+        }
+      } catch (e) {
+        emit(ReactionLoaded(likes: currentState.likes, comments: currentState.comments, pagination: currentState.pagination));
+
+        emit(ReactionError(e.toString()));
+      }
+    }
+
   }
 }
