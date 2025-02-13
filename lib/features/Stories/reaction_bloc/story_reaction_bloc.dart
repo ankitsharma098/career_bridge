@@ -79,6 +79,7 @@ class StoryReactionBloc extends Bloc<StoryReactionEvent, StoryReactionState> {
       final currentState = state as ReactionLoaded;
 
       try {
+        print(("comment update ---------- new comment ---${event.comment}"));
 
         Map<String,dynamic> updatedComment = await apiService.updateComment(event.storyId,event.commentId,event.comment);
 

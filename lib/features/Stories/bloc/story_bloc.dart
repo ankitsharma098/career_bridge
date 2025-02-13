@@ -15,6 +15,7 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     on<FetchStoriesEvent>(_onFetchStories);
     on<LoadMoreStories>(_onLoadMoreStories);
     on<ToggleStoryLikeEvent>(_onToggleStoryLikeEvent);
+    on<ToggleSavedStoryEvent>(_onToggleSavedStoryEvent);
 
   }
 
@@ -104,6 +105,42 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
             hasReachedMax: currentState.hasReachedMax,
             currentPage: currentState.currentPage
         ));
+        emit(StoryErrorState(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _onToggleSavedStoryEvent(ToggleSavedStoryEvent event, Emitter<StoryState> emit) async {
+    if (state is StoryLoadedState) {
+      final currentState = state as StoryLoadedState;
+      try {
+        // First update the UI optimistically
+        // final optimisticStories = currentState.stories.map((story) {
+        //   if (story.id == event.storyId) {
+        //     return story.copyWith(
+        //       isLiked: !story.isLiked,
+        //       likesCount: story.isLiked ? story.likesCount - 1 : story.likesCount + 1,
+        //     );
+        //   }
+        //   return story;
+        // }).toList();
+
+        // emit(StoryLoadedState(
+        //     stories: optimisticStories,
+        //     hasReachedMax: currentState.hasReachedMax,
+        //     currentPage: currentState.currentPage
+        // ));
+
+        // Then make the API call
+        final success = await apiService.savedStory(event.storyId);
+
+        if (!success) {
+          emit(StorySuccessState("Story Saved Successfully"));
+        }else {
+          emit(StorySuccessState("Story Unsaved Successfully"));
+        }
+      } catch (e) {
+
         emit(StoryErrorState(e.toString()));
       }
     }

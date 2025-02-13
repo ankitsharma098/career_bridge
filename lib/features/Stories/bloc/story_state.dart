@@ -23,3 +23,10 @@ class StoryErrorState extends StoryState {
    StoryErrorState(this.error);
 
 }
+
+class StorySuccessState extends StoryState {
+  final String message;
+
+  StorySuccessState(this.message);
+
+}

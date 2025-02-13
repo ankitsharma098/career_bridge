@@ -26,3 +26,7 @@ class LoadMoreStoriesEvent extends StoryStatsEvent {
 
   LoadMoreStoriesEvent({required this.isMyStory});
 }
+class ToggleStoryLikeEvent extends StoryStatsEvent {
+  final String storyId;
+   ToggleStoryLikeEvent(this.storyId);
+}

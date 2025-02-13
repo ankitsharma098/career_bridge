@@ -176,7 +176,7 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
               create: (context) => StoryStatsBloc(),
-              child: MyStoriesScreen(),
+              child: MyStoriesScreen(employerId: widget.employerId,),
             ),));
           },
           child: _statsCard(

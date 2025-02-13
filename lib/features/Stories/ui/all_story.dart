@@ -434,8 +434,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Like indicators
+
             Row(
               children: [
                 Container(
@@ -450,11 +451,25 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     color: Colors.white,
                   ),
                 ),
+                const SizedBox(width: 8),
+                Text('${story.likesCount} likes'),
               ],
             ),
-            const SizedBox(width: 8),
-            Text('${story.likesCount} likes'),
-            const Spacer(),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                children: [
+                  Icon(Icons.remove_red_eye_outlined, size: 20,),
+                  SizedBox(width: 4),
+                  Text(
+                    '${story.views}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Text('${story.commentsCount} comments'),
           ],
         ),
@@ -474,6 +489,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
+
           _buildInteractionButton(
             icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
             label: 'Like',
@@ -500,11 +516,21 @@ class _StoriesScreenState extends State<StoriesScreen> {
               );
             },
           ),
+          _buildInteractionButton(
+            icon: Icons.save,
+            label: 'Saved',
+            onTap: () {
+              context.read<StoryBloc>().add(
+                Togle(story.id),
+              );
+            },
+          ),
           // ... other buttons
         ],
       ),
     );
   }
+
 
   Widget _buildInteractionButton({
     required IconData icon,
