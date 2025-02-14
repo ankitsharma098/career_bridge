@@ -492,7 +492,15 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
               );
             },
           ),
-          // ... other buttons
+          _buildInteractionButton(
+            icon: story.isSaved ? Icons.save:Icons.save_outlined,
+            label: story.isSaved ?"Save":'Saved',
+            onTap: () {
+              context.read<StoryStatsBloc>().add(
+                ToggleSavedStoryEvent(story.id,),
+              );
+            },
+          ),
         ],
       ),
     );

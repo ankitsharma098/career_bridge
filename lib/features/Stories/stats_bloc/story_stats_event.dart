@@ -30,3 +30,7 @@ class ToggleStoryLikeEvent extends StoryStatsEvent {
   final String storyId;
    ToggleStoryLikeEvent(this.storyId);
 }
+class ToggleSavedStoryEvent extends StoryStatsEvent {
+  final String storyId;
+  ToggleSavedStoryEvent(this.storyId);
+}

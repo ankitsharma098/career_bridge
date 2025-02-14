@@ -20,8 +20,7 @@ class ToggleStoryLikeEvent extends StoryEvent {
 }
 class ToggleSavedStoryEvent extends StoryEvent {
   final String storyId;
-  final bool isSaved;
-  const ToggleSavedStoryEvent(this.storyId, this.isSaved);
+  const ToggleSavedStoryEvent(this.storyId);
 
   @override
   List<Object> get props => [storyId];

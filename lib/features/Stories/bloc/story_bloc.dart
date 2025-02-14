@@ -114,34 +114,48 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
     if (state is StoryLoadedState) {
       final currentState = state as StoryLoadedState;
       try {
-        // First update the UI optimistically
-        // final optimisticStories = currentState.stories.map((story) {
-        //   if (story.id == event.storyId) {
-        //     return story.copyWith(
-        //       isLiked: !story.isLiked,
-        //       likesCount: story.isLiked ? story.likesCount - 1 : story.likesCount + 1,
-        //     );
-        //   }
-        //   return story;
-        // }).toList();
 
-        // emit(StoryLoadedState(
-        //     stories: optimisticStories,
-        //     hasReachedMax: currentState.hasReachedMax,
-        //     currentPage: currentState.currentPage
-        // ));
+        final optimisticStories = currentState.stories.map((story) {
+          if (story.id == event.storyId) {
+            return story.copyWith(
+              isSaved: !story.isSaved,
+            );
+          }
+          return story;
+        }).toList();
 
-        // Then make the API call
+        emit(StoryLoadedState(
+            stories: optimisticStories,
+            hasReachedMax: currentState.hasReachedMax,
+            currentPage: currentState.currentPage
+        ));
+
+
         final success = await apiService.savedStory(event.storyId);
 
-        if (!success) {
+        if (success) {
           emit(StorySuccessState("Story Saved Successfully"));
+          emit(StoryLoadedState(
+              stories: optimisticStories,
+              hasReachedMax: currentState.hasReachedMax,
+              currentPage: currentState.currentPage
+          ));
         }else {
           emit(StorySuccessState("Story Unsaved Successfully"));
+          emit(StoryLoadedState(
+              stories: currentState.stories,
+              hasReachedMax: currentState.hasReachedMax,
+              currentPage: currentState.currentPage
+          ));
         }
       } catch (e) {
 
         emit(StoryErrorState(e.toString()));
+        emit(StoryLoadedState(
+            stories: currentState.stories,
+            hasReachedMax: currentState.hasReachedMax,
+            currentPage: currentState.currentPage
+        ));
       }
     }
   }

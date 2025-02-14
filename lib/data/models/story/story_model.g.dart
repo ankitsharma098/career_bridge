@@ -25,6 +25,7 @@ StoryModel _$StoryModelFromJson(Map<String, dynamic> json) => StoryModel(
           ? const HostDetails()
           : HostDetails.fromJson(json['hostDetails'] as Map<String, dynamic>),
       isLiked: json['isLiked'] as bool? ?? false,
+      isSaved: json['isSaved'] as bool? ?? false,
       likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
       commentsCount: (json['commentsCount'] as num?)?.toInt() ?? 0,
       sharesCount: (json['sharesCount'] as num?)?.toInt() ?? 0,
@@ -43,6 +44,7 @@ Map<String, dynamic> _$StoryModelToJson(StoryModel instance) =>
       'createdAt': instance.createdAt,
       'hostDetails': instance.hostDetails.toJson(),
       'isLiked': instance.isLiked,
+      'isSaved': instance.isSaved,
       'likesCount': instance.likesCount,
       'commentsCount': instance.commentsCount,
       'sharesCount': instance.sharesCount,

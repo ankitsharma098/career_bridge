@@ -909,10 +909,19 @@ class _JobStatsTabState extends State<JobStatsTab> {
                       ),
                     ],
                   ),
-                  trailing: Icon(
+                  trailing:IconButton(
+                    onPressed: () {
+                      JobModel
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => JobDetailsScreen(job: job ,
+                        onJobUpdated: (updatedJob) {
+                        },
+
+                      )));
+                    },
+                  icon:  Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
-                  ),
+                  ),)
                 ),
               ),
             );

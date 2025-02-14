@@ -15,6 +15,8 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
     on<LoadMoreStoriesEvent>(_onLoadMoreStoriesEvent);
     on<DeleteStory>(_onDeleteStory);
     on<ToggleStoryLikeEvent>(_onToggleStoryLikeEvent);
+    on<ToggleSavedStoryEvent>(_onToggleSavedStoryEvent);
+
   }
 
   Future<void> _onFetchStoryStats(FetchStoryStats event, Emitter<StoryStatsState> emit) async {
@@ -121,12 +123,76 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
     if (state is StoryLoaded) {
       final currentState = state as StoryLoaded;
       try {
-        // First update the UI optimistically
+        // Get the current story
+        final currentStory = currentState.stories.firstWhere((story) => story.id == event.storyId);
+        final wasLiked = currentStory.isLiked;
+
+        // Create optimistic update
         final optimisticStories = currentState.stories.map((story) {
           if (story.id == event.storyId) {
             return story.copyWith(
-              isLiked: !story.isLiked,
-              likesCount: story.isLiked ? story.likesCount - 1 : story.likesCount + 1,
+              isLiked: !wasLiked,
+              likesCount: wasLiked ? story.likesCount - 1 : story.likesCount + 1,
+            );
+          }
+          return story;
+        }).toList();
+
+        // Emit optimistic state immediately
+        emit(StoryLoaded(
+            stories: optimisticStories,
+            hasReachedMax: currentState.hasReachedMax,
+            currentPage: currentState.currentPage
+        ));
+
+        // Make API call
+        final success = await apiService.likedStory(event.storyId);
+
+        // If API call fails, revert to original state
+        if (!success) {
+          // Create reversion state with original values
+          final revertedStories = currentState.stories.map((story) {
+            if (story.id == event.storyId) {
+              return story.copyWith(
+                isLiked: wasLiked,
+                likesCount: currentStory.likesCount, // Use original like count
+              );
+            }
+            return story;
+          }).toList();
+
+          // Emit the reverted state
+          emit(StoryLoaded(
+              stories: revertedStories,
+              hasReachedMax: currentState.hasReachedMax,
+              currentPage: currentState.currentPage
+          ));
+
+          // Emit error state without reverting the UI again
+       //   emit(StoryStatsError(error: "Failed to update like status"));
+        }
+      } catch (e) {
+        // On error, revert to original state and show error
+        emit(StoryLoaded(
+            stories: currentState.stories,
+            hasReachedMax: currentState.hasReachedMax,
+            currentPage: currentState.currentPage
+        ));
+        emit(StoryStatsError(error: e.toString()));
+      }
+    }
+  }
+
+  Future<void> _onToggleSavedStoryEvent(ToggleSavedStoryEvent event, Emitter<StoryStatsState> emit) async {
+    print("Event occured");
+    if (state is StoryLoaded) {
+      final currentState = state as StoryLoaded;
+      try {
+
+        final optimisticStories = currentState.stories.map((story) {
+          if (story.id == event.storyId) {
+            return story.copyWith(
+              isSaved: !story.isSaved,
             );
           }
           return story;
@@ -138,11 +204,18 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
             currentPage: currentState.currentPage
         ));
 
-        // Then make the API call
-        final success = await apiService.likedStory(event.storyId);
 
-        if (!success) {
-          // If the API call fails, revert the optimistic update
+        final success = await apiService.savedStory(event.storyId);
+
+        if (success) {
+          emit(StorySuccess( message:"Story Saved Successfully"));
+          emit(StoryLoaded(
+              stories: optimisticStories,
+              hasReachedMax: currentState.hasReachedMax,
+              currentPage: currentState.currentPage
+          ));
+        }else {
+          emit(StorySuccess( message:"Story Unsaved Successfully"));
           emit(StoryLoaded(
               stories: currentState.stories,
               hasReachedMax: currentState.hasReachedMax,
@@ -150,13 +223,13 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
           ));
         }
       } catch (e) {
-        // If there's an error, revert to the original state
+
+        emit(StoryStatsError(error: e.toString()));
         emit(StoryLoaded(
             stories: currentState.stories,
             hasReachedMax: currentState.hasReachedMax,
             currentPage: currentState.currentPage
         ));
-        emit(StoryStatsError( error: e.toString(),));
       }
     }
   }

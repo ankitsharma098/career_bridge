@@ -37,6 +37,9 @@ class StoryModel {
   @JsonKey(name: 'isLiked', defaultValue: false)
   final bool isLiked;
 
+  @JsonKey(name: 'isSaved', defaultValue: false)
+  final bool isSaved;
+
   @JsonKey(name: 'likesCount', defaultValue: 0)
   final int likesCount;
 
@@ -58,6 +61,7 @@ class StoryModel {
     this.createdAt = '',
     this.hostDetails = const HostDetails(),
     this.isLiked = false,
+    this.isSaved=false,
     this.likesCount = 0,
     this.commentsCount = 0,
     this.sharesCount = 0,
@@ -75,6 +79,7 @@ class StoryModel {
     String? createdAt,
     HostDetails? hostDetails,
     bool? isLiked,
+    bool? isSaved,
     int? likesCount,
     int? commentsCount,
     int? sharesCount,
@@ -91,6 +96,7 @@ class StoryModel {
       createdAt: createdAt ?? this.createdAt,
       hostDetails: hostDetails ?? this.hostDetails,
       isLiked: isLiked ?? this.isLiked,
+      isSaved: isSaved ?? this.isSaved,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       sharesCount: sharesCount ?? this.sharesCount,

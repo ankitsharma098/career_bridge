@@ -128,6 +128,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
           _isLoadingMore = false;
           return SnackBarUtils.showRedSnackBar(state.error.toString(), context);
         }
+        if(state is StorySuccessState){
+          return SnackBarUtils.showGreenSnackBar(state.message, context);
+        }
 
       },
       builder: (context, state) {
@@ -517,11 +520,11 @@ class _StoriesScreenState extends State<StoriesScreen> {
             },
           ),
           _buildInteractionButton(
-            icon: Icons.save,
-            label: 'Saved',
+            icon: story.isSaved ? Icons.save:Icons.save_outlined,
+            label:story.isSaved ?"Save":'Saved',
             onTap: () {
               context.read<StoryBloc>().add(
-                Togle(story.id),
+                ToggleSavedStoryEvent(story.id,),
               );
             },
           ),
