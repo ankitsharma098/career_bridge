@@ -3,6 +3,7 @@
 import 'dart:math';
 import 'package:android/features/Applications/bloc/applications_bloc.dart';
 import 'package:android/features/Applications/ui/applications.dart';
+import 'package:android/features/Jobs/data_services/jobs_api_service.dart';
 import 'package:android/features/Jobs/job_create_bloc/job_create_bloc.dart';
 import 'package:android/features/Jobs/ui/create_job.dart';
 import 'package:android/features/Jobs/ui/full_job_detail.dart';
@@ -121,11 +122,27 @@ class _JobStatsTabState extends State<JobStatsTab> {
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    return BlocBuilder<JobStatsBloc, JobStatsState>(
+    return BlocConsumer<JobStatsBloc, JobStatsState>(
+      listener: (context, state) {
+        // if (state is FetchSingleJobState) {
+        //   Navigator.push(
+        //       context,
+        //       MaterialPageRoute(
+        //         builder: (context) => JobDetailsScreen(
+        //           job: state.job,
+        //           onJobUpdated: (updatedJob) {
+        //             // Handle updated job if needed
+        //           },
+        //         ),
+        //       )
+        //   );
+        // }
+      },
       builder: (context, state) {
         if (state is JobStatsLoading) {
           return  JobStatsShimmer(screenSize: widget.screenSize,);
         }
+
 
         if (state is JobStatsLoaded) {
           final jobMetrics = state.stats['jobMetrics'];
@@ -910,13 +927,17 @@ class _JobStatsTabState extends State<JobStatsTab> {
                     ],
                   ),
                   trailing:IconButton(
-                    onPressed: () {
-                      JobModel
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => JobDetailsScreen(job: job ,
-                        onJobUpdated: (updatedJob) {
-                        },
-
-                      )));
+                    onPressed: () async {
+                      JobApiService apiService = JobApiService();
+                      JobModel jobModel= await apiService.getSingleJob(job["_id"].toString());
+                      Navigator.push(context, MaterialPageRoute(
+                                  builder: (context) => JobDetailsScreen(
+                                    job:jobModel,
+                                    onJobUpdated: (updatedJob) {
+                                      // Handle updated job if needed
+                                    },
+                                  ),
+                                ));
                     },
                   icon:  Icon(
                     Icons.arrow_forward_ios,

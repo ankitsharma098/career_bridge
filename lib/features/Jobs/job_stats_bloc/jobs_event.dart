@@ -4,3 +4,4 @@ part of 'jobs_bloc.dart';
 sealed class JobsStatsEvent {}
 
 class FetchJobStats extends JobsStatsEvent {}
+

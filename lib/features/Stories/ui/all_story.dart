@@ -57,6 +57,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
     return currentScroll >= (maxScroll * 0.9);
   }
 
+  final Map<String, bool> _expandedStories = {};
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
@@ -254,7 +255,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
   Widget _buildStoryCard(StoryModel story, Size screenSize, BuildContext context) {
     final date = DateTime.parse(story.createdAt);
     final isOwner = story.hostDetails.id == widget.employerId;
-
+    final isExpanded = _expandedStories[story.id] ?? false;
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       elevation: 3,
@@ -292,15 +293,54 @@ class _StoriesScreenState extends State<StoriesScreen> {
                   ),
                 ),
                 SizedBox(height: 8),
-                Text(
-                  story.content,
-                 // maxLines: 6,
-                 // overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: screenSize.width * 0.035,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      story.content,
+                      maxLines: isExpanded ? null : 3,
+                      overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: screenSize.width * 0.035,
+                        color: Colors.grey[700],
+                        height: 1.5,
+                      ),
+                    ),
+                    if (story.content.length > 150)
+                      Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _expandedStories[story.id] = !isExpanded;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  isExpanded ? 'View less' : 'View more',
+                                  style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: screenSize.width * 0.035,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(
+                                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                  size: screenSize.width * 0.04,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),

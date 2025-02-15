@@ -102,7 +102,7 @@ class JobApiService {
   Future<JobModel> getSingleJob(String jobId) async {
 
     try{
-      print("calling");
+      print("getSingleJob");
 
       String? accessToken = await HiveUtils.getAccessToken();
       if(accessToken==null || accessToken.isEmpty){
@@ -121,8 +121,10 @@ class JobApiService {
       if(response.statusCode == 200){
 
         Map<String, dynamic>job  = Map<String, dynamic>.from(response.data["job"]);
+        print("rew job $job");
 
        JobModel jobModel= JobModel.fromJson(job);
+       print("job moddel $jobModel");
         return jobModel;
       }else {
         throw Exception('Failed to fetch  job');

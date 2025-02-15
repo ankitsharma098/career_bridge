@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:android/data/models/Job/job_model.dart';
 import 'package:android/features/Jobs/data_services/jobs_api_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
@@ -10,6 +13,7 @@ class JobStatsBloc extends Bloc<JobsStatsEvent, JobStatsState> {
   JobApiService apiService = JobApiService();
   JobStatsBloc() : super(JobStatsInitial()) {
     on<FetchJobStats>(_onFetchJobStats);
+
   }
   Future<void> _onFetchJobStats(
       FetchJobStats event,
@@ -26,4 +30,5 @@ class JobStatsBloc extends Bloc<JobsStatsEvent, JobStatsState> {
       emit(JobStatsError(e.toString()));
     }
   }
+
 }

@@ -16,6 +16,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
+import '../../About Us/ui/about_us.dart';
 import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
@@ -146,7 +147,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     return  Scaffold(
       appBar: AppBar(
         title: Text(_selectedIndex == 0
-            ? 'Employer Dashboard'
+            ? 'Dashboard'
             : _selectedIndex == 1
             ? 'Stories'
             : 'Settings'
@@ -318,30 +319,30 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                 // );
               },
             ),
-            _buildDrawerItem(
-              icon: Icons.event,
-              title: 'Events',
-              onTap: () {
-                // Navigator.pop(context);
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => EventsScreen(), // You'll need to create this screen
-                //   ),
-                // );
-              },
-            ),
+            // _buildDrawerItem(
+            //   icon: Icons.event,
+            //   title: 'Events',
+            //   onTap: () {
+            //     // Navigator.pop(context);
+            //     // Navigator.push(
+            //     //   context,
+            //     //   MaterialPageRoute(
+            //     //     builder: (context) => EventsScreen(), // You'll need to create this screen
+            //     //   ),
+            //     // );
+            //   },
+            // ),
             _buildDrawerItem(
               icon: CupertinoIcons.person_2_fill,
               title: 'About Us',
               onTap: () {
-                // Navigator.pop(context);
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => EventsScreen(), // You'll need to create this screen
-                //   ),
-                // );
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AboutUsScreen(), // You'll need to create this screen
+                  ),
+                );
               },
             ),
             Divider(),
