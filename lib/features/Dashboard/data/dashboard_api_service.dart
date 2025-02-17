@@ -24,7 +24,7 @@ class EmployerDashboardService{
       );
 
       if(response.statusCode==200){
-        final employerStats = response.data;
+        Map<String,dynamic> employerStats = Map<String,dynamic>.from(response.data);
 
         return employerStats;
       }else {

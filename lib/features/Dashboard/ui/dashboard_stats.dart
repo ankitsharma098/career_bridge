@@ -62,6 +62,7 @@ class _DashboardContentState extends State<DashboardContent> {
         }
         if(state is EmployerDashboardLoaded) {
           Map<String,dynamic> dashboardStats = state.data;
+          List<Map<String,dynamic>> recentApplications = List<Map<String,dynamic>>.from(dashboardStats["recentApplications"]) ?? [];
           return RefreshIndicator(
             onRefresh: () async {
               BlocProvider.of<EmployerDashboardBloc>(context).add(FetchDashboardData());
@@ -76,7 +77,7 @@ class _DashboardContentState extends State<DashboardContent> {
                     _buildJobInsightsSection(dashboardStats, screenSize),
                     _buildApplicationInsightsSection(dashboardStats, screenSize),
                     SizedBox(height: screenSize.height*0.01),
-                    _buildRecentApplicationsSection(screenSize),
+                    _buildRecentApplicationsSection(screenSize,recentApplications),
                   ],
                 ),
               ),
@@ -84,7 +85,6 @@ class _DashboardContentState extends State<DashboardContent> {
           );
         }
 
-        return SizedBox();
         return SizedBox();
       },
     );
@@ -508,7 +508,7 @@ class _DashboardContentState extends State<DashboardContent> {
     );
   }
 
-  Widget _buildRecentApplicationsSection(Size screenSize) {
+  Widget _buildRecentApplicationsSection(Size screenSize,List<Map<String,dynamic>> recentApplications) {
     return Card(
       elevation: 4,
       margin: EdgeInsets.all(0),
@@ -524,12 +524,22 @@ class _DashboardContentState extends State<DashboardContent> {
                 fontWeight: FontWeight.w700,
               ),),
             SizedBox(height: screenSize.height*0.02),
-            _buildApplicationItem(
-                'Ankit Sharma',
-                'Web Designer',
-                'Shortlisted',
-                '2024-12-12',
-                screenSize
+            recentApplications.isEmpty? SizedBox(
+              child: Center(child: Text("No Applications")),
+            ):ListView.builder(
+              shrinkWrap: true,
+              itemCount: recentApplications.length,
+              itemBuilder: (BuildContext context, int index) {
+                final application =recentApplications[index];
+
+                return _buildApplicationItem(
+                    application["candidateName"],
+                    application["jobTitle"],
+                    application["status"],
+                    application["appliedDate"],
+                    screenSize
+                );
+              },
             ),
           ],
         ),

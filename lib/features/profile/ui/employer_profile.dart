@@ -13,7 +13,7 @@ import '../../../data/models/employer/employer_model.dart';
 
 class EmployerProfileScreen extends StatefulWidget {
 
-  const EmployerProfileScreen({super.key});
+  const EmployerProfileScreen({super.key });
 
   @override
   State<EmployerProfileScreen> createState() => _EmployerProfileScreenState();

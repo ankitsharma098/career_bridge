@@ -2,6 +2,8 @@ import 'package:android/core/constants/colors.dart';
 import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
 import 'package:android/data/models/employer/employer_model.dart';
+import 'package:android/features/Chat/bloc/chat_bloc.dart';
+import 'package:android/features/Chat/data%20service/chat_service.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/Stories/bloc/story_bloc.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
@@ -17,6 +19,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../About Us/ui/about_us.dart';
+import '../../Chat/ui/chat.dart';
 import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
@@ -310,13 +313,16 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               icon: Icons.message,
               title: 'Messages',
               onTap: () {
-                // Navigator.pop(context);
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => BlogMessagesScreen(), // You'll need to create this screen
-                //   ),
-                // );
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                    create: (context) => ChatBloc(),
+                    child: ConversationsScreen(),
+                  ), // You'll need to create this screen
+                  ),
+                );
               },
             ),
             // _buildDrawerItem(
