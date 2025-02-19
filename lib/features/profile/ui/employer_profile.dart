@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:android/core/constants/colors.dart';
@@ -6,6 +7,7 @@ import 'package:android/data/models/company/company_model.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/utils/snackBarUtils.dart';
@@ -21,6 +23,47 @@ class EmployerProfileScreen extends StatefulWidget {
 
 class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
 
+  String formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return 'Not provided';
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('dd/MM/yyyy').format(date);
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
+  Future<void> _updateProfilePicture(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
+
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+      try {
+        File imageFile = File(image.path);
+        Map<String, dynamic> personalInfo = {
+          'profilePic': imageFile, // Replace with actual URL after upload
+        };
+
+        BlocProvider.of<ProfileBloc>(context).add(
+            UpdatePersonalInfoDialog(personalInfo)
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        SnackBarUtils.showRedSnackBar("Failed to Update profile picture", context);
+      }
+    }
+  }
   @override
   void initState() {
     BlocProvider.of<ProfileBloc>(context).add(FetchProfileData());
@@ -46,7 +89,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           return Center(child: LoadingAnimationWidget.hexagonDots(color: Theme.of(context).brightness ==Brightness.dark ?AppColors.lightPrimary :AppColors.lightPrimary, size: 30),);
 
         } else if (state is ProfileDataLoaded) {
-          print(state.employer.personalInfo);
+
           return _buildLoadedState(context, state,screenSize);
 
         } else if (state is ProfileError) {
@@ -182,13 +225,43 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                         ),
                       ],
                     ),
-                    child: Hero(
-                      tag: 'profile_image',
-                      child: CircleAvatar(
-                        backgroundImage: employer.personalInfo.profilePic != null
-                            ? NetworkImage(employer.personalInfo.profilePic!)
-                            : AssetImage('assets/default_profile.png') as ImageProvider,
-                      ),
+                    child: Stack(
+                      children: [
+                        ClipOval(
+                          child: SizedBox(
+                            width: 130,
+                            height: 130,
+                            child: Hero(
+                              tag: 'profile_image',
+                              child: CircleAvatar(
+                                backgroundImage: employer.personalInfo.profilePic != null
+                                    ? NetworkImage(employer.personalInfo.profilePic!)
+                                    : AssetImage('assets/default_profile.png') as ImageProvider,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () => _updateProfilePicture(context),
+                            child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade700,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: screenSize.height*0.02),
@@ -249,7 +322,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         _buildInfoCard(
           'About',
           Icons.description,
-          _buildAboutContent(state.employer.about, screenSize),
+         _buildAboutContent(state.employer.about.isNotEmpty ?  state.employer.about : "No About", screenSize),
           screenSize,
           onEdit: () => _editAbout(context, state.employer.about, screenSize),
         ),
@@ -381,7 +454,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         _buildInfoListTile(
           Icons.cake,
           'Date of Birth',
-            DateFormat('dd/MM/yyyy').format(DateTime.parse(employer.personalInfo.DOB!)),
+            formatDate(employer.personalInfo.DOB),
             screenSize
         ),
         _buildInfoListTile(
@@ -521,7 +594,11 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     TextEditingController phoneController = TextEditingController(text: employer.personalInfo.phoneNumber);
     TextEditingController addressController = TextEditingController(text: employer.personalInfo.address);
     TextEditingController designationController = TextEditingController(text: employer.companyDetails.designation);
-    TextEditingController dobController = TextEditingController(text:DateFormat('dd/MM/yyyy').format(DateTime.parse(employer.personalInfo.DOB!)));
+    TextEditingController dobController = TextEditingController(
+        text: employer.personalInfo.DOB.isNotEmpty
+            ? formatDate(employer.personalInfo.DOB)
+            : ''
+    );
     TextEditingController genderController = TextEditingController(text: employer.personalInfo.gender);
 
     final BuildContext parentContext = context;
@@ -566,15 +643,23 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                             SizedBox(width: 12),
                             ElevatedButton(
                               onPressed: () {
-                                DateTime parsedDOB = DateFormat('dd/MM/yyyy').parse(dobController.text.trim());
-                                String isoDOB = parsedDOB.toIso8601String();
+                                String dob = '';
+                                if (dobController.text.isNotEmpty) {
+                                  try {
+                                    final parsedDOB = DateFormat('dd/MM/yyyy').parse(dobController.text.trim());
+                                    dob = parsedDOB.toIso8601String();
+                                  } catch (e) {
+                                    SnackBarUtils.showRedSnackBar("Invalid date format", context);
+                                    return;
+                                  }
+                                }
                                 Map<String,dynamic> personalInfo = {
                                   'fullName': fullNameController.text.trim(),
                                   'designation': designationController.text.trim(),
                                   'email': emailController.text.trim(),
                                   'phoneNumber': phoneController.text.trim(),
                                   'address': addressController.text.trim(),
-                                  'DOB': isoDOB,
+                                  'DOB': dob,
                                   'gender': genderController.text.trim(),
                                 };
                                 BlocProvider.of<ProfileBloc>(parentContext).add(
@@ -832,18 +917,33 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
 
   Widget _buildDOBField(TextEditingController dobController) {
     Future<void> selectDate(BuildContext context) async {
-      DateTime? pickedDate = await showDatePicker(
+      DateTime initialDate;
+      try {
+        initialDate = dobController.text.isNotEmpty
+            ? DateFormat('dd/MM/yyyy').parse(dobController.text)
+            : DateTime.now();
+      } catch (e) {
+        initialDate = DateTime.now();
+      }
+      final DateTime? pickedDate = await showDatePicker(
         context: context,
-        initialDate: DateTime.now(),
+        initialDate: initialDate,
         firstDate: DateTime(1900),
         lastDate: DateTime.now(),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Colors.blue.shade700,
+              ),
+            ),
+            child: child!,
+          );
+        },
       );
-
       if (pickedDate != null) {
-        setState(() {
-          // Format the date in dd/MM/yyyy format to match the display format
           dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-        });
+
       }
     }
 

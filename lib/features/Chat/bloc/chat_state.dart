@@ -9,7 +9,17 @@ abstract class  ChatState extends Equatable {
 class ChatInitial extends ChatState {}
 
 class ChatLoading extends ChatState {}
+// In chat_state.dart
+class ChatInitiated extends ChatState {
+  final String receiverId;
+  final String receiverType;
+  final String receiverName;
 
+  ChatInitiated(this.receiverId, this.receiverType, this.receiverName);
+
+  @override
+  List<Object?> get props => [receiverId, receiverType, receiverName];
+}
 class ConversationsLoaded extends ChatState {
   final List<Conversation> conversations;
 
@@ -28,13 +38,23 @@ class MessagesLoaded extends ChatState {
   List<Object?> get props => [messages];
 }
 
-class MessageSent extends ChatState {
-  final Message message;
+// class MessageSent extends ChatState {
+//   final Message message;
+//
+//   MessageSent(this.message);
+//
+//   @override
+//   List<Object?> get props => [message];
+// }
+class MediaUploading extends ChatState {}
 
-  MessageSent(this.message);
+class MediaUploaded extends ChatState {
+  final String mediaUrl;
+
+  MediaUploaded(this.mediaUrl);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [mediaUrl];
 }
 
 class ChatError extends ChatState {

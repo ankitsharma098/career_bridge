@@ -1,289 +1,262 @@
-// conversations_screen.dart
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timeago/timeago.dart' as timeago;
-
 import '../../../data/models/chat model/chat_model.dart';
 import '../bloc/chat_bloc.dart';
+import 'chat_screen.dart';
 
-class ConversationsScreen extends StatelessWidget {
-  const ConversationsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Chats')),
-      body: BlocBuilder<ChatBloc, ChatState>(
-        builder: (context, state) {
-          if (state is ChatLoading) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (state is ConversationsLoaded) {
-            return ListView.builder(
-              itemCount: state.conversations.length,
-              itemBuilder: (context, index) {
-                final conversation = state.conversations[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: conversation.user.profilePic != null
-                        ? NetworkImage(conversation.user.profilePic!)
-                        : null,
-                    child: conversation.user.profilePic == null
-                        ? Text(conversation.user.name[0])
-                        : null,
-                  ),
-                  title: Text(conversation.user.name),
-                  subtitle: Text(
-                    conversation.lastMessage.content,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Text(
-                    timeago.format(conversation.lastMessage.timestamp),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(
-                          receiverId: conversation.user.id,
-                          receiverType: conversation.user.type,
-                          receiverName: conversation.user.name,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          }
-
-          if (state is ChatError) {
-            return Center(child: Text(state.message));
-          }
-
-          return Center(child: Text('No conversations yet'));
-        },
-      ),
-    );
-  }
-}
-
-// chat_screen.dart
-class ChatScreen extends StatefulWidget {
-  final String receiverId;
-  final String receiverType;
-  final String receiverName;
-
-  ChatScreen({
-    required this.receiverId,
-    required this.receiverType,
-    required this.receiverName,
-  });
+class ConversationsScreen extends StatefulWidget {
+  final String userId;
+  final String userType="employer";
+  const ConversationsScreen({super.key, required this.userId});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  State<ConversationsScreen> createState() => _ConversationsScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
-  final _textController = TextEditingController();
-  final _scrollController = ScrollController();
-
+class _ConversationsScreenState extends State<ConversationsScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(
-      LoadMessages(widget.receiverId, widget.receiverType),
-    );
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+        context.read<ChatBloc>().setCurrentUser(
+          widget.userId,
+          widget.userType,
+        );
+
+    context.read<ChatBloc>().add(LoadConversations());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.receiverName),
+        title: const Text('Messages'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<ChatBloc>().add(LoadConversations()),
+          ),
+        ],
       ),
-      body: Column(
+      body: BlocBuilder<ChatBloc, ChatState>(
+        builder: (context, state) {
+          if (state is ChatLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is ConversationsLoaded) {
+            if (state.conversations.isEmpty) {
+              return const Center(child: Text('No conversations yet'));
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<ChatBloc>().add(LoadConversations());
+              },
+              child: ListView.separated(
+                itemCount: state.conversations.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final conversation = state.conversations[index];
+                  return _buildConversationTile(conversation);
+                },
+              ),
+            );
+          }
+
+          if (state is ChatError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error: ${state.message}',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<ChatBloc>().add(LoadConversations()),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return const Center(child: Text('No conversations yet'));
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showNewChatDialog(context),
+        child: const Icon(Icons.message),
+        tooltip: 'New message',
+      ),
+    );
+  }
+
+  Widget _buildConversationTile(Conversation conversation) {
+    final hasUnreadMessages = conversation.lastMessage.status != 'read' &&
+        conversation.lastMessage.receiverId == context.read<ChatBloc>().currentUserId;
+
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: conversation.user.profilePic != null && conversation.user.profilePic!.isNotEmpty
+            ? NetworkImage(conversation.user.profilePic!)
+            : null,
+        child: conversation.user.profilePic == null || conversation.user.profilePic!.isEmpty
+            ? Text(conversation.user.name[0].toUpperCase())
+            : null,
+      ),
+      title: Text(
+        conversation.user.name,
+        style: TextStyle(
+          fontWeight: hasUnreadMessages ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      subtitle: Row(
         children: [
           Expanded(
-            child: BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                if (state is ChatLoading) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                if (state is MessagesLoaded) {
-                  return ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    itemCount: state.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = state.messages[index];
-                      final isMe = message.senderId == 'current_user_id'; // Replace with actual user ID
-
-                      return MessageBubble(
-                        message: message,
-                        isMe: isMe,
-                      );
-                    },
-                  );
-                }
-
-                return Center(child: Text('No messages yet'));
-              },
+            child: Text(
+              conversation.lastMessage.content,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: hasUnreadMessages ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
-          MessageComposer(
-            onSend: (content) {
-              context.read<ChatBloc>().add(
-                SendMessage(
-                  widget.receiverId,
-                  widget.receiverType,
-                  content,
-                ),
-              );
-              _textController.clear();
-            },
-            onAttach: () async {
-              final file = await FilePicker.platform.pickFiles(
-                type: FileType.image,
-              );
-
-              if (file != null) {
-                context.read<ChatBloc>().add(
-                  UploadMedia(File(file.files.single.path!)),
-                );
-              }
-            },
+          const SizedBox(width: 4),
+          Text(
+            timeago.format(conversation.lastMessage.timestamp),
+            style: TextStyle(
+              fontSize: 12,
+              color: hasUnreadMessages ? Theme.of(context).primaryColor : Colors.grey,
+              fontWeight: hasUnreadMessages ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class MessageBubble extends StatelessWidget {
-  final Message message;
-  final bool isMe;
-
-  MessageBubble({
-    required this.message,
-    required this.isMe,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      trailing: hasUnreadMessages
+          ? Container(
+        width: 12,
+        height: 12,
         decoration: BoxDecoration(
-          color: isMe ? Colors.blue : Colors.grey[300],
-          borderRadius: BorderRadius.circular(16),
+          color: Theme.of(context).primaryColor,
+          shape: BoxShape.circle,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (message.mediaUrl != null)
-              Image.network(
-                message.mediaUrl!,
-                height: 200,
-                width: 200,
-                fit: BoxFit.cover,
-              ),
-            Text(
-              message.content,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black,
-              ),
+      )
+          : null,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              receiverId: conversation.user.id,
+              receiverType: conversation.user.type,
+              receiverName: conversation.user.name,
             ),
-            Text(
-              timeago.format(message.timestamp),
-              style: TextStyle(
-                fontSize: 12,
-                color: isMe ? Colors.white70 : Colors.black54,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        ).then((_) => _loadData()); // Refresh the list when returning
+      },
     );
   }
-}
 
-class MessageComposer extends StatelessWidget {
-  final Function(String) onSend;
-  final VoidCallback onAttach;
-  final TextEditingController _textController = TextEditingController();
+  void _showNewChatDialog(BuildContext context) {
+    final TextEditingController recipientIdController = TextEditingController();
+    final TextEditingController messageController = TextEditingController();
+    String selectedRecipientType = 'candidate'; // Default value
 
-  MessageComposer({
-    super.key,
-    required this.onSend,
-    required this.onAttach,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, -2),
-            blurRadius: 4,
-            color: Colors.black.withOpacity(0.1),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.attach_file),
-              onPressed: onAttach,
-              color: Colors.grey[600],
-            ),
-            Expanded(
-              child: TextField(
-                controller: _textController,
-                textCapitalization: TextCapitalization.sentences,
-                maxLines: null,
-                decoration: InputDecoration(
-                  hintText: 'Type a message...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Start New Chat'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Recipient Type:'),
+              DropdownButton<String>(
+                value: selectedRecipientType,
+                isExpanded: true,
+                items: const [
+                  DropdownMenuItem(value: 'candidate', child: Text('Candidate')),
+                  DropdownMenuItem(value: 'employer', child: Text('Employer')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedRecipientType = value;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: recipientIdController,
+                decoration: const InputDecoration(
+                  labelText: 'Recipient ID',
+                  border: OutlineInputBorder(),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.send),
-              onPressed: () {
-                final message = _textController.text.trim();
-                if (message.isNotEmpty) {
-                  onSend(message);
-                  _textController.clear();
-                }
-              },
-              color: Theme.of(context).primaryColor,
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: messageController,
+                decoration: const InputDecoration(
+                  labelText: 'Initial Message',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              print("button hit");
+              final recipientId = recipientIdController.text.trim();
+              final message = messageController.text.trim();
+
+
+                context.read<ChatBloc>().add(
+                  InitiateChat(
+                    "67b311aaec4aff87784bc966",
+                    "employer",
+                    'Ankit sharma',
+                    message,
+                  ),
+                );
+
+                Navigator.pop(dialogContext);
+
+                // Navigate to chat screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider(
+                   create: (context) => ChatBloc(),
+                    child: ChatScreen(
+                      receiverId: recipientId,
+                      receiverType: selectedRecipientType,
+                      receiverName: 'New Contact',
+                    ),
+                      ),
+                  ),
+                ).then((_) => _loadData());
+              },
+            
+            child: const Text('Start Chat'),
+          ),
+        ],
       ),
     );
   }

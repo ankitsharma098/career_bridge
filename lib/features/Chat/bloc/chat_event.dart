@@ -10,6 +10,8 @@ class LoadConversations extends ChatEvent {}
 class LoadMessages extends ChatEvent {
   final String receiverId;
   final String receiverType;
+  // final String? before;
+  // final int? limit;
 
   LoadMessages(this.receiverId, this.receiverType);
 
@@ -29,6 +31,25 @@ class SendMessage extends ChatEvent {
   List<Object?> get props => [receiverId, receiverType, content, mediaUrl];
 }
 
+// In chat_event.dart
+class InitiateChat extends ChatEvent {
+  final String receiverId;
+  final String receiverType;
+  final String receiverName;
+  final String initialMessage;
+  final String? mediaUrl;
+
+  InitiateChat(
+      this.receiverId,
+      this.receiverType,
+      this.receiverName,
+      this.initialMessage,
+      {this.mediaUrl}
+      );
+
+  @override
+  List<Object?> get props => [receiverId, receiverType, receiverName, initialMessage, mediaUrl];
+}
 class UploadMedia extends ChatEvent {
   final File file;
 
@@ -37,4 +58,16 @@ class UploadMedia extends ChatEvent {
   @override
   List<Object?> get props => [file];
 
+}
+
+class MarkAsRead extends ChatEvent {
+  final String messageId;
+
+  MarkAsRead(this.messageId);
+}
+
+class NewMessageReceived extends ChatEvent {
+  final Message message;
+
+  NewMessageReceived(this.message);
 }

@@ -141,6 +141,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     Size screenSize = MediaQuery.of(context).size;
     if (isLoading) {
       return  Scaffold(
@@ -319,7 +320,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                     create: (context) => ChatBloc(),
-                    child: ConversationsScreen(),
+                    child: ConversationsScreen(userId: employerData!.id,),
                   ), // You'll need to create this screen
                   ),
                 );

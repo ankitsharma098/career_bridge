@@ -60,7 +60,7 @@ class PersonalInfo {
   final String address;
 
   @JsonKey(defaultValue: '')
-  final String? DOB;
+  final String DOB;
 
   @JsonKey(defaultValue: 'Male')
   final String gender;

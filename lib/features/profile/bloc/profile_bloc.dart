@@ -49,13 +49,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       // Update implementation
       await apiService.updatePersonalInfo(
           fullName: personalInfo['fullName'],
-          profilePic: '',
+        profilePicFile: personalInfo['profilePic'],
           email: personalInfo['email'],
           phoneNumber: personalInfo['phoneNumber'],
           address: personalInfo['address'],
           DOB: personalInfo['DOB'],
           designation: personalInfo['designation'],
-          gender: personalInfo['gender']
+          gender: personalInfo['gender'],
       );
      emit(ProfileUpdateSuccess('Personal info updated successfully'));
       // Refresh data

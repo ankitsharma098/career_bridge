@@ -34,6 +34,17 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
     BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryStats());
     super.initState();
   }
+  String formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return 'Not provided';
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('dd/MM/yyyy').format(date);
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
@@ -59,11 +70,17 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
           }
 
           if (state is StoryStatsLoaded) {
-            final totalStories = state.stats['totalStories'];
-            final savedStories = state.stats['savedStories'];
-            StoryModel mostViewedStory = StoryModel.fromJson(state.stats['mostViewedStory']);
-            StoryModel mostLikedStory = StoryModel.fromJson(state.stats['mostLikedStory']);
-            StoryModel latestStory =StoryModel.fromJson( state.stats['latestStory']);
+            final totalStories = state.stats['totalStories'] ?? 0;
+            final savedStories = state.stats['savedStories'] ?? 0;
+            StoryModel? mostViewedStory = state.stats['mostViewedStory'] != null
+                ? StoryModel.fromJson(state.stats['mostViewedStory'])
+                : null;
+            StoryModel? mostLikedStory = state.stats['mostLikedStory'] != null
+                ? StoryModel.fromJson(state.stats['mostLikedStory'])
+                : null;
+            StoryModel? latestStory = state.stats['latestStory'] != null
+                ? StoryModel.fromJson(state.stats['latestStory'])
+                : null;
             final totalViews = state.stats['totalViews'] ?? 0;
             final totalLikes = state.stats['totalLikes'] ?? 0;
 
@@ -91,13 +108,16 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                       },
                     ),
                     SizedBox(height: screenSize.height * 0.03),
-                    _buildTopStories(
-                      context,
-                      screenSize,
-                      mostViewedStory,
-                      mostLikedStory,
-                      latestStory,
-                    ),
+                    if (mostViewedStory != null  || mostLikedStory != null || latestStory != null)
+                      _buildTopStories(
+                        context,
+                        screenSize,
+                        mostViewedStory,
+                        mostLikedStory,
+                        latestStory,
+                      )
+                    else
+                      _buildNoStoriesMessage(context, screenSize),
                   ],
                 ),
               ),
@@ -136,7 +156,41 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
 
     );
   }
-
+  Widget _buildNoStoriesMessage(BuildContext context, Size screenSize) {
+    return Card(
+      margin: EdgeInsets.all(screenSize.width * 0.03),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.auto_stories_outlined,
+              size: 48,
+              color: Colors.grey,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No Stories Yet',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Create your first story to see stats here',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildHeader(BuildContext context, Size screenSize) {
     return Card(
       margin: EdgeInsets.zero,
@@ -223,9 +277,9 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
   Widget _buildTopStories(
       BuildContext context,
       Size screenSize,
-      StoryModel mostViewed,
-      StoryModel mostLiked,
-      StoryModel latest,
+      StoryModel? mostViewed,
+      StoryModel? mostLiked,
+      StoryModel? latest,
       ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,18 +291,18 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
           ),
         ),
         SizedBox(height: screenSize.height * 0.02),
-        _buildStoryCard('Most Viewed Story', mostViewed, Icons.visibility, Colors.blue),
+          mostViewed != null ? _buildStoryCard('Most Viewed Story', mostViewed, Icons.visibility, Colors.blue):SizedBox(height: screenSize.height * 0),
         SizedBox(height: screenSize.height * 0.02),
-        _buildStoryCard('Most Liked Story', mostLiked, Icons.favorite, Colors.red),
+        mostLiked != null ? _buildStoryCard('Most Liked Story', mostLiked, Icons.favorite, Colors.red):SizedBox(height: screenSize.height * 0),
         SizedBox(height: screenSize.height * 0.02),
-        _buildStoryCard('Latest Story', latest, Icons.access_time, Colors.green),
+        latest != null ?_buildStoryCard('Latest Story', latest, Icons.access_time, Colors.green):SizedBox(height: screenSize.height * 0.02),
       ],
     );
   }
 
   Widget _buildStoryCard(String title, StoryModel story, IconData icon, Color color) {
     final screenSize = MediaQuery.of(context).size;
-    final date = DateTime.parse(story.createdAt);
+    final date = formatDate(story.createdAt);
     return Card(
       margin: EdgeInsets.all(screenSize.width * 0.03),
       elevation: 2,
@@ -264,27 +318,11 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             ),
             title: Text(story.hostDetails.name),
             subtitle: Text(
-              DateFormat('MMM dd, yyyy').format(date),
+              date,
               style: TextStyle(color: Colors.grey[600]),
             ),
             trailing: _buildEditButton(story, context),
           ),
-
-          // // Title
-          // Padding(
-          //   padding: EdgeInsets.symmetric(
-          //     horizontal: screenSize.width * 0.04,
-          //     vertical: screenSize.height * 0.01,
-          //   ),
-          //   child: Text(
-          //     story.title,
-          //     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          //       fontWeight: FontWeight.bold,
-          //     ),
-          //   ),
-          // ),
-
-          // Media (if available)
           if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
           Padding(
             padding: EdgeInsets.all(16),

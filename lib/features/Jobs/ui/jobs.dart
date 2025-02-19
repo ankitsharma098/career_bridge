@@ -264,7 +264,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
         ),
         _statsCard(
             'Total Views',
-            metrics['totalViews'].toString(),
+            metrics['totalViews'].toString() ?? 0.toString(),
             Icons.visibility,
             Colors.purple,
             screenSize
@@ -290,7 +290,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
           ),
         ),
         SizedBox(height: screenSize.height * 0.02),
-        Row(
+         insights['employmentTypes'].isNotEmpty || insights['experienceLevels'].isNotEmpty ?  Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -311,8 +311,15 @@ class _JobStatsTabState extends State<JobStatsTab> {
               ),
             ),
           ],
-        ),
-      ],
+        ) :SizedBox(
+           height: screenSize.height*0.1,
+          child: Center(
+            child: Text(
+            'No data available',
+            style: Theme.of(context).textTheme.bodyMedium,
+            ),),
+        )
+            ],
     );
   }
 
@@ -493,31 +500,31 @@ class _JobStatsTabState extends State<JobStatsTab> {
               ],
             ),
             SizedBox(height: screenSize.height * 0.02),
-            SizedBox(
-              height: screenSize.height * 0.25,
-              child: roundedMaxY > 0 ? BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: roundedMaxY,
-                  barGroups: [
-                    _createBarGroup(0, averageViews, Colors.blue[400]!),
-                    _createBarGroup(1, averageApplicants, Colors.teal[400]!),
-                  ],
-                  gridData: FlGridData(
-                    show: true,
-                    drawHorizontalLine: true,
-                    horizontalInterval: roundedMaxY <= 5 ? 1 : (roundedMaxY / 5).ceilToDouble(),
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: Colors.grey[200],
-                        strokeWidth: 1,
-                      );
-                    },
-                  ),
-                  borderData: FlBorderData(show: false),
-                  titlesData: _createBarTitles(context, roundedMaxY),
+            roundedMaxY > 0 ? BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: roundedMaxY,
+                barGroups: [
+                  _createBarGroup(0, averageViews, Colors.blue[400]!),
+                  _createBarGroup(1, averageApplicants, Colors.teal[400]!),
+                ],
+                gridData: FlGridData(
+                  show: true,
+                  drawHorizontalLine: true,
+                  horizontalInterval: roundedMaxY <= 5 ? 1 : (roundedMaxY / 5).ceilToDouble(),
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey[200],
+                      strokeWidth: 1,
+                    );
+                  },
                 ),
-              ) : Center(
+                borderData: FlBorderData(show: false),
+                titlesData: _createBarTitles(context, roundedMaxY),
+              ),
+            ) : SizedBox(
+              height: screenSize.height*0.1,
+              child: Center(
                 child: Text(
                   'No data available',
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -831,6 +838,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
           ),
         ),
         SizedBox(height: screenSize.height * 0.02),
+        performance['topPerformingJobs'].isNotEmpty?
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -947,7 +955,14 @@ class _JobStatsTabState extends State<JobStatsTab> {
               ),
             );
           },
-        ),
+        ):SizedBox(
+          height: screenSize.height*0.1,
+          child: Center(
+            child: Text(
+              'No data available',
+              style: Theme.of(context).textTheme.bodyMedium,
+              ),),
+        )
       ],
     );
   }

@@ -1,10 +1,13 @@
 
 
+import 'dart:io';
+
 import 'package:android/core/constants/app_constants.dart';
 import 'package:android/core/utils/hiveUtils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 
 class EmployerProfileService{
@@ -13,7 +16,7 @@ class EmployerProfileService{
   final dio = Dio();
 
   Future<void> updatePersonalInfo({ required String? fullName,
-    required String? profilePic,
+      required File? profilePicFile,
     required String? email,
     required String? phoneNumber,
     required String? address,
@@ -29,16 +32,15 @@ class EmployerProfileService{
       }
 
       print("accessToken");
-      final Map<String, dynamic> data = {};
+      FormData formData = FormData.fromMap({});
 
       void addIfValid(String key, String? value) {
         if (value != null && value.isNotEmpty) {
-          data[key] = value;
+          formData.fields.add(MapEntry(key, value));
         }
       }
 
       addIfValid('fullName', fullName);
-      addIfValid('profilePic', profilePic);
       addIfValid('email', email);
       addIfValid('phoneNumber', phoneNumber);
       addIfValid('address', address);
@@ -46,19 +48,51 @@ class EmployerProfileService{
       addIfValid('designation', designation);
       addIfValid('gender', gender);
 
-      // Check if there is any data to update
-      if (data.isEmpty) {
-        throw Exception("No valid fields to update");
+      if (profilePicFile != null) {
+        String extension = profilePicFile.path.split('.').last.toLowerCase();
+        String mimeType;
+
+        switch (extension) {
+          case 'jpg':
+          case 'jpeg':
+            mimeType = 'image/jpeg';
+            break;
+          case 'png':
+            mimeType = 'image/png';
+            break;
+          default:
+            throw Exception('Unsupported image type: $extension');
+        }
+        formData.files.add(
+            MapEntry(
+                'profilePic',
+                await MultipartFile.fromFile(
+                    profilePicFile.path,
+                    filename: 'profile.$extension',
+                    contentType: MediaType.parse(mimeType)
+                )
+            )
+        );
       }
-      print("APi hit data $data");
+
+      print("APi hit data $formData");
       final response = await dio.put(
         "${AppConstants.baseUrl}/employer/update/personalInfo",
         options: Options(
             headers: {
               'Authorization': 'Bearer $accessToken'
-            }
+            },
+          sendTimeout: const Duration(minutes: 2),
+          receiveTimeout: const Duration(minutes: 2),
+          contentType: 'multipart/form-data',
         ),
-        data: data,
+        data: formData,
+        onSendProgress: (sent, total) {
+          if (total != -1) {
+            final progress = (sent / total * 100).toStringAsFixed(2);
+            print('Upload Progress: $progress%');
+          }
+        },
       );
 
       if (response.statusCode == 200) {
