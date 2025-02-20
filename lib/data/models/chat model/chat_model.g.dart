@@ -7,41 +7,40 @@ part of 'chat_model.dart';
 // **************************************************************************
 
 Message _$MessageFromJson(Map<String, dynamic> json) => Message(
-      id: json['id'] as String,
-      senderId: json['senderId'] as String,
-      senderType: json['senderType'] as String,
-      receiverId: json['receiverId'] as String,
-      receiverType: json['receiverType'] as String,
-      content: json['content'] as String,
+      id: json['_id'] as String? ?? '',
+      senderId: json['sender'] as String? ?? '',
+      senderType: json['senderType'] as String? ?? '',
+      receiverId: json['receiver'] as String? ?? '',
+      receiverType: json['receiverType'] as String? ?? '',
+      content: json['content'] as String? ?? '',
       mediaUrl: json['mediaUrl'] as String?,
-      status: json['status'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      deliveredAt: json['deliveredAt'] == null
-          ? null
-          : DateTime.parse(json['deliveredAt'] as String),
-      readAt: json['readAt'] == null
-          ? null
-          : DateTime.parse(json['readAt'] as String),
+      status: json['status'] as String? ?? 'sent',
+      timestamp: json['timestamp'] as String? ?? '',
+      deliveredAt: json['deliveredAt'] as String? ?? '',
+      readAt: json['readAt'] as String? ?? '',
     );
 
 Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
-      'id': instance.id,
-      'senderId': instance.senderId,
+      '_id': instance.id,
+      'sender': instance.senderId,
       'senderType': instance.senderType,
-      'receiverId': instance.receiverId,
+      'receiver': instance.receiverId,
       'receiverType': instance.receiverType,
       'content': instance.content,
       'mediaUrl': instance.mediaUrl,
       'status': instance.status,
-      'timestamp': instance.timestamp.toIso8601String(),
-      'deliveredAt': instance.deliveredAt?.toIso8601String(),
-      'readAt': instance.readAt?.toIso8601String(),
+      'timestamp': instance.timestamp,
+      'deliveredAt': instance.deliveredAt,
+      'readAt': instance.readAt,
     };
 
 Conversation _$ConversationFromJson(Map<String, dynamic> json) => Conversation(
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
-      lastMessage:
-          Message.fromJson(json['lastMessage'] as Map<String, dynamic>),
+      user: json['user'] == null
+          ? const User()
+          : User.fromJson(json['user'] as Map<String, dynamic>),
+      lastMessage: json['lastMessage'] == null
+          ? const Message()
+          : Message.fromJson(json['lastMessage'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
@@ -51,10 +50,10 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
     };
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
-      id: json['id'] as String,
-      type: json['type'] as String,
-      name: json['name'] as String,
-      profilePic: json['profilePic'] as String?,
+      id: json['id'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      name: json['name'] as String? ?? 'Unknown User',
+      profilePic: json['profilePic'] as String? ?? 'default-profile-pic-url',
     );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{

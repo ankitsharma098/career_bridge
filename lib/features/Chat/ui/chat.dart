@@ -7,7 +7,7 @@ import 'chat_screen.dart';
 
 class ConversationsScreen extends StatefulWidget {
   final String userId;
-  final String userType="employer";
+  final String userType = "employer";
   const ConversationsScreen({super.key, required this.userId});
 
   @override
@@ -15,25 +15,32 @@ class ConversationsScreen extends StatefulWidget {
 }
 
 class _ConversationsScreenState extends State<ConversationsScreen> {
+  late ChatBloc _chatBloc;
   @override
   void initState() {
     super.initState();
+    _chatBloc = ChatBloc();
     _loadData();
+  }
+  @override
+  void dispose() {
+    _chatBloc.close();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
-        context.read<ChatBloc>().setCurrentUser(
-          widget.userId,
-          widget.userType,
-        );
-
-    context.read<ChatBloc>().add(LoadConversations());
+    _chatBloc.setCurrentUser(widget.userId, widget.userType);
+    _chatBloc.add(LoadConversations());
   }
+
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    print("senderID ${widget.userId}");
+    return BlocProvider(
+       create: (context) => _chatBloc,
+       child: Scaffold(
+          appBar: AppBar(
         title: const Text('Messages'),
         actions: [
           IconButton(
@@ -42,7 +49,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           ),
         ],
       ),
-      body: BlocBuilder<ChatBloc, ChatState>(
+         body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
           if (state is ChatLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -90,17 +97,18 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           return const Center(child: Text('No conversations yet'));
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showNewChatDialog(context),
-        child: const Icon(Icons.message),
-        tooltip: 'New message',
+         floatingActionButton: FloatingActionButton(
+            onPressed: () => _showNewChatDialog(context),
+            child: const Icon(Icons.message),
+            tooltip: 'New message',
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildConversationTile(Conversation conversation) {
     final hasUnreadMessages = conversation.lastMessage.status != 'read' &&
-        conversation.lastMessage.receiverId == context.read<ChatBloc>().currentUserId;
+        conversation.lastMessage.receiverId == widget.userId;
 
     return ListTile(
       leading: CircleAvatar(
@@ -131,7 +139,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           ),
           const SizedBox(width: 4),
           Text(
-            timeago.format(conversation.lastMessage.timestamp),
+            timeago.format(DateTime.parse(conversation.lastMessage.timestamp)),
             style: TextStyle(
               fontSize: 12,
               color: hasUnreadMessages ? Theme.of(context).primaryColor : Colors.grey,
@@ -151,16 +159,22 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       )
           : null,
       onTap: () {
+        if (hasUnreadMessages) {
+          context.read<ChatBloc>().add(MarkAsRead(conversation.lastMessage.id));
+        }
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ChatScreen(
-              receiverId: conversation.user.id,
-              receiverType: conversation.user.type,
-              receiverName: conversation.user.name,
+            builder: (context) => BlocProvider.value(
+              value: _chatBloc, // Pass the existing instance
+              child: ChatScreen(
+                receiverId: conversation.user.id,
+                receiverType: conversation.user.type,
+                receiverName: conversation.user.name,
+              ),
             ),
           ),
-        ).then((_) => _loadData()); // Refresh the list when returning
+        ).then((_) => _loadData());
       },
     );
   }
@@ -232,26 +246,26 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                     "67b311aaec4aff87784bc966",
                     "employer",
                     'Ankit sharma',
-                    message,
+                    "Hello Ankit",
                   ),
                 );
 
                 Navigator.pop(dialogContext);
 
                 // Navigate to chat screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider(
-                   create: (context) => ChatBloc(),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                    value: context.read<ChatBloc>(),  // Use the existing ChatBloc
                     child: ChatScreen(
-                      receiverId: recipientId,
-                      receiverType: selectedRecipientType,
-                      receiverName: 'New Contact',
+                      receiverId: "67b311aaec4aff87784bc966",
+                      receiverType: "employer",
+                      receiverName: 'Ankit sharma',
                     ),
-                      ),
                   ),
-                ).then((_) => _loadData());
+                ),
+              ).then((_) => _loadData());
               },
             
             child: const Text('Start Chat'),

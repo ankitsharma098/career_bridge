@@ -2,6 +2,7 @@ import 'package:android/features/auth/data/auth_api_service.dart';
 import 'package:android/features/auth/ui/login.dart';
 import 'package:bloc/bloc.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
@@ -96,6 +97,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
      emit(LoginLoading());
      try {
        await _loginApiService.login(event.email, event.password);
+
+       print("login success----------------------------------------------------------");
+       String? fcmToken = await FirebaseMessaging.instance.getToken();
+       fcmToken != null ? await _loginApiService.saveToken(fcmToken) : null;
        emit(LoginSuccess());
      } catch (e) {
        emit(LoginFailure(error: e.toString()));

@@ -13,21 +13,14 @@ class ChatRepository {
   final String socketUrl = "http://192.168.1.6:8000";
   final String _baseUrl = "http://192.168.1.6:8000";
 
-  bool get isSocketConnected => _socket?.connected ?? false;
 
-
-  static final ChatRepository _instance = ChatRepository._internal();
-
-  factory ChatRepository() => _instance;
-
-  ChatRepository._internal() {
+  ChatRepository() {
     _initializeSocket();
   }
 
   void _initializeSocket() async {
     try {
       final token = await HiveUtils.getAccessToken();
-
       _socket = IO.io(
         socketUrl,
         IO.OptionBuilder()
@@ -38,47 +31,22 @@ class ChatRepository {
             .build(),
       );
 
-      _setupSocketListeners();
+      _socket!.onConnect((_) => print('Socket connected'));
+      _socket!.onConnectError((data) => print('Connect error: $data'));
+      _socket!.onError((data) => print('Socket error: $data'));
+      _socket!.onDisconnect((_) => print('Socket disconnected'));
+      _socket?.on("message_sent",(data) {
+        print("message sent ${data}");
+      }, );
     } catch (e) {
       print('Socket initialization error: $e');
-      // Retry connection after delay
       Future.delayed(Duration(seconds: 5), _initializeSocket);
     }
-  }
-  void _setupSocketListeners() {
-    if (_socket == null) {
-      print("Cannot setup listeners - socket is null");
-      return;
-    }
-
-    _socket!.onConnect((_) {
-      print('Socket connected');
-      _socket!.emit('user_connect');
-    });
-
-    _socket!.onConnectError((data) {
-      print('Connect error: $data');
-      // Retry connection after error
-      Future.delayed(Duration(seconds: 5), () {
-        if (_socket != null) _socket!.connect();
-      });
-    });
-
-    _socket!.onError((data) => print('Socket error: $data'));
-
-    _socket!.onDisconnect((_) {
-      print('Socket disconnected');
-      Future.delayed(Duration(seconds: 2), () {
-        if (_socket != null) _socket!.connect();
-      });
-    });
   }
 
   Future<List<Conversation>> getConversations() async {
     try {
-      print("Getting access token...");
       final token = await HiveUtils.getAccessToken();
-      print("Token obtained, making API request to $_baseUrl/conversations");
 
       final response = await dio.get(
         '$_baseUrl/conversations',
@@ -86,38 +54,36 @@ class ChatRepository {
           headers: {'Authorization': 'Bearer $token'},
         ),
       );
-
-      print("API response status: ${response.statusCode}");
-      print("API response data: ${response.data}");
-
-      if (response.data is! List) {
-        print("Warning: API response is not a list. Type: ${response.data.runtimeType}");
-        // Return empty list if response is not as expected
+      if(response.statusCode==200){
+        final conversations = (response.data as List)
+            .map((json) => Conversation.fromJson(json))
+            .toList();
+        return conversations;
+      }else {
         return [];
       }
-
-      final conversations = (response.data as List)
-          .map((json) => Conversation.fromJson(json))
-          .toList();
-
-      print("Parsed ${conversations.length} conversations");
-      return conversations;
-    } catch (e) {
-      print('Error fetching conversations: $e');
-      if (e is DioException) {
-        print('DioError details: ${e.response?.statusCode}, ${e.response?.data}');
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
       }
-      throw Exception('Failed to load conversations: ${e.toString()}');
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<List<Message>> getMessages(String receiverId,
-      String receiverType,
+  Future<List<Message>> getMessages(String receiverId, String receiverType,
       {String? before, int? limit = 50}) async {
     try {
       final token = await HiveUtils.getAccessToken();
       final response = await dio.get(
-        '$_baseUrl/messages/$receiverId/$receiverType',
+        '$_baseUrl/$receiverId/$receiverType', // Make sure this matches your backend route
         queryParameters: {
           if (before != null) 'before': before,
           if (limit != null) 'limit': limit,
@@ -127,14 +93,32 @@ class ChatRepository {
         ),
       );
 
-      return (response.data as List)
-          .map((json) => Message.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error fetching messages: $e');
-      throw Exception('Failed to load messages: ${e.toString()}');
+      if (response.statusCode == 200) {
+
+        List<Message> messages=(response.data as List)
+            .map((json) => Message.fromJson(json))
+            .toList();
+        return messages;
+      }else {
+        return []; //
+      }
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
     }
   }
+
+
 
   Future<String> uploadMedia(File file) async {
     try {
@@ -158,15 +142,26 @@ class ChatRepository {
     }
   }
 
-  void sendMessage(String receiverId, String receiverType, String content,
-      {String? mediaUrl}) {
-    if (_socket == null || !_socket!.connected) {
-      print("Socket not connected. Unable to send message.");
-      return;
+  Future<void> initiateChat(String receiverId, String receiverType, String initialMessage,
+      {String? mediaUrl}) async {
+    try {
+      print("Initiating chat...");
+      await sendMessage(receiverId, receiverType, initialMessage, mediaUrl: mediaUrl);
+      print("Message sent successfully");
+    } catch (e) {
+      print('Error initiating chat: $e');
+      throw Exception('Failed to initiate chat: ${e.toString()}');
     }
+  }
 
-    print(
-        "Sending message via socket to $receiverId ($receiverType): $content");
+  Future<void> sendMessage(String receiverId, String receiverType, String content, {String? mediaUrl}) async {
+
+      if (_socket == null || !_socket!.connected) {
+        throw Exception("Failed to establish socket connection");
+      }
+
+
+    print("Sending message via socket to $receiverId ($receiverType): $content");
     _socket!.emit('send_message', {
       'receiverId': receiverId,
       'receiverType': receiverType,
@@ -175,19 +170,7 @@ class ChatRepository {
     });
   }
 
-  Future<void> initiateChat(String receiverId,
-      String receiverType,
-      String initialMessage,
-      {String? mediaUrl}) async {
-    try {
-      // First send message through socket
-      sendMessage(receiverId, receiverType, initialMessage, mediaUrl: mediaUrl);
-      print("Conversation initiated");
-    } catch (e) {
-      print('Error initiating chat: $e');
-      throw Exception('Failed to initiate chat: ${e.toString()}');
-    }
-  }
+
 
   void markAsRead(String messageId) {
     if (_socket == null || !_socket!.connected) {
@@ -203,10 +186,6 @@ class ChatRepository {
   void onNewMessage(Function(Message) callback) {
     // Check if socket is initialized
     if (_socket == null) {
-      print(
-          "Socket not initialized yet, will set listener after initialization");
-      // Set up a delayed check to add the listener once socket is ready
-      Future.delayed(Duration(seconds: 2), () => onNewMessage(callback));
       return;
     }
 
@@ -223,18 +202,14 @@ class ChatRepository {
 
   void onReadReceipt(Function(String, DateTime) callback) {
     if (_socket == null) {
-      print(
-          "Socket not initialized yet, will set read receipt listener after initialization");
-      Future.delayed(Duration(seconds: 2), () => onReadReceipt(callback));
       return;
     }
 
     _socket!.on('read_receipt', (data) {
       try {
-        callback(
-            data['messageId'],
-            DateTime.parse(data['readAt'])
-        );
+        final messageId = data['messageId'].toString();
+        final readAt = DateTime.parse(data['readAt'].toString());
+        callback(messageId, readAt);
       } catch (e) {
         print('Error handling read receipt: $e');
       }

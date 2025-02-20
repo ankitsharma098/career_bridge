@@ -34,9 +34,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(
-      LoadMessages(widget.receiverId, widget.receiverType),
-    );
+    context.read<ChatBloc>().add(LoadMessages(widget.receiverId, widget.receiverType));
   }
 
   void _scrollToBottom() {
@@ -160,9 +158,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageList(List<Message> messages) {
-    final String currentUserId = context
-        .read<ChatBloc>()
-        .currentUserId ?? '';
+    final currentUserId = context.read<ChatBloc>().currentUserId ?? '';
+
+    print("Current user ID: $currentUserId");
 
     return ListView.builder(
       controller: _scrollController,
@@ -172,7 +170,7 @@ class _ChatScreenState extends State<ChatScreen> {
       itemBuilder: (context, index) {
         final message = messages[messages.length - 1 - index];
         final isMe = message.senderId == currentUserId;
-
+        print("Is this my message? $isMe");
         return Align(
           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
@@ -183,7 +181,7 @@ class _ChatScreenState extends State<ChatScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 if (message.mediaUrl != null)
                   ClipRRect(
@@ -208,13 +206,24 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
 
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  timeago.format(message.timestamp),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isMe ? Colors.white70 : Colors.black54,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      timeago.format(DateTime.parse(message.timestamp)),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isMe ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                    if (isMe && message.status == 'read') ...[
+                      const SizedBox(width: 4),
+                      const Icon(Icons.done_all, size: 14, color: Colors.white70),
+                    ] else if (isMe && message.status == 'sent') ...[
+                      const SizedBox(width: 4),
+                      const Icon(Icons.done, size: 14, color: Colors.white70),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -257,22 +266,19 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.send),
             onPressed: () {
-              if (_textController.text
-                  .trim()
-                  .isNotEmpty) {
+              if (_textController.text.trim().isNotEmpty) {
                 context.read<ChatBloc>().add(
                   SendMessage(
-                     widget.receiverId,
+                    widget.receiverId,
                     widget.receiverType,
-                    _textController.text,
+                    _textController.text.trim(),
                   ),
                 );
                 _textController.clear();
-                setState(() {
-                  _uploadedMediaUrl = null;
-                });
               }
             },
+
+
           ),
         ],
       ),

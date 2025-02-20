@@ -20,64 +20,85 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<LoadConversations>(_onLoadConversations);
     on<LoadMessages>(_onLoadMessages);
     on<SendMessage>(_onSendMessage);
-    on<UploadMedia>(_onUploadMedia);
-    on<InitiateChat>(_onInitiateChat);
     on<MarkAsRead>(_onMarkAsRead);
     on<NewMessageReceived>(_onNewMessageReceived);
 
-    // Safe setup of message listeners
-    Future.delayed(Duration(milliseconds: 500), () {
-      _setupMessageListeners();
+    on<UploadMedia>(_onUploadMedia);
+    on<InitiateChat>(_onInitiateChat);
+
+    _repository.onNewMessage((message) => add(NewMessageReceived(message)));
+
+    _repository.onReadReceipt((messageId, readAt) {
+      if (state is MessagesLoaded) {
+        final currentMessages = (state as MessagesLoaded).messages;
+        final updatedMessages = currentMessages.map((msg) {
+          if (msg.id == messageId) {
+            return Message(
+              id: msg.id,
+              senderId: msg.senderId,
+              senderType: msg.senderType,
+              receiverId: msg.receiverId,
+              receiverType: msg.receiverType,
+              content: msg.content,
+              status: 'read',
+              timestamp: msg.timestamp,
+              readAt: readAt.toIso8601String(),
+            );
+          }
+          return msg;
+        }).toList();
+        emit(MessagesLoaded(updatedMessages));
+      }
     });
+
+
   }
     // Setup message listener
 
-  void _setupMessageListeners() {
-  // Setup message listener
-  _repository.onNewMessage(_handleNewMessage);
+//   void _setupMessageListeners() {
+//   // Setup message listener
+//   _repository.onNewMessage(_handleNewMessage);
+//
+//   // Setup read receipt listener
+//   _repository.onReadReceipt((messageId, readAt) {
+//     // Update message status if needed
+//     if (state is MessagesLoaded) {
+//       final currentMessages = (state as MessagesLoaded).messages;
+//       final updatedMessages = currentMessages.map((msg) {
+//         if (msg.id == messageId) {
+//           return Message(
+//             id: msg.id,
+//             senderId: msg.senderId,
+//             senderType: msg.senderType,
+//             receiverId: msg.receiverId,
+//             receiverType: msg.receiverType,
+//             content: msg.content,
+//             mediaUrl: msg.mediaUrl,
+//             status: 'read',
+//             timestamp: msg.timestamp,
+//             readAt: readAt.toIso8601String(),
+//             deliveredAt: msg.deliveredAt,
+//           );
+//         }
+//         return msg;
+//       }).toList();
+//
+//       emit(MessagesLoaded(updatedMessages));
+//     }
+//   });
+// }
 
-  // Setup read receipt listener
-  _repository.onReadReceipt((messageId, readAt) {
-    // Update message status if needed
-    if (state is MessagesLoaded) {
-      final currentMessages = (state as MessagesLoaded).messages;
-      final updatedMessages = currentMessages.map((msg) {
-        if (msg.id == messageId) {
-          return Message(
-            id: msg.id,
-            senderId: msg.senderId,
-            senderType: msg.senderType,
-            receiverId: msg.receiverId,
-            receiverType: msg.receiverType,
-            content: msg.content,
-            mediaUrl: msg.mediaUrl,
-            status: 'read',
-            timestamp: msg.timestamp,
-            readAt: readAt,
-            deliveredAt: msg.deliveredAt,
-          );
-        }
-        return msg;
-      }).toList();
+  // void _handleNewMessage(Message message) {
+  //   add(NewMessageReceived(message));
+  // }
 
-      emit(MessagesLoaded(updatedMessages));
-    }
-  });
-}
-
-  void _handleNewMessage(Message message) {
-    add(NewMessageReceived(message));
-  }
 
   Future<void> _onLoadConversations(LoadConversations event, Emitter<ChatState> emit) async {
-    print("Loading conversations...");
     emit(ChatLoading());
     try {
-      print("Fetching conversations from repository...");
       final conversations = await _repository.getConversations();
       print("Fetched ${conversations.length} conversations");
       emit(ConversationsLoaded(conversations));
-      print("Emitted ConversationsLoaded state");
     } catch (e) {
       print("Error loading conversations: $e");
       emit(ChatError(e.toString()));
@@ -106,16 +127,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
     try {
-      final messages = await _repository.getMessages(
-        event.receiverId,
-        event.receiverType,
-      );
+      final messages = await _repository.getMessages(event.receiverId, event.receiverType);
 
-      // Mark unread messages as read
       for (var message in messages) {
-        if (message.status != 'read' &&
-            message.receiverId == currentUserId &&
-            message.receiverType == currentUserType) {
+        if (message.status != 'read' && message.receiverId == currentUserId) {
           _repository.markAsRead(message.id);
         }
       }
@@ -140,13 +155,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         content: event.content,
         mediaUrl: event.mediaUrl,
         status: 'sent',
-        timestamp: DateTime.now(),
+        timestamp: DateTime.now().toIso8601String(),
       );
 
       emit(MessagesLoaded([...currentMessages, newMessage]));
 
       // Send actual message
-      _repository.sendMessage(
+     await _repository.sendMessage(
         event.receiverId,
         event.receiverType,
         event.content,

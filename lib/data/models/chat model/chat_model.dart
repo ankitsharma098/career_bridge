@@ -5,30 +5,50 @@ part 'chat_model.g.dart';
 
 @JsonSerializable()
 class Message {
+  @JsonKey(name: '_id', defaultValue: '')
   final String id;
-  final String senderId;
-  final String senderType;
-  final String receiverId;
-  final String receiverType;
-  final String content;
-  final String? mediaUrl;
-  final String status;
-  final DateTime timestamp;
-  final DateTime? deliveredAt;
-  final DateTime? readAt;
 
-  Message({
-    required this.id,
-    required this.senderId,
-    required this.senderType,
-    required this.receiverId,
-    required this.receiverType,
-    required this.content,
+  @JsonKey(name: 'sender', defaultValue: '')
+  final String senderId;
+
+  @JsonKey(defaultValue: '')
+  final String senderType;
+
+  @JsonKey(name: 'receiver', defaultValue: '')
+  final String receiverId;
+
+  @JsonKey(defaultValue: '')
+  final String receiverType;
+
+  @JsonKey(defaultValue: '')
+  final String content;
+
+  final String? mediaUrl;
+
+  @JsonKey(defaultValue: 'sent')
+  final String status;
+
+  @JsonKey(defaultValue: '')
+  final String timestamp;
+
+  @JsonKey(defaultValue: '')
+  final String deliveredAt;
+
+  @JsonKey(defaultValue: '')
+  final String readAt;
+
+  const Message({
+    this.id = '',
+    this.senderId = '',
+    this.senderType = '',
+    this.receiverId = '',
+    this.receiverType = '',
+    this.content = '',
     this.mediaUrl,
-    required this.status,
-    required this.timestamp,
-    this.deliveredAt,
-    this.readAt,
+    this.status = 'sent',
+    this.timestamp='',
+    this.deliveredAt='',
+    this.readAt='',
   });
 
   factory Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(json);
@@ -37,12 +57,15 @@ class Message {
 
 @JsonSerializable()
 class Conversation {
+
   final User user;
+
+  @JsonKey(name:"lastMessage")
   final Message lastMessage;
 
   Conversation({
-    required this.user,
-    required this.lastMessage,
+    this.user = const User(),
+    this.lastMessage = const Message(),
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
@@ -51,16 +74,23 @@ class Conversation {
 
 @JsonSerializable()
 class User {
+  @JsonKey(name: 'id', defaultValue: '')
   final String id;
+
+  @JsonKey(defaultValue: '')
   final String type;
+
+  @JsonKey(defaultValue: 'Unknown User')
   final String name;
+
+  @JsonKey(defaultValue: '')
   final String? profilePic;
 
-  User({
-    required this.id,
-    required this.type,
-    required this.name,
-    this.profilePic,
+  const User({
+    this.id = '',
+    this.type = '',
+    this.name = 'Unknown User',
+    this.profilePic = 'default-profile-pic-url',
   });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
