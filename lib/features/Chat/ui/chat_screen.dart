@@ -73,6 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: BlocConsumer<ChatBloc, ChatState>(
                 listener: (context, state) {
                   if (state is MessagesLoaded) {
+                    print('MessagesLoaded with ${state.messages.length} messages');
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       _scrollToBottom();
                     });
@@ -219,7 +220,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     if (isMe && message.status == 'read') ...[
                       const SizedBox(width: 4),
                       const Icon(Icons.done_all, size: 14, color: Colors.white70),
-                    ] else if (isMe && message.status == 'sent') ...[
+                    ] else if (isMe) ...[
                       const SizedBox(width: 4),
                       const Icon(Icons.done, size: 14, color: Colors.white70),
                     ],

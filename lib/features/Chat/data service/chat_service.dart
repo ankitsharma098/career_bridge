@@ -25,23 +25,85 @@ class ChatRepository {
         socketUrl,
         IO.OptionBuilder()
             .setTransports(['websocket'])
-            .enableAutoConnect()
-            .enableForceNew()
             .setAuth({'token': token})
+            .enableReconnection()
+            .setReconnectionAttempts(10)
+            .setReconnectionDelay(1000)
             .build(),
       );
 
-      _socket!.onConnect((_) => print('Socket connected'));
+      _socket!.onConnect((_) {
+        print('Socket connected with ID: ${_socket!.id}');
+        _socket!.emit('user_connect');
+
+        // Move listeners here to ensure they’re active
+        _socket!.on('new_message', (data) {
+          try {
+            print('Raw new_message data: $data');
+            Map<String,dynamic> rawMessage= Map<String,dynamic>.from(data);
+
+            final mappedMessage = {
+              '_id': rawMessage['messageId']?.toString() ?? '',
+              'sender': rawMessage['senderId']?.toString() ?? '',
+              'senderType': rawMessage['senderType'] ?? '',
+              'receiver': rawMessage['receiverId']?.toString() ?? '',
+              'receiverType': rawMessage['receiverType'] ?? '',
+              'content': rawMessage['content'] ?? '',
+              'mediaUrl': rawMessage['mediaUrl'],
+              'status': rawMessage['status'] ?? 'sent',
+              'timestamp': rawMessage['timestamp'] ?? DateTime.now().toIso8601String(),
+              'deliveredAt': rawMessage['deliveredAt'],
+              'readAt': rawMessage['readAt'],
+            };
+
+
+            Message message = Message.fromJson(mappedMessage);
+            print('Parsed message: ${message.toJson()}');
+            _newMessageCallback?.call(message);
+          } catch (e) {
+            print('Error parsing new message: $e');
+          }
+        });
+
+        _socket!.on('read_receipt', (data) {
+          try {
+            final messageId = data['messageId'].toString();
+            final readAt = DateTime.parse(data['readAt'].toString());
+            _readReceiptCallback?.call(messageId, readAt);
+          } catch (e) {
+            print('Error handling read receipt: $e');
+          }
+        });
+      });
+
+      _socket!.onReconnect((_) {
+        print('Socket reconnected with ID: ${_socket!.id}');
+        _socket!.emit('user_connect');
+      });
       _socket!.onConnectError((data) => print('Connect error: $data'));
       _socket!.onError((data) => print('Socket error: $data'));
       _socket!.onDisconnect((_) => print('Socket disconnected'));
-      _socket?.on("message_sent",(data) {
-        print("message sent ${data}");
-      }, );
+
+      _socket!.onAny((event, data) {
+        print('Socket event received: $event, data: $data');
+      });
+
+      _socket!.connect();
+      print('Attempting socket connection...');
     } catch (e) {
       print('Socket initialization error: $e');
-      Future.delayed(Duration(seconds: 5), _initializeSocket);
     }
+  }
+
+  Function(Message)? _newMessageCallback;
+  Function(String, DateTime)? _readReceiptCallback;
+
+  void onNewMessage(Function(Message) callback) {
+    _newMessageCallback = callback;
+  }
+
+  void onReadReceipt(Function(String, DateTime) callback) {
+    _readReceiptCallback = callback;
   }
 
   Future<List<Conversation>> getConversations() async {
@@ -157,7 +219,9 @@ class ChatRepository {
   Future<void> sendMessage(String receiverId, String receiverType, String content, {String? mediaUrl}) async {
 
       if (_socket == null || !_socket!.connected) {
-        throw Exception("Failed to establish socket connection");
+        print('Socket not connected, attempting reconnect...');
+        _socket?.connect();
+        throw Exception("Socket not connected");
       }
 
 
@@ -183,38 +247,44 @@ class ChatRepository {
     });
   }
 
-  void onNewMessage(Function(Message) callback) {
-    // Check if socket is initialized
-    if (_socket == null) {
-      return;
-    }
+  // void onNewMessage(Function(Message) callback) {
+  //   if (_socket == null) return;
+  //   _socket!.on('new_message', (data) {
+  //     try {
+  //       print('Raw new_message data: $data');
+  //       final message = Message.fromJson({
+  //         'id': data['messageId'].toString(),
+  //         'senderId': data['senderId'],
+  //         'senderType': data['senderType'],
+  //         'receiverId': data['receiverId'],
+  //         'receiverType': data['receiverType'],
+  //         'content': data['content'],
+  //         'mediaUrl': data['mediaUrl'],
+  //         'status': data['status'],
+  //         'timestamp': data['timestamp'],
+  //       });
+  //       callback(message);
+  //     } catch (e) {
+  //       print('Error parsing new message: $e');
+  //     }
+  //   });
+  // }
 
-    _socket!.on('new_message', (data) {
-      print("New message received: $data");
-      try {
-        final message = Message.fromJson(data);
-        callback(message);
-      } catch (e) {
-        print('Error parsing message: $e');
-      }
-    });
-  }
-
-  void onReadReceipt(Function(String, DateTime) callback) {
-    if (_socket == null) {
-      return;
-    }
-
-    _socket!.on('read_receipt', (data) {
-      try {
-        final messageId = data['messageId'].toString();
-        final readAt = DateTime.parse(data['readAt'].toString());
-        callback(messageId, readAt);
-      } catch (e) {
-        print('Error handling read receipt: $e');
-      }
-    });
-  }
+  // void onReadReceipt(Function(String, DateTime) callback) {
+  //   if (_socket == null) {
+  //     return;
+  //   }
+  //
+  //   _socket!.on('read_receipt', (data) {
+  //     try {
+  //       final messageId = data['messageId'].toString();
+  //       final readAt = DateTime.parse(data['readAt'].toString());
+  //       callback(messageId, readAt);
+  //     } catch (e) {
+  //       print('Error handling read receipt: $e');
+  //     }
+  //   });
+  // }
 
   // User activity update
   void updateUserActivity() {

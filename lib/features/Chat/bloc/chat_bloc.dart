@@ -14,6 +14,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository _repository = ChatRepository();
   String? currentUserType;
   String? currentUserId;
+  String? currentReceiverId;
 
   ChatBloc() : super(ChatInitial()) {
 
@@ -26,10 +27,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<UploadMedia>(_onUploadMedia);
     on<InitiateChat>(_onInitiateChat);
 
-    _repository.onNewMessage((message) => add(NewMessageReceived(message)));
-
+    _repository.onNewMessage((message) {
+      print('New message received: ${message.toJson()}');
+      add(NewMessageReceived(message));
+    });
     _repository.onReadReceipt((messageId, readAt) {
       if (state is MessagesLoaded) {
+        print('Read receipt for messageId: $messageId at $readAt');
         final currentMessages = (state as MessagesLoaded).messages;
         final updatedMessages = currentMessages.map((msg) {
           if (msg.id == messageId) {
@@ -127,6 +131,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
     try {
+      currentReceiverId = event.receiverId;
       final messages = await _repository.getMessages(event.receiverId, event.receiverType);
 
       for (var message in messages) {
@@ -145,9 +150,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (state is MessagesLoaded) {
       final currentMessages = (state as MessagesLoaded).messages;
 
-      // Optimistically update UI with sent message
+      // Optimistically update UI with a temporary message
+      final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}'; // Unique temp ID
       final newMessage = Message(
-        id: DateTime.now().millisecondsSinceEpoch.toString(), // Temporary ID
+        id: tempId, // Mark as temporary
         senderId: currentUserId ?? '',
         senderType: currentUserType ?? '',
         receiverId: event.receiverId,
@@ -159,9 +165,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       );
 
       emit(MessagesLoaded([...currentMessages, newMessage]));
+      print('Added temporary message with ID: $tempId');
 
       // Send actual message
-     await _repository.sendMessage(
+      await _repository.sendMessage(
         event.receiverId,
         event.receiverType,
         event.content,
@@ -185,20 +192,48 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onNewMessageReceived(NewMessageReceived event, Emitter<ChatState> emit) async {
+    final message = event.message;
+    print('Processing new message: ${message.id}, sender: ${message.senderId}, receiver: ${message.receiverId}');
     if (state is MessagesLoaded) {
       final currentMessages = (state as MessagesLoaded).messages;
+      if ((message.senderId == currentUserId && message.receiverId == currentReceiverId) ||
+          (message.receiverId == currentUserId && message.senderId == currentReceiverId)) {
 
-      // Avoid duplicate messages
-      if (!currentMessages.any((msg) => msg.id == event.message.id)) {
-        final updatedMessages = [...currentMessages, event.message];
+        final updatedMessages = currentMessages.map((msg) {
+          // Check if this is a temp message for the same content and sender/receiver
+          if (msg.id.startsWith('temp_') &&
+              msg.content == message.content &&
+              msg.senderId == message.senderId &&
+              msg.receiverId == message.receiverId) {
+            print('Replacing temporary message ${msg.id} with server message ${message.id}');
+            return message;
+          }
+          return msg;
+        }).toList();
+
+        if (!updatedMessages.any((msg) => msg.id == message.id)) {
+          updatedMessages.add(message);
+        }
+        print('Emitting MessagesLoaded with ${updatedMessages.length} messages');
         emit(MessagesLoaded(updatedMessages));
-
-        // Mark message as read if we're the receiver
-        if (event.message.receiverId == currentUserId &&
-            event.message.receiverType == currentUserType) {
-          _repository.markAsRead(event.message.id);
+        if (message.receiverId == currentUserId && message.status != 'read') {
+          _repository.markAsRead(message.id);
+        }else {
+          print('Message not for current chat: sender $currentUserId, receiver $currentReceiverId');
         }
       }
+      if (state is ConversationsLoaded) {
+        final currentConversations = (state as ConversationsLoaded).conversations;
+        final updatedConversations = currentConversations.map((conv) {
+          if (conv.user.id == (message.senderId == currentUserId ? message.receiverId : message.senderId)) {
+            return Conversation(user: conv.user, lastMessage: message);
+          }
+          return conv;
+        }).toList();
+        print('Emitting ConversationsLoaded with updated last message');
+        emit(ConversationsLoaded(updatedConversations));
+      }
+
     }
   }
 

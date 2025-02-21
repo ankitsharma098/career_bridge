@@ -38,14 +38,6 @@ class MessagesLoaded extends ChatState {
   List<Object?> get props => [messages];
 }
 
-// class MessageSent extends ChatState {
-//   final Message message;
-//
-//   MessageSent(this.message);
-//
-//   @override
-//   List<Object?> get props => [message];
-// }
 class MediaUploading extends ChatState {}
 
 class MediaUploaded extends ChatState {
