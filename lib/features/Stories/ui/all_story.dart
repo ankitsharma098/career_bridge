@@ -9,6 +9,8 @@ import '../../../core/constants/colors.dart';
 import '../../../core/utils/image_viewer.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/story/story_model.dart';
+import '../../See profile/bloc/see_profile_bloc.dart';
+import '../../See profile/ui/see_profile.dart';
 import '../bloc/story_bloc.dart';
 import '../create_story_bloc/create_story_bloc.dart';
 import '../data/story_api_service.dart';
@@ -263,21 +265,37 @@ class _StoriesScreenState extends State<StoriesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: CircleAvatar(
-              radius: screenSize.width * 0.05,
-              backgroundImage: NetworkImage(story.hostDetails.profilePic),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) => SeeProfileBloc(),
+                    child: UserProfileScreen(
+                                      userId: story.hostDetails.id,
+                                      userType: story.userType, // Ensure StoryModel has type
+                                    ),
+                  ),
+                ),
+              );
+            },
+            child: ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: CircleAvatar(
+                radius: screenSize.width * 0.05,
+                backgroundImage: NetworkImage(story.hostDetails.profilePic),
+              ),
+              title: Text(
+                story.hostDetails.name,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                DateFormat('MMM dd, yyyy').format(date),
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              trailing: isOwner ? _buildEditButton(story, context) : null,
             ),
-            title: Text(
-              story.hostDetails.name,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              DateFormat('MMM dd, yyyy').format(date),
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            trailing: isOwner ? _buildEditButton(story, context) : null,
           ),
           if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
           Padding(

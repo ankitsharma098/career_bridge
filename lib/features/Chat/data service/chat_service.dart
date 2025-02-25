@@ -2,6 +2,8 @@
 import 'dart:io';
 import 'package:android/core/constants/app_constants.dart';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../../../core/utils/hiveUtils.dart';
@@ -36,12 +38,10 @@ class ChatRepository {
         print('Socket connected with ID: ${_socket!.id}');
         _socket!.emit('user_connect');
 
-        // Move listeners here to ensure they’re active
         _socket!.on('new_message', (data) {
           try {
             print('Raw new_message data: $data');
-            Map<String,dynamic> rawMessage= Map<String,dynamic>.from(data);
-
+            Map<String, dynamic> rawMessage = Map<String, dynamic>.from(data);
             final mappedMessage = {
               '_id': rawMessage['messageId']?.toString() ?? '',
               'sender': rawMessage['senderId']?.toString() ?? '',
@@ -50,13 +50,12 @@ class ChatRepository {
               'receiverType': rawMessage['receiverType'] ?? '',
               'content': rawMessage['content'] ?? '',
               'mediaUrl': rawMessage['mediaUrl'],
+              'publicId': rawMessage['publicId'] ?? '',
               'status': rawMessage['status'] ?? 'sent',
               'timestamp': rawMessage['timestamp'] ?? DateTime.now().toIso8601String(),
               'deliveredAt': rawMessage['deliveredAt'],
               'readAt': rawMessage['readAt'],
             };
-
-
             Message message = Message.fromJson(mappedMessage);
             print('Parsed message: ${message.toJson()}');
             _newMessageCallback?.call(message);
@@ -76,17 +75,11 @@ class ChatRepository {
         });
       });
 
-      _socket!.onReconnect((_) {
-        print('Socket reconnected with ID: ${_socket!.id}');
-        _socket!.emit('user_connect');
-      });
+      _socket!.onReconnect((_) => print('Socket reconnected with ID: ${_socket!.id}'));
       _socket!.onConnectError((data) => print('Connect error: $data'));
       _socket!.onError((data) => print('Socket error: $data'));
       _socket!.onDisconnect((_) => print('Socket disconnected'));
-
-      _socket!.onAny((event, data) {
-        print('Socket event received: $event, data: $data');
-      });
+      _socket!.onAny((event, data) => print('Socket event received: $event, data: $data'));
 
       _socket!.connect();
       print('Attempting socket connection...');
@@ -182,33 +175,64 @@ class ChatRepository {
 
 
 
-  Future<String> uploadMedia(File file) async {
+  Future<Map<String, String>> uploadMedia(File file) async {
     try {
       final token = await HiveUtils.getAccessToken();
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      print('Uploading file: ${file.path}, MIME type: $mimeType');
+
+      const allowedMimes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+      if (!allowedMimes.contains(mimeType)) {
+        throw Exception('Unsupported file type: $mimeType. Allowed types: jpg, png, gif, pdf, doc, docx');
+      }
+
       final formData = FormData.fromMap({
-        'media': await MultipartFile.fromFile(file.path),
+        'media': await MultipartFile.fromFile(
+          file.path,
+          contentType: MediaType.parse(mimeType), // Explicitly set MIME type
+        ),
       });
 
-      final response = await dio.post(
-        '$_baseUrl/messages/upload',
+      final response = await dio.post('$_baseUrl/upload',
         data: formData,
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
       );
+      print("Url ====${ response.data['url']}");
 
-      return response.data['url'];
-    } catch (e) {
-      print('Error uploading media: $e');
-      throw Exception('Failed to upload media: ${e.toString()}');
+      return {
+        'url': response.data['url'],
+        'publicId': response.data['publicId'],
+      };
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
     }
   }
 
   Future<void> initiateChat(String receiverId, String receiverType, String initialMessage,
-      {String? mediaUrl}) async {
+      {Map<String, String>? media}) async {
     try {
       print("Initiating chat...");
-      await sendMessage(receiverId, receiverType, initialMessage, mediaUrl: mediaUrl);
+      await sendMessage(receiverId, receiverType, initialMessage, media: media);
       print("Message sent successfully");
     } catch (e) {
       print('Error initiating chat: $e');
@@ -216,7 +240,7 @@ class ChatRepository {
     }
   }
 
-  Future<void> sendMessage(String receiverId, String receiverType, String content, {String? mediaUrl}) async {
+  Future<void> sendMessage(String receiverId, String receiverType, String content, {Map<String, String>? media}) async {
 
       if (_socket == null || !_socket!.connected) {
         print('Socket not connected, attempting reconnect...');
@@ -226,14 +250,46 @@ class ChatRepository {
 
 
     print("Sending message via socket to $receiverId ($receiverType): $content");
-    _socket!.emit('send_message', {
-      'receiverId': receiverId,
-      'receiverType': receiverType,
-      'content': content,
-      if (mediaUrl != null) 'mediaUrl': mediaUrl,
-    });
+      _socket!.emit('send_message', {
+        'receiverId': receiverId,
+        'receiverType': receiverType,
+        'content': content,
+        if (media != null) 'mediaUrl': media, // Pass both url and publicId
+      });
   }
 
+
+  Future<bool> deleteMessage(String messageId) async {
+    try {
+      print("Message delete $messageId");
+      final token = await HiveUtils.getAccessToken();
+      final response = await dio.delete(
+        '$_baseUrl/$messageId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      if (response.statusCode == 200) {
+
+        bool success = response.data["success"] ?? false;
+        return success;
+        throw Exception('Failed to delete message');
+      }else{
+        throw Exception('Failed to delete message');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
 
 
   void markAsRead(String messageId) {

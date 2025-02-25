@@ -23,7 +23,7 @@ class SendMessage extends ChatEvent {
   final String receiverId;
   final String receiverType;
   final String content;
-  final String? mediaUrl;
+  final Map<String, String>? mediaUrl;
 
   SendMessage(this.receiverId, this.receiverType, this.content, {this.mediaUrl});
 
@@ -37,7 +37,7 @@ class InitiateChat extends ChatEvent {
   final String receiverType;
   final String receiverName;
   final String initialMessage;
-  final String? mediaUrl;
+  final Map<String, String>? mediaUrl;
 
   InitiateChat(
       this.receiverId,
@@ -70,4 +70,11 @@ class NewMessageReceived extends ChatEvent {
   final Message message;
 
   NewMessageReceived(this.message);
+}
+
+class DeleteMessage extends ChatEvent {
+  final String messageId;
+  DeleteMessage(this.messageId);
+  @override
+  List<Object?> get props => [messageId];
 }

@@ -23,7 +23,11 @@ class Message {
   @JsonKey(defaultValue: '')
   final String content;
 
+  @JsonKey(fromJson: _mediaUrlFromJson)
   final String? mediaUrl;
+
+  @JsonKey(defaultValue: '')
+  final String publicId;
 
   @JsonKey(defaultValue: 'sent')
   final String status;
@@ -45,6 +49,7 @@ class Message {
     this.receiverType = '',
     this.content = '',
     this.mediaUrl,
+    this.publicId = '',
     this.status = 'sent',
     this.timestamp='',
     this.deliveredAt='',
@@ -53,6 +58,11 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(json);
   Map<String, dynamic> toJson() => _$MessageToJson(this);
+
+  static String? _mediaUrlFromJson(dynamic value) {
+    if (value == null || value == '') return null;
+    return value.toString();
+  }
 }
 
 @JsonSerializable()

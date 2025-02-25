@@ -42,12 +42,13 @@ class MediaUploading extends ChatState {}
 
 class MediaUploaded extends ChatState {
   final String mediaUrl;
-
-  MediaUploaded(this.mediaUrl);
-
+  final String publicId;
+  MediaUploaded(this.mediaUrl, this.publicId);
   @override
-  List<Object?> get props => [mediaUrl];
+  List<Object?> get props => [mediaUrl, publicId];
 }
+
+
 
 class ChatError extends ChatState {
   final String message;

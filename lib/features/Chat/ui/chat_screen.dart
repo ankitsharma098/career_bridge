@@ -1,5 +1,6 @@
 // lib/features/chat/presentation/chat_screen.dart
 import 'dart:io';
+import 'package:android/core/utils/snackBarUtils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +30,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _uploadedMediaUrl;
+  String? _uploadedPublicId;
   bool _isUploading = false;
 
   @override
@@ -53,14 +55,21 @@ class _ChatScreenState extends State<ChatScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.receiverName),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.receiverName),
+              Text('Last seen: TBD', style: TextStyle(fontSize: 12)), // Fetch via API if added
+            ],
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new),
+            onPressed: () => Navigator.pop(context),
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: () =>
-                  context.read<ChatBloc>().add(
-                    LoadMessages(widget.receiverId, widget.receiverType),
-                  ),
+              onPressed: () => context.read<ChatBloc>().add(LoadMessages(widget.receiverId, widget.receiverType)),
             ),
           ],
         ),
@@ -77,9 +86,15 @@ class _ChatScreenState extends State<ChatScreen> {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       _scrollToBottom();
                     });
+                  } else if (state is ChatError) {
+                    print('ChatError: ${state.message}');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${state.message}')),
+                    );
                   }
                 },
                 builder: (context, state) {
+                  print('Building ChatScreen with state: ${state.runtimeType}');
                   if (state is ChatLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
@@ -172,61 +187,86 @@ class _ChatScreenState extends State<ChatScreen> {
         final message = messages[messages.length - 1 - index];
         final isMe = message.senderId == currentUserId;
         print("Is this my message? $isMe");
-        return Align(
-          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isMe ? Colors.blue : Colors.grey[300],
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                if (message.mediaUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      message.mediaUrl!,
-                      fit: BoxFit.cover,
-                      width: 200,
-                      errorBuilder: (_, __, ___) =>
-                          Container(
-                            width: 200,
-                            height: 150,
-                            color: Colors.grey,
-                            child: const Icon(Icons.image, size: 48),
-                          ),
-                    ),
+        return GestureDetector(
+          onLongPress: isMe
+              ? () {
+            showDialog(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Delete Message'),
+                content: const Text('Are you sure you want to delete this message?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Cancel'),
                   ),
-                Text(
-                  message.content,
-                  style: TextStyle(
-                    color: isMe ? Colors.white : Colors.black,
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<ChatBloc>().add(DeleteMessage(message.id));
+                      Navigator.pop(dialogContext);
+                    },
+                    child: const Text('Delete'),
                   ),
-
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      timeago.format(DateTime.parse(message.timestamp)),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isMe ? Colors.white70 : Colors.black54,
+                ],
+              ),
+            );
+          }
+              : null,
+          child: Align(
+            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isMe ? Colors.blue : Colors.grey[300],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  if (message.mediaUrl != null && message.mediaUrl!.isNotEmpty) // Updated condition
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        message.mediaUrl!,
+                        fit: BoxFit.cover,
+                        width: 200,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 200,
+                          height: 150,
+                          color: Colors.grey,
+                          child: const Icon(Icons.image, size: 48),
+                        ),
                       ),
                     ),
-                    if (isMe && message.status == 'read') ...[
-                      const SizedBox(width: 4),
-                      const Icon(Icons.done_all, size: 14, color: Colors.white70),
-                    ] else if (isMe) ...[
-                      const SizedBox(width: 4),
-                      const Icon(Icons.done, size: 14, color: Colors.white70),
+                  Text(
+                    message.content,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : Colors.black,
+                    ),
+
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        timeago.format(DateTime.parse(message.timestamp)),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isMe ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                      if (isMe && message.status == 'read') ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.done_all, size: 14, color: Colors.white70),
+                      ] else if (isMe) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.done, size: 14, color: Colors.white70),
+                      ],
                     ],
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -240,11 +280,7 @@ class _ChatScreenState extends State<ChatScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, -2),
-            blurRadius: 4,
-            color: Colors.black.withOpacity(0.1),
-          ),
+          BoxShadow(offset: const Offset(0, -2), blurRadius: 4, color: Colors.black.withOpacity(0.1)),
         ],
       ),
       child: Row(
@@ -252,34 +288,63 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.attach_file),
             onPressed: () async {
-              // Implement file attachment logic
+              try {
+                final result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'],
+                );
+                if (result != null) {
+                  final file = File(result.files.single.path!);
+                  context.read<ChatBloc>().add(UploadMedia(file));
+                  await for (var state in context.read<ChatBloc>().stream) {
+                    if (state is MediaUploaded) {
+                      setState(() {
+                        _uploadedMediaUrl = state.mediaUrl;
+                        _uploadedPublicId = state.publicId;
+                      });
+                      break;
+                    } else if (state is ChatError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Upload error: ${state.message}')),
+                      );
+                      break;
+                    }
+                  }
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to pick file: $e')),
+                );
+              }
             },
           ),
           Expanded(
             child: TextField(
               controller: _textController,
-              decoration: const InputDecoration(
-                hintText: 'Type a message',
-                border: InputBorder.none,
-              ),
+              decoration: const InputDecoration(hintText: 'Type a message', border: InputBorder.none),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.send),
             onPressed: () {
-              if (_textController.text.trim().isNotEmpty) {
+              if (_textController.text.trim().isNotEmpty || _uploadedMediaUrl != null) {
                 context.read<ChatBloc>().add(
                   SendMessage(
                     widget.receiverId,
                     widget.receiverType,
                     _textController.text.trim(),
+                    mediaUrl: _uploadedMediaUrl != null
+                        ? {'url': _uploadedMediaUrl!, 'publicId': _uploadedPublicId!}
+                        : null,
                   ),
                 );
                 _textController.clear();
+                setState(() {
+                  _uploadedMediaUrl = null;
+                  _uploadedPublicId = null;
+                });
               }
             },
-
-
           ),
         ],
       ),

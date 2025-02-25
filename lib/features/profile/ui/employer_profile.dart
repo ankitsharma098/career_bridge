@@ -454,7 +454,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         _buildInfoListTile(
           Icons.cake,
           'Date of Birth',
-            formatDate(employer.personalInfo.DOB),
+            formatDate(employer.personalInfo.dob),
             screenSize
         ),
         _buildInfoListTile(
@@ -595,8 +595,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     TextEditingController addressController = TextEditingController(text: employer.personalInfo.address);
     TextEditingController designationController = TextEditingController(text: employer.companyDetails.designation);
     TextEditingController dobController = TextEditingController(
-        text: employer.personalInfo.DOB.isNotEmpty
-            ? formatDate(employer.personalInfo.DOB)
+        text: employer.personalInfo.dob!.isNotEmpty
+            ? formatDate(employer.personalInfo.dob)
             : ''
     );
     TextEditingController genderController = TextEditingController(text: employer.personalInfo.gender);

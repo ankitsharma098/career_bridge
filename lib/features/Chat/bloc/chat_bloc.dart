@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -15,6 +16,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   String? currentUserType;
   String? currentUserId;
   String? currentReceiverId;
+  Timer? _activityTimer;
 
   ChatBloc() : super(ChatInitial()) {
 
@@ -26,6 +28,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     on<UploadMedia>(_onUploadMedia);
     on<InitiateChat>(_onInitiateChat);
+    on<DeleteMessage>(_onDeleteMessage);
 
     _repository.onNewMessage((message) {
       print('New message received: ${message.toJson()}');
@@ -55,46 +58,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
     });
 
-
+    _activityTimer = Timer.periodic(Duration(minutes: 1), (_) => _repository.updateUserActivity());
   }
-    // Setup message listener
-
-//   void _setupMessageListeners() {
-//   // Setup message listener
-//   _repository.onNewMessage(_handleNewMessage);
-//
-//   // Setup read receipt listener
-//   _repository.onReadReceipt((messageId, readAt) {
-//     // Update message status if needed
-//     if (state is MessagesLoaded) {
-//       final currentMessages = (state as MessagesLoaded).messages;
-//       final updatedMessages = currentMessages.map((msg) {
-//         if (msg.id == messageId) {
-//           return Message(
-//             id: msg.id,
-//             senderId: msg.senderId,
-//             senderType: msg.senderType,
-//             receiverId: msg.receiverId,
-//             receiverType: msg.receiverType,
-//             content: msg.content,
-//             mediaUrl: msg.mediaUrl,
-//             status: 'read',
-//             timestamp: msg.timestamp,
-//             readAt: readAt.toIso8601String(),
-//             deliveredAt: msg.deliveredAt,
-//           );
-//         }
-//         return msg;
-//       }).toList();
-//
-//       emit(MessagesLoaded(updatedMessages));
-//     }
-//   });
-// }
-
-  // void _handleNewMessage(Message message) {
-  //   add(NewMessageReceived(message));
-  // }
 
 
   Future<void> _onLoadConversations(LoadConversations event, Emitter<ChatState> emit) async {
@@ -116,7 +81,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         event.receiverId,
         event.receiverType,
         event.initialMessage,
-        mediaUrl: event.mediaUrl,
+        media: event.mediaUrl,
       );
 
       emit(ChatInitiated(event.receiverId, event.receiverType, event.receiverName));
@@ -147,43 +112,77 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
+    print('Handling SendMessage for receiver: ${event.receiverId}');
+    List<Message> currentMessages = [];
     if (state is MessagesLoaded) {
-      final currentMessages = (state as MessagesLoaded).messages;
+      currentMessages = (state as MessagesLoaded).messages;
+    } else {
+      // Load messages if state isn’t MessagesLoaded
+      emit(ChatLoading());
+      currentMessages = await _repository.getMessages(event.receiverId, event.receiverType);
+      emit(MessagesLoaded(currentMessages));
+    }
 
-      // Optimistically update UI with a temporary message
-      final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}'; // Unique temp ID
-      final newMessage = Message(
-        id: tempId, // Mark as temporary
-        senderId: currentUserId ?? '',
-        senderType: currentUserType ?? '',
-        receiverId: event.receiverId,
-        receiverType: event.receiverType,
-        content: event.content,
-        mediaUrl: event.mediaUrl,
-        status: 'sent',
-        timestamp: DateTime.now().toIso8601String(),
-      );
+    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+    final newMessage = Message(
+      id: tempId,
+      senderId: currentUserId ?? '',
+      senderType: currentUserType ?? '',
+      receiverId: event.receiverId,
+      receiverType: event.receiverType,
+      content: event.content,
+      mediaUrl: event.mediaUrl?['url'],
+      publicId: event.mediaUrl?['publicId'] ?? '',
+      status: 'sent',
+      timestamp: DateTime.now().toIso8601String(),
+    );
+    print('Adding temporary message: ${newMessage.toJson()}');
+    emit(MessagesLoaded([...currentMessages, newMessage]));
 
-      emit(MessagesLoaded([...currentMessages, newMessage]));
-      print('Added temporary message with ID: $tempId');
-
-      // Send actual message
+    try {
       await _repository.sendMessage(
         event.receiverId,
         event.receiverType,
         event.content,
-        mediaUrl: event.mediaUrl,
+        media: event.mediaUrl,
       );
+      print('Message sent to server successfully');
+    } catch (e) {
+      print('Error sending message: $e');
+      emit(ChatError('Failed to send message: $e'));
+      emit(MessagesLoaded(currentMessages)); // Restore on error
     }
   }
 
   Future<void> _onUploadMedia(UploadMedia event, Emitter<ChatState> emit) async {
     emit(MediaUploading());
     try {
-      final mediaUrl = await _repository.uploadMedia(event.file);
-      emit(MediaUploaded(mediaUrl));
+      final mediaData = await _repository.uploadMedia(event.file);
+      emit(MediaUploaded(mediaData['url']!, mediaData['publicId']!));
+      // Restore MessagesLoaded state immediately
+      if (state is MessagesLoaded) {
+        final currentMessages = (state as MessagesLoaded).messages;
+        emit(MessagesLoaded(currentMessages));
+      } else {
+        // Load messages if not already loaded
+        print("State -----------$state");
+        final messages = await _repository.getMessages(currentReceiverId ?? '', currentUserType ?? '');
+        emit(MessagesLoaded(messages));
+      }
     } catch (e) {
       emit(ChatError(e.toString()));
+      if (state is MessagesLoaded) {
+        final currentMessages = (state as MessagesLoaded).messages;
+        emit(MessagesLoaded(currentMessages));
+      }
+    }
+  }
+  Future<void> _onDeleteMessage(DeleteMessage event, Emitter<ChatState> emit) async {
+    if (state is MessagesLoaded) {
+      final currentMessages = (state as MessagesLoaded).messages;
+      await _repository.deleteMessage(event.messageId);
+      final updatedMessages = currentMessages.where((msg) => msg.id != event.messageId).toList();
+      emit(MessagesLoaded(updatedMessages));
     }
   }
 
@@ -212,6 +211,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         }).toList();
 
         if (!updatedMessages.any((msg) => msg.id == message.id)) {
+          print('Adding new message from server: ${message.id}');
           updatedMessages.add(message);
         }
         print('Emitting MessagesLoaded with ${updatedMessages.length} messages');
@@ -221,6 +221,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         }else {
           print('Message not for current chat: sender $currentUserId, receiver $currentReceiverId');
         }
+      }else{
+        print('Received new message but state is not MessagesLoaded');
       }
       if (state is ConversationsLoaded) {
         final currentConversations = (state as ConversationsLoaded).conversations;
@@ -244,6 +246,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   @override
   Future<void> close() {
+    _activityTimer?.cancel();
     _repository.dispose();
     return super.close();
   }

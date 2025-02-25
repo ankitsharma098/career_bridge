@@ -214,7 +214,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           padding: EdgeInsets.zero,
           children: [
             SizedBox(
-              height: screenSize.height*0.25,
+               height: screenSize.height*0.26,
               child: DrawerHeader(
                 // decoration: BoxDecoration(
                 //   color: AppColors.primary,

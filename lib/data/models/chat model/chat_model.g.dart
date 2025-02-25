@@ -13,7 +13,8 @@ Message _$MessageFromJson(Map<String, dynamic> json) => Message(
       receiverId: json['receiver'] as String? ?? '',
       receiverType: json['receiverType'] as String? ?? '',
       content: json['content'] as String? ?? '',
-      mediaUrl: json['mediaUrl'] as String?,
+      mediaUrl: Message._mediaUrlFromJson(json['mediaUrl']),
+      publicId: json['publicId'] as String? ?? '',
       status: json['status'] as String? ?? 'sent',
       timestamp: json['timestamp'] as String? ?? '',
       deliveredAt: json['deliveredAt'] as String? ?? '',
@@ -28,6 +29,7 @@ Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
       'receiverType': instance.receiverType,
       'content': instance.content,
       'mediaUrl': instance.mediaUrl,
+      'publicId': instance.publicId,
       'status': instance.status,
       'timestamp': instance.timestamp,
       'deliveredAt': instance.deliveredAt,
@@ -53,7 +55,7 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       id: json['id'] as String? ?? '',
       type: json['type'] as String? ?? '',
       name: json['name'] as String? ?? 'Unknown User',
-      profilePic: json['profilePic'] as String? ?? 'default-profile-pic-url',
+      profilePic: json['profilePic'] as String? ?? '',
     );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{

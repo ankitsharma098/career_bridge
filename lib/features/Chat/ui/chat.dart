@@ -40,15 +40,19 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     return BlocProvider(
        create: (context) => _chatBloc,
        child: Scaffold(
-          appBar: AppBar(
-        title: const Text('Messages'),
-        actions: [
+              appBar: AppBar(
+              title: const Text('Messages'),
+              leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new),
+              onPressed: () => Navigator.pop(context),
+            ),
+               actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => context.read<ChatBloc>().add(LoadConversations()),
           ),
         ],
-      ),
+             ),
          body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
           if (state is ChatLoading) {
@@ -180,95 +184,52 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   }
 
   void _showNewChatDialog(BuildContext context) {
-    final TextEditingController recipientIdController = TextEditingController();
-    final TextEditingController messageController = TextEditingController();
-    String selectedRecipientType = 'candidate'; // Default value
+    final recipientIdController = TextEditingController();
+    final messageController = TextEditingController();
+    String selectedRecipientType = 'employer';
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Start New Chat'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Recipient Type:'),
-              DropdownButton<String>(
-                value: selectedRecipientType,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(value: 'candidate', child: Text('Candidate')),
-                  DropdownMenuItem(value: 'employer', child: Text('Employer')),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedRecipientType = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: recipientIdController,
-                decoration: const InputDecoration(
-                  labelText: 'Recipient ID',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: messageController,
-                decoration: const InputDecoration(
-                  labelText: 'Initial Message',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButton<String>(
+              value: selectedRecipientType,
+              items: const [
+                DropdownMenuItem(value: 'candidate', child: Text('Candidate')),
+                DropdownMenuItem(value: 'employer', child: Text('Employer')),
+              ],
+              onChanged: (value) => setState(() => selectedRecipientType = value ?? 'employer'),
+            ),
+            TextField(controller: recipientIdController, decoration: const InputDecoration(labelText: 'Recipient ID')),
+            TextField(controller: messageController, decoration: const InputDecoration(labelText: 'Message')),
+          ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              print("button hit");
-              final recipientId = recipientIdController.text.trim();
-              final message = messageController.text.trim();
-
-
-                context.read<ChatBloc>().add(
-                  InitiateChat(
-                    "67b311aaec4aff87784bc966",
-                    "employer",
-                    'Ankit sharma',
-                    "Hello Ankit",
-                  ),
-                );
-
-                Navigator.pop(dialogContext);
-
-                // Navigate to chat screen
+              context.read<ChatBloc>().add(InitiateChat(
+                recipientIdController.text,
+                selectedRecipientType,
+                'Unknown User', // Could fetch name if API exists
+                messageController.text,
+              ));
+              Navigator.pop(dialogContext);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => BlocProvider.value(
-                    value: context.read<ChatBloc>(),  // Use the existing ChatBloc
-                    child: ChatScreen(
-                      receiverId: "67b311aaec4aff87784bc966",
-                      receiverType: "employer",
-                      receiverName: 'Ankit sharma',
-                    ),
+                  builder: (context) => ChatScreen(
+                    receiverId: recipientIdController.text,
+                    receiverType: selectedRecipientType,
+                    receiverName: 'Unknown User',
                   ),
                 ),
-              ).then((_) => _loadData());
-              },
-            
-            child: const Text('Start Chat'),
+              );
+            },
+            child: const Text('Start'),
           ),
         ],
       ),
