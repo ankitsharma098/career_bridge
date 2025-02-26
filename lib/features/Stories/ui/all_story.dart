@@ -19,8 +19,10 @@ import 'create_story.dart';
 import 'edit_story.dart';
 
 class StoriesScreen extends StatefulWidget {
-  const StoriesScreen({super.key, required this.employerId});
-  final String employerId;
+  final String currentUserType;
+  final String currentUserId;
+  const StoriesScreen({super.key, required this.currentUserId, required this.currentUserType});
+
 
   @override
   State<StoriesScreen> createState() => _StoriesScreenState();
@@ -256,7 +258,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
   Widget _buildStoryCard(StoryModel story, Size screenSize, BuildContext context) {
     final date = DateTime.parse(story.createdAt);
-    final isOwner = story.hostDetails.id == widget.employerId;
+    final isOwner = story.hostDetails.id == widget.currentUserId;
     final isExpanded = _expandedStories[story.id] ?? false;
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -274,7 +276,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     create: (context) => SeeProfileBloc(),
                     child: UserProfileScreen(
                                       userId: story.hostDetails.id,
-                                      userType: story.userType, // Ensure StoryModel has type
+                                      userType: story.userType, currentUserId: widget.currentUserId, currentUserType:widget.currentUserType , // Ensure StoryModel has type
                                     ),
                   ),
                 ),
@@ -486,7 +488,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
               create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
               child: StoryReactionsScreen(
                 story: story,
-                employerId: widget.employerId,
+                employerId: widget.currentUserId,
               ),
             ),
           ),
@@ -570,7 +572,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
                     child: StoryReactionsScreen(
                       story: story,
-                      employerId: widget.employerId,
+                      employerId: widget.currentUserId,
                     ),
                   ),
                 ),

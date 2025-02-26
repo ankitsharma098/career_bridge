@@ -19,15 +19,13 @@ class ConversationsBloc extends Bloc<ConversationsEvent, ConversationsState> {
     on<LoadConversations>(_onLoadConversations);
     on<NewMessageReceived>(_onNewMessageReceived);
 
-    // Listen to new messages to update the conversation list
-    _newMessageSubscription = _repository.newMessageStream.listen((message) {
-      add(NewMessageReceived(message));
-    });
-
-    // Update user activity every minute
-    _activityTimer = Timer.periodic(Duration(minutes: 1), (_) => _repository.updateUserActivity());
+    _repository.addNewMessageListener(_handleNewMessage);
+    _activityTimer = Timer.periodic(const Duration(minutes: 1), (_) => _repository.updateUserActivity());
   }
-
+  void _handleNewMessage(Message message) {
+    print('ConversationsBloc - New message callback: $message');
+    add(NewMessageReceived(message));
+  }
   Future<void> _onLoadConversations(LoadConversations event, Emitter<ConversationsState> emit) async {
     emit(ConversationsLoading());
     try {

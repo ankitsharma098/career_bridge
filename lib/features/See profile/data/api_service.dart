@@ -1,3 +1,4 @@
+import 'package:android/core/constants/app_constants.dart';
 import 'package:dio/dio.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../../data/models/candidate/candidate_model.dart';
@@ -7,7 +8,6 @@ import '../../../data/models/employer/employer_model.dart';
 
 class UserProfileApi {
   final Dio dio = Dio();
-  final String baseUrl = "http://192.168.1.6:8000"; // Adjust to your API base URL
 
   Future<dynamic> getUserProfile(String userId, String userType) async {
     try {
@@ -15,7 +15,7 @@ class UserProfileApi {
       final token = await HiveUtils.getAccessToken();
 
       final response = await dio.get(
-        '$baseUrl/user/profile/$userType/$userId',
+        '${AppConstants.baseUrl}/user/profile/$userType/$userId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       print(response.data);

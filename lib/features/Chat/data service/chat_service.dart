@@ -19,17 +19,37 @@ class ReadReceipt {
 class ChatRepository {
   final dio = Dio();
   IO.Socket? _socket; // Make nullable instead of late
-  final String socketUrl = "http://192.168.1.6:8000";
-  final String _baseUrl = "http://192.168.1.6:8000";
+  final String socketUrl = AppConstants.baseUrl;
+  // final String _baseUrl = "http://192.168.1.6:8000";
 
-  final _newMessageController = StreamController<Message>.broadcast();
-  final _readReceiptController = StreamController<ReadReceipt>.broadcast();
-  Stream<Message> get newMessageStream => _newMessageController.stream;
-  Stream<ReadReceipt> get readReceiptStream => _readReceiptController.stream;
+
+  final List<Function(Message)> _newMessageCallbacks = [];
+  final List<Function(ReadReceipt)> _readReceiptCallbacks = [];
   final Map<String, Message> _pendingMessages = {};
-  final Map<String, bool> _pendingDeletions = {}; // t
+  final Map<String, bool> _pendingDeletions = {};
+
   ChatRepository() {
     _initializeSocket();
+  }
+
+  void addNewMessageListener(Function(Message) callback) {
+    print('Adding new message listener');
+    _newMessageCallbacks.add(callback);
+  }
+
+  void removeNewMessageListener(Function(Message) callback) {
+    print('Removing new message listener');
+    _newMessageCallbacks.remove(callback);
+  }
+
+  void addReadReceiptListener(Function(ReadReceipt) callback) {
+    print('Adding read receipt listener');
+    _readReceiptCallbacks.add(callback);
+  }
+
+  void removeReadReceiptListener(Function(ReadReceipt) callback) {
+    print('Removing read receipt listener');
+    _readReceiptCallbacks.remove(callback);
   }
 
   void _initializeSocket() async {
@@ -49,113 +69,52 @@ class ChatRepository {
       _socket!.onConnect((_) {
         print('Socket connected with ID: ${_socket!.id}');
         _socket!.emit('user_connect');
+      });
 
-        // _socket!.on('new_message', (data) {
-        //   try {
-        //     print('Raw new_message data: $data');
-        //     Map<String, dynamic> rawMessage = Map<String, dynamic>.from(data);
-        //     final mappedMessage = {
-        //       '_id': rawMessage['messageId']?.toString() ?? '',
-        //       'sender': rawMessage['senderId']?.toString() ?? '',
-        //       'senderType': rawMessage['senderType'] ?? '',
-        //       'receiver': rawMessage['receiverId']?.toString() ?? '',
-        //       'receiverType': rawMessage['receiverType'] ?? '',
-        //       'content': rawMessage['content'] ?? '',
-        //       'mediaUrl': rawMessage['mediaUrl'],
-        //       'publicId': rawMessage['publicId'] ?? '',
-        //       'status': rawMessage['status'] ?? 'sent',
-        //       'timestamp': rawMessage['timestamp'] ?? DateTime.now().toIso8601String(),
-        //       'deliveredAt': rawMessage['deliveredAt'],
-        //       'readAt': rawMessage['readAt'],
-        //     };
-        //     Message message = Message.fromJson(mappedMessage);
-        //     _newMessageController.add(message);
-        //   } catch (e) {
-        //     print('Error parsing new message: $e');
-        //   }
-        // });
-
-        _socket!.on('read_receipt', (data) {
-          try {
-            final messageId = data['messageId'].toString();
-            final readAt = DateTime.parse(data['readAt'].toString());
-            _readReceiptController.add(ReadReceipt(messageId, readAt));
-          } catch (e) {
-            print('Error handling read receipt: $e');
+      _socket!.on('read_receipt', (data) {
+        try {
+          final messageId = data['messageId'].toString();
+          final readAt = DateTime.parse(data['readAt'].toString());
+          final readReceipt = ReadReceipt(messageId, readAt);
+          print('Received read_receipt: $readReceipt');
+          for (var callback in _readReceiptCallbacks) {
+            callback(readReceipt);
           }
-        });
-        _socket!.on('new_message', (data) {
-          try {
-            print('Raw new_message data: $data');
-            Map<String, dynamic> rawMessage = Map<String, dynamic>.from(data);
+        } catch (e) {
+          print('Error handling read receipt: $e');
+        }
+      });
+
+      _socket!.on('new_message', (data) {
+        print('Received new_message event with data: $data');
+        try {
+          if (data is Map) {
+            print('Processing new_message: $data');
             final mappedMessage = {
-              '_id': rawMessage['messageId']?.toString() ?? '',
-              'sender': rawMessage['senderId']?.toString() ?? '',
-              'senderType': rawMessage['senderType'] ?? '',
-              'receiver': rawMessage['receiverId']?.toString() ?? '',
-              'receiverType': rawMessage['receiverType'] ?? '',
-              'content': rawMessage['content'] ?? '',
-              'mediaUrl': rawMessage['mediaUrl'],
-              'publicId': rawMessage['publicId'] ?? '',
-              'status': rawMessage['status'] ?? 'sent',
-              'timestamp': rawMessage['timestamp'] ?? DateTime.now().toIso8601String(),
-              'deliveredAt': rawMessage['deliveredAt'],
-              'readAt': rawMessage['readAt'],
+              '_id': data['messageId']?.toString() ?? '',
+              'sender': data['senderId']?.toString() ?? '',
+              'senderType': data['senderType'] ?? '',
+              'receiver': data['receiverId']?.toString() ?? '',
+              'receiverType': data['receiverType'] ?? '',
+              'content': data['content'] ?? '',
+              'mediaUrl': data['mediaUrl'],
+              'publicId': data['publicId'] ?? '',
+              'status': data['status'] ?? 'sent',
+              'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
+              'deliveredAt': data['deliveredAt'],
+              'readAt': data['readAt'],
             };
             Message message = Message.fromJson(mappedMessage);
-            final tempId = _pendingMessages.keys.firstWhere(
-                  (id) => _pendingMessages[id]!.content == message.content &&
-                  _pendingMessages[id]!.receiverId == message.receiverId,
-              orElse: () => '',
-            );
-            if (tempId.isNotEmpty) {
-              _pendingMessages.remove(tempId);
-              if (_pendingDeletions[tempId] != true) {
-                _newMessageController.add(message);
-              } else {
-                deleteMessage(message.id); // Delete if marked
-                _pendingDeletions.remove(tempId);
-              }
-            } else {
-              _newMessageController.add(message); // Incoming message from others
+            print('Invoking ${_newMessageCallbacks.length} newMessageCallbacks with: $message');
+            for (var callback in _newMessageCallbacks) {
+              callback(message);
             }
-          } catch (e) {
-            print('Error parsing new message: $e');
+          } else {
+            print('Unexpected data format for new_message: $data');
           }
-        });
-
-        _socket!.on('message_sent', (data) {
-          try {
-            final messageId = data['messageId'].toString();
-            print('Message sent confirmed with ID: $messageId');
-            // Do nothing here; wait for new_message to provide full details
-          } catch (e) {
-            print('Error handling message_sent: $e');
-          }
-        });
-
-        // _socket!.on('message_sent', (data) async {
-        //   try {
-        //     final messageId = data['messageId'].toString();
-        //     print('Message sent confirmed with ID: $messageId');
-        //     final tempId = _pendingMessages.keys.firstWhere(
-        //           (id) => _pendingMessages[id] != null,
-        //       orElse: () => '',
-        //     );
-        //     if (tempId.isNotEmpty) {
-        //       final message = _pendingMessages[tempId]!.copyWith(id: messageId);
-        //       _pendingMessages.remove(tempId);
-        //       if (_pendingDeletions[tempId] == true) {
-        //         await deleteMessage(messageId); // Delete on server if marked for deletion
-        //         _pendingDeletions.remove(tempId);
-        //       } else {
-        //         _newMessageController.add(message); // Only add if not deleted
-        //       }
-        //     }
-        //   } catch (e) {
-        //     print('Error handling message_sent: $e');
-        //   }
-        // });
+        } catch (e) {
+          print('Error parsing new_message: $e');
+        }
       });
 
       _socket!.onReconnect((_) => print('Socket reconnected with ID: ${_socket!.id}'));
@@ -170,23 +129,12 @@ class ChatRepository {
     }
   }
 
-  // Function(Message)? _newMessageCallback;
-  // Function(String, DateTime)? _readReceiptCallback;
-  //
-  // void onNewMessage(Function(Message) callback) {
-  //   _newMessageCallback = callback;
-  // }
-  //
-  // void onReadReceipt(Function(String, DateTime) callback) {
-  //   _readReceiptCallback = callback;
-  // }
-
   Future<List<Conversation>> getConversations() async {
     try {
       final token = await HiveUtils.getAccessToken();
 
       final response = await dio.get(
-        '$_baseUrl/conversations',
+        '${AppConstants.baseUrl}/conversations',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
@@ -220,7 +168,7 @@ class ChatRepository {
     try {
       final token = await HiveUtils.getAccessToken();
       final response = await dio.get(
-        '$_baseUrl/$receiverId/$receiverType', // Make sure this matches your backend route
+        '${AppConstants.baseUrl}/$receiverId/$receiverType', // Make sure this matches your backend route
         queryParameters: {
           if (before != null) 'before': before,
           if (limit != null) 'limit': limit,
@@ -282,7 +230,7 @@ class ChatRepository {
         ),
       });
 
-      final response = await dio.post('$_baseUrl/upload',
+      final response = await dio.post('${AppConstants.baseUrl}/upload',
         data: formData,
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
@@ -322,33 +270,54 @@ class ChatRepository {
     }
   }
 
-  Future<void> sendMessage(String receiverId,String currentUserId,String currentUserType, String receiverType, String content, {Map<String, String>? media}) async {
+  Future<Message> sendMessage(
+      String receiverId,
+      String receiverType,
+      String currentUserId,
+      String currentUserType,
+      String content,
+      {Map<String, String>? media}
+      ) async {
     if (_socket == null || !_socket!.connected) {
       print('Socket not connected, attempting reconnect...');
       _socket?.connect();
       throw Exception("Socket not connected");
     }
-    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
-    final message = Message(
-      id: tempId,
-      senderId: currentUserId, // Assume this is available or passed in
-      senderType: currentUserType, // Assume this is available or passed in
-      receiverId: receiverId,
-      receiverType: receiverType,
-      content: content,
-      mediaUrl: media?['url'],
-      publicId: media?['publicId'] ?? "",
-      status: 'sent',
-      timestamp: DateTime.now().toIso8601String(),
-    );
-    _pendingMessages[tempId] = message;
-    _socket!.emit('send_message', {
+
+    final messageData = {
       'receiverId': receiverId,
       'receiverType': receiverType,
       'content': content,
-      if (media != null) 'mediaUrl': media,
+      if (media != null) 'mediaUrl': media['url'],
+      if (media != null) 'publicId': media['publicId'],
+    };
+
+    Completer<Message> completer = Completer();
+
+    _socket!.emitWithAck('send_message', messageData, ack: (data) {
+      try {
+        final messageId = data['messageId'].toString();
+        final message = Message(
+          id: messageId,
+          senderId: currentUserId,
+          senderType: currentUserType,
+          receiverId: receiverId,
+          receiverType: receiverType,
+          content: content,
+          mediaUrl: media?['url'],
+          publicId: media?['publicId'] ?? "",
+          status: 'sent',
+          timestamp: DateTime.now().toIso8601String(),
+        );
+        completer.complete(message);
+      } catch (e) {
+        completer.completeError(e);
+      }
     });
+
+    return completer.future;
   }
+
   Future<bool> deleteMessage(String messageId) async {
     try {
       print("Message delete $messageId");
@@ -358,7 +327,7 @@ class ChatRepository {
       }
       final token = await HiveUtils.getAccessToken();
       final response = await dio.delete(
-        '$_baseUrl/$messageId',
+        '${AppConstants.baseUrl}/$messageId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       if (response.statusCode == 200) {
@@ -380,7 +349,6 @@ class ChatRepository {
       throw Exception('An unexpected error occurred');
     }
   }
-
   void markAsRead(String messageId) {
     if (_socket == null || !_socket!.connected) {
       print("Socket not connected.");
@@ -395,12 +363,12 @@ class ChatRepository {
     }
   }
 
-
   void dispose() {
+    print('Disposing ChatRepository');
     _socket?.disconnect();
     _socket?.dispose();
-    _newMessageController.close();
-    _readReceiptController.close();
+    _newMessageCallbacks.clear();
+    _readReceiptCallbacks.clear();
     _pendingMessages.clear();
     _pendingDeletions.clear();
   }

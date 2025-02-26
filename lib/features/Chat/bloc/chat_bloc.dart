@@ -27,19 +27,28 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<MarkAsRead>(_onMarkAsRead);
     on<NewMessageReceived>(_onNewMessageReceived);
     on<ReadReceiptReceived>(_onReadReceiptReceived);
-    on<MessageSentConfirmed>(_onMessageSentConfirmed);
-    // Listen to new messages for this conversation
-    _newMessageSubscription = _repository.newMessageStream.listen((message) {
-      if ((message.senderId == currentUserId && message.receiverId == receiverId) ||
-          (message.senderId == receiverId && message.receiverId == currentUserId)) {
-        add(NewMessageReceived(message));
-      }
-    });
+    //on<MessageSentConfirmed>(_onMessageSentConfirmed);
 
-    // Listen to read receipts for this conversation
-    _readReceiptSubscription = _repository.readReceiptStream.listen((readReceipt) {
-      add(ReadReceiptReceived(readReceipt));
-    });
+    _repository.addNewMessageListener(_handleNewMessage);
+    _repository.addReadReceiptListener(_handleReadReceipt);
+
+  }
+
+  void _handleNewMessage(Message message) {
+    print('ChatBloc - New message callback: $message');
+    bool isRelevant = (message.senderId == currentUserId && message.receiverId == receiverId) ||
+        (message.senderId == receiverId && message.receiverId == currentUserId);
+    if (isRelevant) {
+      print('ChatBloc - Adding NewMessageReceived event for: $message');
+
+      add(NewMessageReceived(message));
+    } else {
+      print('ChatBloc - Message ignored (not for this chat): $message');
+    }
+  }
+  void _handleReadReceipt(ReadReceipt readReceipt) {
+    print('ChatBloc - Read receipt callback: $readReceipt');
+    add(ReadReceiptReceived(readReceipt));
   }
 
   Future<void> _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
@@ -57,6 +66,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
+
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     List<Message> currentMessages = [];
     if (state is MessagesLoaded) {
@@ -67,30 +77,60 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(MessagesLoaded(currentMessages));
     }
 
-    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
     final newMessage = Message(
-      id: tempId,
+      id: '', // Placeholder ID, will be replaced by server
       senderId: currentUserId,
       senderType: currentUserType,
       receiverId: receiverId,
       receiverType: receiverType,
       content: event.content,
-      mediaUrl: event.mediaUrl?['url'] ?? "",
-      publicId: event.mediaUrl?['publicId'] ?? "",
-      status: 'sent',
+      mediaUrl: event.mediaUrl?['url'] ?? '',
+      publicId: event.mediaUrl?['publicId'] ?? '',
+      status: 'sending',
       timestamp: DateTime.now().toIso8601String(),
     );
 
-    emit(MessagesLoaded([...currentMessages, newMessage]));
+    // Optimistically add the message
+    final updatedMessages = [...currentMessages, newMessage];
+    emit(MessagesLoaded(updatedMessages));
 
     try {
-      await _repository.sendMessage(receiverId, receiverType,currentUserId,currentUserType, event.content, media: event.mediaUrl);
+      final sentMessage = await _repository.sendMessage(
+        receiverId,
+        receiverType,
+        currentUserId,
+        currentUserType,
+        event.content,
+        media: event.mediaUrl,
+      );
+
+      // Replace the placeholder with the server-confirmed message
+      final finalMessages = updatedMessages.map((msg) {
+        if (msg.timestamp == newMessage.timestamp && msg.content == newMessage.content) {
+          return sentMessage;
+        }
+        return msg;
+      }).toList();
+      emit(MessagesLoaded(finalMessages));
     } catch (e) {
       emit(ChatError('Failed to send message: $e'));
       emit(MessagesLoaded(currentMessages));
     }
   }
 
+  Future<void> _onDeleteMessage(DeleteMessage event, Emitter<ChatState> emit) async {
+    if (state is MessagesLoaded) {
+      final currentMessages = (state as MessagesLoaded).messages;
+      final updatedMessages = currentMessages.where((msg) => msg.id != event.messageId).toList();
+      emit(MessagesLoaded(updatedMessages)); // Optimistic deletion
+      try {
+        await _repository.deleteMessage(event.messageId);
+      } catch (e) {
+        emit(ChatError('Failed to delete message: $e'));
+        emit(MessagesLoaded(currentMessages)); // Revert on failure
+      }
+    }
+  }
   void _onMessageSentConfirmed(MessageSentConfirmed event, Emitter<ChatState> emit) {
     print("messave sent confirmed");
     if (state is MessagesLoaded) {
@@ -105,36 +145,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onUploadMedia(UploadMedia event, Emitter<ChatState> emit) async {
+    List<Message> currentMessages = [];
+    if (state is MessagesLoaded) {
+      currentMessages = (state as MessagesLoaded).messages;
+    } else {
+      emit(ChatLoading());
+      currentMessages = await _repository.getMessages(receiverId, receiverType);
+      emit(MessagesLoaded(currentMessages));
+    }
+
     emit(MediaUploading());
     try {
       final mediaData = await _repository.uploadMedia(event.file);
       emit(MediaUploaded(mediaData['url']!, mediaData['publicId']!));
-      if (state is MessagesLoaded) {
-        final currentMessages = (state as MessagesLoaded).messages;
-        emit(MessagesLoaded(currentMessages));
-      }
+      // Do not send the message here; just keep the current messages
+      emit(MessagesLoaded(currentMessages));
     } catch (e) {
-      emit(ChatError(e.toString()));
-      if (state is MessagesLoaded) {
-        final currentMessages = (state as MessagesLoaded).messages;
-        emit(MessagesLoaded(currentMessages));
-      }
-    }
-  }
-
-  Future<void> _onDeleteMessage(DeleteMessage event, Emitter<ChatState> emit) async {
-    if (state is MessagesLoaded) {
-      final currentMessages = (state as MessagesLoaded).messages;
-      if (event.messageId.startsWith('temp_')) {
-        // Remove locally and mark for server deletion
-        final updatedMessages = currentMessages.where((msg) => msg.id != event.messageId).toList();
-        emit(MessagesLoaded(updatedMessages));
-        await _repository.deleteMessage(event.messageId); // Mark for deletion
-      } else {
-        await _repository.deleteMessage(event.messageId);
-        final updatedMessages = currentMessages.where((msg) => msg.id != event.messageId).toList();
-        emit(MessagesLoaded(updatedMessages));
-      }
+      emit(ChatError('Failed to upload media: $e'));
+      emit(MessagesLoaded(currentMessages));
     }
   }
 
@@ -143,25 +171,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _onNewMessageReceived(NewMessageReceived event, Emitter<ChatState> emit) {
-    if (state is MessagesLoaded) {
-      final currentMessages = (state as MessagesLoaded).messages;
-      final message = event.message;
+    print('ChatBloc - Handling NewMessageReceived: ${event.message}');
+    List<Message> currentMessages = state is MessagesLoaded ? (state as MessagesLoaded).messages : [];
+    final message = event.message;
+    final updatedMessages = [...currentMessages, message];
+    print('ChatBloc - Adding new message: $message, Updated messages: $updatedMessages');
+    emit(MessagesLoaded(updatedMessages));
 
-      final tempIndex = currentMessages.indexWhere((m) => m.id.startsWith('temp_') && m.content == message.content);
-      if (tempIndex != -1) {
-        final updatedMessages = List<Message>.from(currentMessages);
-        updatedMessages[tempIndex] = message; // Replace with full message details
-        emit(MessagesLoaded(updatedMessages));
-      } else {
-        emit(MessagesLoaded([...currentMessages, message]));
-      }
-
-      if (message.receiverId == currentUserId && message.status != 'read') {
-        _repository.markAsRead(message.id);
-      }
+    if (message.receiverId == currentUserId && message.status != 'read') {
+      print('ChatBloc - Marking message as read: ${message.id}');
+      _repository.markAsRead(message.id);
     }
   }
-
   void _onReadReceiptReceived(ReadReceiptReceived event, Emitter<ChatState> emit) {
     if (state is MessagesLoaded) {
       final currentMessages = (state as MessagesLoaded).messages;
@@ -177,8 +198,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   @override
   Future<void> close() {
-    _newMessageSubscription?.cancel();
-    _readReceiptSubscription?.cancel();
+    _repository.removeNewMessageListener(_handleNewMessage);
+    _repository.removeReadReceiptListener(_handleReadReceipt);
     return super.close();
   }
 }

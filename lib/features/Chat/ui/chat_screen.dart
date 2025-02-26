@@ -33,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     context.read<ChatBloc>().add(LoadMessages());
+
   }
 
   void _scrollToBottom() {
@@ -71,18 +72,26 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         body: Column(
           children: [
-            if (_uploadedMediaUrl != null) _buildMediaPreview(),
+            if (_uploadedMediaUrl != null) _buildMediaPreview(), // Show preview if media is uploaded
             Expanded(
               child: BlocConsumer<ChatBloc, ChatState>(
                 listener: (context, state) {
+                  print('Bloc state changed: $state');
                   if (state is MessagesLoaded) {
+                    print('Messages loaded, scrolling to bottom: ${state.messages}');
                     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
                   } else if (state is ChatError) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.message}')));
+                  } else if (state is MediaUploaded) {
+                    setState(() {
+                      _uploadedMediaUrl = state.mediaUrl;
+                      _uploadedPublicId = state.publicId;
+                    });
                   }
                 },
                 builder: (context, state) {
-                  if (state is ChatLoading) {
+                  print('Building UI with state: $state');
+                  if (state is ChatLoading || state is MediaUploading) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (state is MessagesLoaded) {
@@ -130,14 +139,20 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: Image.network(
                   _uploadedMediaUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: Colors.grey, child: const Icon(Icons.image, size: 48)),
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey,
+                    child: const Icon(Icons.image, size: 48),
+                  ),
                 ),
               ),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.close),
-            onPressed: () => setState(() => _uploadedMediaUrl = null),
+            onPressed: () => setState(() {
+              _uploadedMediaUrl = null;
+              _uploadedPublicId = null;
+            }),
           ),
         ],
       ),
@@ -167,7 +182,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
                   ElevatedButton(
                     onPressed: () {
-                      print("Deleting message: ${message.id}");
                       context.read<ChatBloc>().add(DeleteMessage(message.id));
                       Navigator.pop(dialogContext);
                     },
@@ -197,14 +211,19 @@ class _ChatScreenState extends State<ChatScreen> {
                         message.mediaUrl!,
                         fit: BoxFit.cover,
                         width: 200,
-                        errorBuilder: (_, __, ___) =>
-                            Container(width: 200, height: 150, color: Colors.grey, child: const Icon(Icons.image, size: 48)),
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 200,
+                          height: 150,
+                          color: Colors.grey,
+                          child: const Icon(Icons.image, size: 48),
+                        ),
                       ),
                     ),
-                  Text(
-                    message.content,
-                    style: TextStyle(color: isMe ? Colors.white : Colors.black),
-                  ),
+                  if (message.content.isNotEmpty)
+                    Text(
+                      message.content,
+                      style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                    ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -242,22 +261,13 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.attach_file),
             onPressed: () async {
-              final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']);
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'],
+              );
               if (result != null) {
                 final file = File(result.files.single.path!);
                 context.read<ChatBloc>().add(UploadMedia(file));
-                await for (var state in context.read<ChatBloc>().stream) {
-                  if (state is MediaUploaded) {
-                    setState(() {
-                      _uploadedMediaUrl = state.mediaUrl;
-                      _uploadedPublicId = state.publicId;
-                    });
-                    break;
-                  } else if (state is ChatError) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload error: ${state.message}')));
-                    break;
-                  }
-                }
               }
             },
           ),
@@ -274,7 +284,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 context.read<ChatBloc>().add(
                   SendMessage(
                     _textController.text.trim(),
-                    mediaUrl: _uploadedMediaUrl != null ? {'url': _uploadedMediaUrl!, 'publicId': _uploadedPublicId!} : null,
+                    mediaUrl: _uploadedMediaUrl != null
+                        ? {'url': _uploadedMediaUrl!, 'publicId': _uploadedPublicId!}
+                        : null,
                   ),
                 );
                 _textController.clear();

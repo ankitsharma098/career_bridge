@@ -12,13 +12,13 @@ import '../../../data/models/employer/employer_model.dart';
 class LoginApiService {
 
   final dio = Dio();
-  String baseUrl="http://192.168.1.6:8000";
+
 
   Future<void> login(String email, String password) async {
 
 
     try{
-      final response = await dio.post("$baseUrl/employer/login",
+      final response = await dio.post("${AppConstants.baseUrl}/employer/login",
 
         data: {
         "email":email,
@@ -75,7 +75,7 @@ class LoginApiService {
       if(accessToken==null || accessToken.isEmpty){
         throw Exception("AccessToken not found");
       }
-      final response = await dio.post("$baseUrl/notification/save-token",
+      final response = await dio.post("${AppConstants.baseUrl}/notification/save-token",
         options:  Options(
             headers: {
               'Authorization':'Bearer $accessToken'

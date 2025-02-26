@@ -9,14 +9,19 @@ import '../../../core/constants/colors.dart';
 import '../../../data/models/candidate/candidate_model.dart';
 import '../../../data/models/company/company_model.dart';
 import '../../../data/models/employer/employer_model.dart';
+import '../../Chat/bloc/chat_bloc.dart';
+import '../../Chat/data service/chat_service.dart';
 import '../../Chat/ui/chat.dart';
+import '../../Chat/ui/chat_screen.dart';
 import '../bloc/see_profile_bloc.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
   final String userType;
+  final String currentUserId;
+  final String currentUserType;
 
-  const UserProfileScreen({super.key, required this.userId, required this.userType});
+  const UserProfileScreen({super.key, required this.userId, required this.userType, required this.currentUserId, required this.currentUserType});
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -133,6 +138,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildProfileHeader(dynamic user, CompanyDetails? companyDetails, Size screenSize, BuildContext context) {
+    // final String currentUserId = "your-logged-in-user-id";
+    // final String currentUserType = "your-logged-in-user-type";
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -184,7 +191,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
                 SizedBox(width: screenSize.width * 0.04),
                 Expanded(
-                  child: Column(
+                  child:Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
@@ -213,74 +220,78 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                       ),
                       SizedBox(height: screenSize.height * 0.01),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: user.auth.verified ? Colors.green : Colors.red.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.12),
-                              blurRadius: 4,
-                              spreadRadius: 1,
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: user.auth.verified ? Colors.green : Colors.red.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.12),
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              user.auth.verified ? Icons.check_circle : Icons.cancel,
-                              size: screenSize.width * 0.035,
-                              color: Colors.white,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  user.auth.verified ? Icons.check_circle : Icons.cancel,
+                                  size: screenSize.width * 0.035,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  user.auth.verified ? 'Verified' : 'Unverified',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: screenSize.width * 0.035,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 5),
-                            Text(
-                              user.auth.verified ? 'Verified' : 'Unverified',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: screenSize.width * 0.035,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          ),
+                          Spacer(),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BlocProvider(
+                                    create: (context) => ChatBloc(
+                                      ChatRepository(),
+                                      user.id, // receiverId
+                                      widget.userType, // receiverType
+                                      widget.currentUserId, // Correct currentUserId
+                                      widget.currentUserType,
+                                    ),
+                                    child: ChatScreen(
+                                      receiverId: user.id,
+                                      receiverType: widget.userType,
+                                      receiverName: user.personalInfo.fullName,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: Icon(Icons.message, size: screenSize.width * 0.04,color: Colors.white,),
+                            label: Text(
+                              'Message',
+                              style: TextStyle(fontSize: screenSize.width * 0.035),
                             ),
-                            SizedBox(width: screenSize.width * 0.02),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                // Trigger InitiateChat event
-                                // context.read<ChatBloc>().add(
-                                //   InitiateChat(
-                                //     user.id,
-                                //     widget.userType,
-                                //     user.personalInfo.fullName,
-                                //     "Hello! I’d like to connect with you.", // Default initial message
-                                //   ),
-                                // );
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => ConversationsScreen(userId: widget.userId , userType: widget.userType,),));
-                                Navigator.pushNamed(
-                                  context,
-                                  '/chat',
-                                  arguments: {
-                                    'receiverId': user.id,
-                                    'receiverType': widget.userType,
-                                    'receiverName': user.personalInfo.fullName,
-                                  },
-                                );
-                              },
-                              icon: Icon(Icons.message, size: screenSize.width * 0.04),
-                              label: Text(
-                                'Message',
-                                style: TextStyle(fontSize: screenSize.width * 0.035),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Theme.of(context).primaryColor,
-                                backgroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                elevation: 2,
-                              ),
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.8),
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              elevation: 2,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
