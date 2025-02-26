@@ -9,6 +9,7 @@ import '../../../core/constants/colors.dart';
 import '../../../data/models/candidate/candidate_model.dart';
 import '../../../data/models/company/company_model.dart';
 import '../../../data/models/employer/employer_model.dart';
+import '../../Chat/ui/chat.dart';
 import '../bloc/see_profile_bloc.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -152,7 +153,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Hero(
-                  tag: 'profile-',
+                  tag: 'profile',
                   child: Container(
                     width: screenSize.width * 0.25,
                     height: screenSize.width * 0.25,
@@ -240,6 +241,42 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 color: Colors.white,
                                 fontSize: screenSize.width * 0.035,
                                 fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: screenSize.width * 0.02),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                // Trigger InitiateChat event
+                                // context.read<ChatBloc>().add(
+                                //   InitiateChat(
+                                //     user.id,
+                                //     widget.userType,
+                                //     user.personalInfo.fullName,
+                                //     "Hello! I’d like to connect with you.", // Default initial message
+                                //   ),
+                                // );
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => ConversationsScreen(userId: widget.userId , userType: widget.userType,),));
+                                Navigator.pushNamed(
+                                  context,
+                                  '/chat',
+                                  arguments: {
+                                    'receiverId': user.id,
+                                    'receiverType': widget.userType,
+                                    'receiverName': user.personalInfo.fullName,
+                                  },
+                                );
+                              },
+                              icon: Icon(Icons.message, size: screenSize.width * 0.04),
+                              label: Text(
+                                'Message',
+                                style: TextStyle(fontSize: screenSize.width * 0.035),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Theme.of(context).primaryColor,
+                                backgroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                elevation: 2,
                               ),
                             ),
                           ],

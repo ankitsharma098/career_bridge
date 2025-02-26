@@ -3,6 +3,7 @@ import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
 import 'package:android/data/models/employer/employer_model.dart';
 import 'package:android/features/Chat/bloc/chat_bloc.dart';
+import 'package:android/features/Chat/converstation%20bloc/conversations_bloc.dart';
 import 'package:android/features/Chat/data%20service/chat_service.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/Stories/bloc/story_bloc.dart';
@@ -319,8 +320,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
-                    create: (context) => ChatBloc(),
-                    child: ConversationsScreen(userId: employerData!.id,),
+                    create: (context) => ConversationsBloc(ChatRepository(), employerData?.id , "employer"),
+                    child: ConversationsScreen(userId: employerData!.id, userType: 'employer',),
                   ), // You'll need to create this screen
                   ),
                 );
