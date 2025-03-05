@@ -542,6 +542,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
 
   Widget _buildBottomBar(StoryModel story) {
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -552,14 +553,13 @@ class _StoriesScreenState extends State<StoriesScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-
           _buildInteractionButton(
             icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
             label: 'Like',
             color: story.isLiked ? Theme.of(context).primaryColor : null,
-            onTap: () => context.read<StoryBloc>().add(
-              ToggleStoryLikeEvent(story.id),
-            ),
+            onTap: () {
+              context.read<StoryBloc>().add(ToggleStoryLikeEvent(story.id));
+            },
           ),
           _buildInteractionButton(
             icon: Icons.comment_outlined,
@@ -580,15 +580,13 @@ class _StoriesScreenState extends State<StoriesScreen> {
             },
           ),
           _buildInteractionButton(
-            icon: story.isSaved ? Icons.save:Icons.save_outlined,
-            label:story.isSaved ?"Save":'Saved',
+            icon: story.isSaved ? Icons.bookmark : Icons.bookmark_border,
+            label: story.isSaved ? 'Saved' : 'Save',
+            color: story.isSaved ? Theme.of(context).primaryColor : null,
             onTap: () {
-              context.read<StoryBloc>().add(
-                ToggleSavedStoryEvent(story.id,),
-              );
+              context.read<StoryBloc>().add(ToggleSavedStoryEvent(story.id));
             },
           ),
-          // ... other buttons
         ],
       ),
     );

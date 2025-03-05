@@ -292,6 +292,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
         SizedBox(height: screenSize.height * 0.02),
          insights['employmentTypes'].isNotEmpty || insights['experienceLevels'].isNotEmpty ?  Row(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: _buildPieChart(
@@ -301,7 +302,6 @@ class _JobStatsTabState extends State<JobStatsTab> {
                   screenSize
               ),
             ),
-            SizedBox(width: screenSize.width * 0.04),
             Expanded(
               child: _buildPieChart(
                   'Experience Levels',
@@ -368,7 +368,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
                 fontWeight: FontWeight.w700
               )
             ),
-            Container(height: screenSize.height*0.01),
+            Container(height: screenSize.height*0.012),
             SizedBox(
               height: screenSize.height*0.2,
               child: PieChart(
@@ -380,7 +380,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
                 ),
               ),
             ),
-             SizedBox(height: screenSize.height*0.01),
+             SizedBox(height: screenSize.height*0.012),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
@@ -1263,6 +1263,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
+                    SizedBox(width: screenSize.width*0.02,),
                     Text(
                       'Deadline: ${_formatDate(job.deadline)}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(

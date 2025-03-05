@@ -12,7 +12,7 @@ class HiveUtils {
     Hive.init(appDir.path);
   }
 
-  static Future<void> storeUserData(Map<String,dynamic> data) async {
+  static Future<void> storeEmployerData(Map<String,dynamic> data) async {
 
     try{
 
@@ -25,6 +25,8 @@ class HiveUtils {
       print("employer data ${data['employer'].runtimeType}");
       print("company data ${data['companyDetails'].runtimeType}");
       await box.put("companyDetails", data["companyDetails"]);
+
+      await box.put("userType", "employer");
 
       await box.put("isLoggedIn", true);
 
@@ -170,6 +172,17 @@ class HiveUtils {
       return accessToken;
     } catch (e) {
       print('Error getting access token: $e');
+      return null;
+    }
+  }
+
+  static Future<String?> getUserType() async {
+    try {
+      final box = await Hive.openBox(USER_BOX);
+      final userType = await box.get('userType');
+      return userType;
+    } catch (e) {
+      print('Error getting userType: $e');
       return null;
     }
   }

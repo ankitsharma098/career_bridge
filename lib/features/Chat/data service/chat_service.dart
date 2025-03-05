@@ -203,7 +203,38 @@ class ChatRepository {
     }
   }
 
+// chat_repository.dart
 
+  Future<DateTime?> getLastSeen(String userId, String userType) async {
+    try {
+      final token = await HiveUtils.getAccessToken();
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/last-seen/$userId/$userType',
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return DateTime.parse(response.data['lastSeen']);
+      } else if (response.statusCode == 404) {
+        return null; // No last seen recorded yet
+      } else {
+        throw Exception('Failed to fetch last seen');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An error occurred");
+      } else {
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    } catch (e) {
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
 
   Future<Map<String, String>> uploadMedia(File file) async {
     try {

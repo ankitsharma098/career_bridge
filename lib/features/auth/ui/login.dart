@@ -3,16 +3,20 @@ import 'package:android/core/utils/snackBarUtils.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/data/auth_api_service.dart';
+import 'package:android/features/auth/ui/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+import '../../../core/constants/colors.dart';
 import '../../Dashboard/ui/employer_dashboard.dart';
 
 
 class LoginScreen extends StatefulWidget {
   final bool isDarkMode;
   final VoidCallback onThemeToggle;
-  const LoginScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
+  final String userType;
+  const LoginScreen({super.key, required this.isDarkMode, required this.onThemeToggle, required this.userType});
 
 
   @override
@@ -205,9 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: BlocBuilder<LoginBloc,LoginState>(
                           builder: (context, state) {
                             if(state is LoginLoading){
-                              return Center(child:  CircularProgressIndicator(
-                                color: Theme.of(context).primaryColor,
-                              ),);
+                              return Center(child:  LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),);
                             }
 
                             return ElevatedButton(
@@ -215,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (_formKey.currentState!.validate()) {
                                   // Perform login
                                   print("//// Login Valid state");
-                                  BlocProvider.of<LoginBloc>(context).add(LoginSubmitted(email: emailController.text, password: passwordController.text));
+                                  BlocProvider.of<LoginBloc>(context).add(LoginSubmitted(email: emailController.text, password: passwordController.text, userType: widget.userType));
 
                                 } }: null,
 

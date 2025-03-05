@@ -98,7 +98,11 @@ class _DashboardContentState extends State<DashboardContent> {
     final missingFields = profileStats['missingFields'] ?? {};
     final employerField=missingFields['employer'] ?? [];
     final company=missingFields['company'] ?? [];
-    final overAllMissingFields=employerField+company;
+    final overAllMissingFields = [
+      ...?employerField,
+      ...?company
+    ].where((field) => field != null && field.toString().isNotEmpty).toList();
+
 
     return Card(
       elevation: 4,
@@ -133,7 +137,7 @@ class _DashboardContentState extends State<DashboardContent> {
             ),
             SizedBox(height: screenSize.height * 0.02),
             Text(
-              'Missing Fields: ${(overAllMissingFields as List?)?.join(', ') ?? 'None'}',
+              'Missing Fields: ${overAllMissingFields.isNotEmpty ? overAllMissingFields.join(', ') : "None"}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: screenSize.width*0.04,
                   color: Colors.orange
@@ -439,37 +443,42 @@ class _DashboardContentState extends State<DashboardContent> {
   }
 
   Widget _buildEnhancedInsightCard(String title, String count, IconData icon, Color color,Size screenSize) {
-    return Container(
-      width: screenSize.width*0.28,
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 30),
-          SizedBox(height: screenSize.height*0.01),
-          Text(
-              count,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  fontSize: screenSize.width*0.04
-              )
+    return Card(
+     // width: screenSize.width*0.28,
+      margin: EdgeInsets.all(0),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),side: BorderSide(color: color.withOpacity(0.3), width: 1)),
+      color: color.withOpacity(0.1),
+
+      child: SizedBox(
+        width: screenSize.width*0.26,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 30),
+              SizedBox(height: screenSize.height*0.01),
+              Text(
+                  count,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                      fontSize: screenSize.width*0.04
+                  )
+              ),
+              Text(
+                  title,
+                  maxLines: 1,
+                  overflow:TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w200,
+                      color: color,
+                      fontSize: screenSize.width*0.035
+                  )
+              ),
+            ],
           ),
-          Text(
-              title,
-              maxLines: 1,
-              overflow:TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w200,
-                  color: color,
-                  fontSize: screenSize.width*0.035
-              )
-          ),
-        ],
+        ),
       ),
     );
   }

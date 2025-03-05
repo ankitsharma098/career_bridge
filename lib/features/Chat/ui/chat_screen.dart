@@ -11,13 +11,15 @@ class ChatScreen extends StatefulWidget {
   final String receiverId;
   final String receiverType;
   final String receiverName;
+  final String? profilePic;
 
   const ChatScreen({
-    Key? key,
+    super.key,
     required this.receiverId,
     required this.receiverType,
     required this.receiverName,
-  }) : super(key: key);
+    required this.profilePic,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -33,6 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     context.read<ChatBloc>().add(LoadMessages());
+    context.read<ChatBloc>().add(FetchLastSeen());
 
   }
 
@@ -48,15 +51,40 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          title: Row(
             children: [
-              Text(widget.receiverName),
-              Text('Last seen: TBD', style: TextStyle(fontSize: 12)),
+              CircleAvatar(
+                backgroundImage: widget.profilePic != null &&widget.profilePic!.isNotEmpty
+                    ? NetworkImage(widget.profilePic!)
+                    : null,
+                child: widget.profilePic == null || widget.profilePic!.isEmpty
+                    ? Text(widget.receiverName[0].toUpperCase())
+                    : null,
+              ),
+              SizedBox(width: size.width*0.05,),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.receiverName),
+                  BlocBuilder<ChatBloc, ChatState>(
+                    builder: (context, state) {
+                      if (state is MessagesLoaded && state.lastSeen != null) {
+                        return Text(
+                          'Last seen: ${timeago.format(state.lastSeen!)}',
+
+                          style: const TextStyle(fontSize: 12),
+                        );
+                      }
+                      return const Text('Last seen: TBD', style: TextStyle(fontSize: 12));
+                    },
+                  ),
+                ],
+              ),
             ],
           ),
           leading: IconButton(

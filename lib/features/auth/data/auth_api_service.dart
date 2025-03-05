@@ -47,7 +47,7 @@ class LoginApiService {
           'accessToken':tokens['accessTokens'],
           'refreshToken':tokens['refreshToken'],
         };
-        await HiveUtils.storeUserData(data);
+        await HiveUtils.storeEmployerData(data);
 
       }
 

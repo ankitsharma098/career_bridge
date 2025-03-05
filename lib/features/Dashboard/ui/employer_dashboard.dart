@@ -10,6 +10,7 @@ import 'package:android/features/Stories/bloc/story_bloc.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
+import 'package:android/features/auth/ui/splash_screen.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
@@ -91,7 +92,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => LoginBloc(),
-                      child: LoginScreen(isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
+                      child: AuthenticationScreen(isDarkMode: _isDarkMode, toggleTheme: toggleTheme),
                     ), // Navigate to login screen
                   ),
                 );
@@ -263,7 +264,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               title: 'Dashboard',
               onTap: () {
                 // Current screen, so just close the drawer
-                //Navigator.pop(context);
+                Navigator.pop(context);
               },
             ),
             _buildDrawerItem(

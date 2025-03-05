@@ -11,7 +11,8 @@ class ChatLoading extends ChatState {}
 
 class MessagesLoaded extends ChatState {
   final List<Message> messages;
-  MessagesLoaded(this.messages);
+  final DateTime? lastSeen;
+  MessagesLoaded(this.messages,{this.lastSeen});
   @override
   List<Object?> get props => [messages];
 }

@@ -42,6 +42,12 @@ class MarkAsRead extends ChatEvent {
   List<Object?> get props => [messageId];
 }
 
+class FetchLastSeen extends ChatEvent {
+   FetchLastSeen();
+
+  @override
+  List<Object?> get props => [];
+}
 class NewMessageReceived extends ChatEvent {
   final Message message;
   NewMessageReceived(this.message);

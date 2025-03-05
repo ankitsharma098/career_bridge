@@ -272,7 +272,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     child: ChatScreen(
                                       receiverId: user.id,
                                       receiverType: widget.userType,
-                                      receiverName: user.personalInfo.fullName,
+                                      receiverName: user.personalInfo.fullName, profilePic: user.personalInfo.profilePic,
                                     ),
                                   ),
                                 ),

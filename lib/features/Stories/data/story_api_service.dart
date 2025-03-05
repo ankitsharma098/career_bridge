@@ -509,11 +509,11 @@ class StoryApiService {
         print("response ${response.data}");
 
 
-        bool success = response.data['liked'] ?? false;
+        bool liked = response.data['liked'] ?? false;
 
 
-        print("success $success");
-        return success;
+        print("success $liked");
+        return liked;
       }else{
         print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
         throw Exception('Failed to Liked stories ${response.statusMessage}');

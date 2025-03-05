@@ -69,43 +69,41 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
   Future<void> _onToggleStoryLikeEvent(ToggleStoryLikeEvent event, Emitter<StoryState> emit) async {
     if (state is StoryLoadedState) {
       final currentState = state as StoryLoadedState;
-      try {
-        // First update the UI optimistically
-        final optimisticStories = currentState.stories.map((story) {
-          if (story.id == event.storyId) {
-            return story.copyWith(
-              isLiked: !story.isLiked,
-              likesCount: story.isLiked ? story.likesCount - 1 : story.likesCount + 1,
-            );
-          }
-          return story;
-        }).toList();
 
-        emit(StoryLoadedState(
-            stories: optimisticStories,
-            hasReachedMax: currentState.hasReachedMax,
-            currentPage: currentState.currentPage
-        ));
-
-        // Then make the API call
-        final success = await apiService.likedStory(event.storyId);
-
-        if (!success) {
-          // If the API call fails, revert the optimistic update
-          emit(StoryLoadedState(
-              stories: currentState.stories,
-              hasReachedMax: currentState.hasReachedMax,
-              currentPage: currentState.currentPage
-          ));
+      // Create optimistic update
+      final updatedStories = currentState.stories.map((story) {
+        if (story.id == event.storyId) {
+          final newIsLiked = !story.isLiked;
+          return story.copyWith(
+            isLiked: newIsLiked,
+            likesCount: newIsLiked ? story.likesCount + 1 : story.likesCount - 1,
+          );
         }
+        return story;
+      }).toList();
+
+      // Emit optimistic update immediately
+      emit(StoryLoadedState(
+        stories: updatedStories,
+        hasReachedMax: currentState.hasReachedMax,
+        currentPage: currentState.currentPage,
+      ));
+
+      try {
+        // Make API call
+        final success = await apiService.likedStory(event.storyId);
+        print("Toggle Like for ${event.storyId}: ${success ? 'Liked' : 'Unliked'}");
+
+        // No need to revert state here unless API actually fails
+        // The optimistic update is correct regardless of success value
       } catch (e) {
-        // If there's an error, revert to the original state
+        // Revert only on actual API failure
         emit(StoryLoadedState(
-            stories: currentState.stories,
-            hasReachedMax: currentState.hasReachedMax,
-            currentPage: currentState.currentPage
+          stories: currentState.stories,
+          hasReachedMax: currentState.hasReachedMax,
+          currentPage: currentState.currentPage,
         ));
-        emit(StoryErrorState(e.toString()));
+        emit(StoryErrorState("Failed to update like status: ${e.toString()}"));
       }
     }
   }
@@ -113,50 +111,87 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
   Future<void> _onToggleSavedStoryEvent(ToggleSavedStoryEvent event, Emitter<StoryState> emit) async {
     if (state is StoryLoadedState) {
       final currentState = state as StoryLoadedState;
-      try {
 
-        final optimisticStories = currentState.stories.map((story) {
-          if (story.id == event.storyId) {
-            return story.copyWith(
-              isSaved: !story.isSaved,
-            );
-          }
-          return story;
-        }).toList();
-
-        emit(StoryLoadedState(
-            stories: optimisticStories,
-            hasReachedMax: currentState.hasReachedMax,
-            currentPage: currentState.currentPage
-        ));
-
-
-        final success = await apiService.savedStory(event.storyId);
-
-        if (success) {
-          emit(StorySuccessState("Story Saved Successfully"));
-          emit(StoryLoadedState(
-              stories: optimisticStories,
-              hasReachedMax: currentState.hasReachedMax,
-              currentPage: currentState.currentPage
-          ));
-        }else {
-          emit(StorySuccessState("Story Unsaved Successfully"));
-          emit(StoryLoadedState(
-              stories: currentState.stories,
-              hasReachedMax: currentState.hasReachedMax,
-              currentPage: currentState.currentPage
-          ));
+      // Create optimistic update
+      final updatedStories = currentState.stories.map((story) {
+        if (story.id == event.storyId) {
+          return story.copyWith(
+            isSaved: !story.isSaved,
+          );
         }
-      } catch (e) {
+        return story;
+      }).toList();
 
-        emit(StoryErrorState(e.toString()));
+      // Emit optimistic update immediately
+      emit(StoryLoadedState(
+        stories: updatedStories,
+        hasReachedMax: currentState.hasReachedMax,
+        currentPage: currentState.currentPage,
+      ));
+
+      try {
+        // Make API call
+        final success = await apiService.savedStory(event.storyId);
+        print("Toggle Like for ${event.storyId}: ${success ? 'Saved' : 'Save'}");
+
+      } catch (e) {
+        // Revert on error and show error message
         emit(StoryLoadedState(
-            stories: currentState.stories,
-            hasReachedMax: currentState.hasReachedMax,
-            currentPage: currentState.currentPage
+          stories: currentState.stories,
+          hasReachedMax: currentState.hasReachedMax,
+          currentPage: currentState.currentPage,
         ));
+        emit(StoryErrorState(e.toString()));
       }
     }
   }
+  // Future<void> _onToggleSavedStoryEvent(ToggleSavedStoryEvent event, Emitter<StoryState> emit) async {
+  //   if (state is StoryLoadedState) {
+  //     final currentState = state as StoryLoadedState;
+  //     try {
+  //
+  //       final optimisticStories = currentState.stories.map((story) {
+  //         if (story.id == event.storyId) {
+  //           return story.copyWith(
+  //             isSaved: !story.isSaved,
+  //           );
+  //         }
+  //         return story;
+  //       }).toList();
+  //
+  //       emit(StoryLoadedState(
+  //           stories: optimisticStories,
+  //           hasReachedMax: currentState.hasReachedMax,
+  //           currentPage: currentState.currentPage
+  //       ));
+  //
+  //
+  //       final success = await apiService.savedStory(event.storyId);
+  //
+  //       if (success) {
+  //         emit(StorySuccessState("Story Saved Successfully"));
+  //         emit(StoryLoadedState(
+  //             stories: optimisticStories,
+  //             hasReachedMax: currentState.hasReachedMax,
+  //             currentPage: currentState.currentPage
+  //         ));
+  //       }else {
+  //         emit(StorySuccessState("Story Unsaved Successfully"));
+  //         emit(StoryLoadedState(
+  //             stories: currentState.stories,
+  //             hasReachedMax: currentState.hasReachedMax,
+  //             currentPage: currentState.currentPage
+  //         ));
+  //       }
+  //     } catch (e) {
+  //
+  //       emit(StoryErrorState(e.toString()));
+  //       emit(StoryLoadedState(
+  //           stories: currentState.stories,
+  //           hasReachedMax: currentState.hasReachedMax,
+  //           currentPage: currentState.currentPage
+  //       ));
+  //     }
+  //   }
+  // }
 }

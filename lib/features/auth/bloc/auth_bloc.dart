@@ -96,7 +96,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
      emit(LoginLoading());
      try {
-       await _loginApiService.login(event.email, event.password);
+       if(event.userType == "employer") {
+         await _loginApiService.login(event.email, event.password);
+       }else if(event.userType=="candidate"){
+
+         //candidate api call
+       }
 
        print("login success----------------------------------------------------------");
        String? fcmToken = await FirebaseMessaging.instance.getToken();

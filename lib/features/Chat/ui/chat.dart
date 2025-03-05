@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/constants/colors.dart';
 import '../../../data/models/chat model/chat_model.dart';
 import '../bloc/chat_bloc.dart';
 import '../converstation bloc/conversations_bloc.dart';
@@ -39,7 +41,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
         body: BlocBuilder<ConversationsBloc, ConversationsState>(
           builder: (context, state) {
             if (state is ConversationsLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20));
             }
             if (state is ConversationsLoaded) {
               if (state.conversations.isEmpty) {
@@ -77,11 +79,11 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             return const Center(child: Text('No conversations yet'));
           },
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showNewChatDialog(context),
-          child: const Icon(Icons.message),
-          tooltip: 'New message',
-        ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () => _showNewChatDialog(context),
+        //   child: const Icon(Icons.message),
+        //   tooltip: 'New message',
+        // ),
       ),
     );
   }
@@ -140,6 +142,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 receiverId: conversation.user.id,
                 receiverType: conversation.user.type,
                 receiverName: conversation.user.name,
+                profilePic: conversation.user.profilePic,
               ),
             ),
           ),
@@ -148,59 +151,59 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     );
   }
 
-  void _showNewChatDialog(BuildContext context) {
-    final recipientIdController = TextEditingController();
-    final messageController = TextEditingController();
-    String selectedRecipientType = 'employer';
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Start New Chat'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButton<String>(
-              value: selectedRecipientType,
-              items: const [
-                DropdownMenuItem(value: 'candidate', child: Text('Candidate')),
-                DropdownMenuItem(value: 'employer', child: Text('Employer')),
-              ],
-              onChanged: (value) => setState(() => selectedRecipientType = value ?? 'employer'),
-            ),
-            TextField(controller: recipientIdController, decoration: const InputDecoration(labelText: 'Recipient ID')),
-            TextField(controller: messageController, decoration: const InputDecoration(labelText: 'Message')),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => ChatBloc(
-                      ChatRepository(),
-                      recipientIdController.text,
-                      selectedRecipientType,
-                      widget.userId,
-                      widget.userType,
-                    )..add(SendMessage(messageController.text)),
-                    child: ChatScreen(
-                      receiverId: recipientIdController.text,
-                      receiverType: selectedRecipientType,
-                      receiverName: 'Unknown User',
-                    ),
-                  ),
-                ),
-              );
-            },
-            child: const Text('Start'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showNewChatDialog(BuildContext context) {
+  //   final recipientIdController = TextEditingController();
+  //   final messageController = TextEditingController();
+  //   String selectedRecipientType = 'employer';
+  //
+  //   showDialog(
+  //     context: context,
+  //     builder: (dialogContext) => AlertDialog(
+  //       title: const Text('Start New Chat'),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           DropdownButton<String>(
+  //             value: selectedRecipientType,
+  //             items: const [
+  //               DropdownMenuItem(value: 'candidate', child: Text('Candidate')),
+  //               DropdownMenuItem(value: 'employer', child: Text('Employer')),
+  //             ],
+  //             onChanged: (value) => setState(() => selectedRecipientType = value ?? 'employer'),
+  //           ),
+  //           TextField(controller: recipientIdController, decoration: const InputDecoration(labelText: 'Recipient ID')),
+  //           TextField(controller: messageController, decoration: const InputDecoration(labelText: 'Message')),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             Navigator.pop(dialogContext);
+  //             Navigator.push(
+  //               context,
+  //               MaterialPageRoute(
+  //                 builder: (context) => BlocProvider(
+  //                   create: (context) => ChatBloc(
+  //                     ChatRepository(),
+  //                     recipientIdController.text,
+  //                     selectedRecipientType,
+  //                     widget.userId,
+  //                     widget.userType,
+  //                   )..add(SendMessage(messageController.text)),
+  //                   child: ChatScreen(
+  //                     receiverId: recipientIdController.text,
+  //                     receiverType: selectedRecipientType,
+  //                     receiverName: 'Unknown User',
+  //                   ),
+  //                 ),
+  //               ),
+  //             );
+  //           },
+  //           child: const Text('Start'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

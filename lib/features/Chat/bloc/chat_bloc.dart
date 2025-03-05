@@ -15,8 +15,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final String receiverType;
   final String currentUserId;
   final String currentUserType;
-  StreamSubscription<Message>? _newMessageSubscription;
-  StreamSubscription<ReadReceipt>? _readReceiptSubscription;
+  Timer? _activityTimer;
 
   ChatBloc(this._repository, this.receiverId, this.receiverType, this.currentUserId, this.currentUserType)
       : super(ChatInitial()) {
@@ -28,10 +27,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<NewMessageReceived>(_onNewMessageReceived);
     on<ReadReceiptReceived>(_onReadReceiptReceived);
     //on<MessageSentConfirmed>(_onMessageSentConfirmed);
+    on<FetchLastSeen>(_onFetchLastSeen);
 
     _repository.addNewMessageListener(_handleNewMessage);
     _repository.addReadReceiptListener(_handleReadReceipt);
-
+    _activityTimer = Timer.periodic(const Duration(minutes: 1), (_) => _repository.updateUserActivity());
   }
 
   void _handleNewMessage(Message message) {
@@ -55,18 +55,31 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(ChatLoading());
     try {
       final messages = await _repository.getMessages(receiverId, receiverType);
+      final lastSeen = await _repository.getLastSeen(receiverId, receiverType); //
       for (var message in messages) {
         if (message.status != 'read' && message.receiverId == currentUserId) {
           _repository.markAsRead(message.id);
         }
       }
-      emit(MessagesLoaded(messages));
+      emit(MessagesLoaded(messages, lastSeen: lastSeen));
     } catch (e) {
       emit(ChatError(e.toString()));
     }
   }
 
-
+  Future<void> _onFetchLastSeen(FetchLastSeen event, Emitter<ChatState> emit) async {
+    try {
+      final lastSeen = await _repository.getLastSeen(receiverId, receiverType);
+      if (state is MessagesLoaded) {
+        final currentState = state as MessagesLoaded;
+        emit(MessagesLoaded(currentState.messages, lastSeen: lastSeen));
+      } else {
+        emit(MessagesLoaded([], lastSeen: lastSeen));
+      }
+    } catch (e) {
+      emit(ChatError('Failed to fetch last seen: $e'));
+    }
+  }
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     List<Message> currentMessages = [];
     if (state is MessagesLoaded) {
@@ -198,6 +211,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   @override
   Future<void> close() {
+    _activityTimer?.cancel(); // Clean up timer
     _repository.removeNewMessageListener(_handleNewMessage);
     _repository.removeReadReceiptListener(_handleReadReceipt);
     return super.close();

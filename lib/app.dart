@@ -10,6 +10,8 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'core/constants/colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/ui/login.dart';
+import 'features/auth/ui/onboading_Screen.dart';
+import 'features/auth/ui/splash_screen.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -29,24 +31,25 @@ class _MyAppState extends State<MyApp> {
 
   bool isLoggedIn = false;
   bool isLoading =false;
+  String? userType;
 
   void checkLoginStatus() async {
     try {
-      isLoading=true;
+      isLoading = true;
       isLoggedIn = await HiveUtils.getLoggedIn();
+
       if (isLoggedIn) {
-        print('User is logged in.');
+        userType = await HiveUtils.getUserType();
       } else {
         print('User is not logged in.');
       }
-    }catch(e){
-
-    }finally{
+    } catch(e) {
+      // Handle error
+    } finally {
       setState(() {
-        isLoading=false;
+        isLoading = false;
       });
     }
-
   }
 
   @override
@@ -62,11 +65,14 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: _isDarkMode ? AppTheme.darkTheme(context) :  AppTheme.lightTheme(context),
 
-      home: isLoading ?  Scaffold(body: Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),)):isLoggedIn ? EmployerDashboardScreen(isDarkMode: _isDarkMode, onThemeToggle:toggleTheme,) :
-      BlocProvider(
-        create: (context) => LoginBloc(),
-        child: LoginScreen(isDarkMode: _isDarkMode, onThemeToggle:toggleTheme),
-      ),
+      home: isLoading ?  Scaffold(body: Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),)):
+        isLoggedIn
+    ? (userType == "employer"
+    ? EmployerDashboardScreen(isDarkMode: _isDarkMode, onThemeToggle: toggleTheme)
+        : userType == "candidate"
+    ? SizedBox()
+        : OnboardingScreen(isDarkMode: _isDarkMode, toggleTheme: toggleTheme))
+        : OnboardingScreen(isDarkMode: _isDarkMode, toggleTheme: toggleTheme),
     );
   }
 }

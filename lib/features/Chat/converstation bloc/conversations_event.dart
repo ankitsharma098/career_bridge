@@ -13,3 +13,10 @@ class NewMessageReceived extends ConversationsEvent {
   @override
   List<Object?> get props => [message];
 }
+class ReadReceiptReceived extends ConversationsEvent {
+  final ReadReceipt readReceipt;
+   ReadReceiptReceived(this.readReceipt);
+
+  @override
+  List<Object?> get props => [readReceipt];
+}
