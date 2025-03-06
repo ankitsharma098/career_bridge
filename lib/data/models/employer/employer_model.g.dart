@@ -28,6 +28,7 @@ Employer _$EmployerFromJson(Map<String, dynamic> json) => Employer(
       auth: json['auth'] == null
           ? const Auth()
           : Auth.fromJson(json['auth'] as Map<String, dynamic>),
+      role: json['role'] as String? ?? '',
       about: json['about'] as String? ?? '',
       createdAt: json['createdAt'] as String? ?? '',
       updatedAt: json['updatedAt'] as String? ?? '',
@@ -42,6 +43,7 @@ Map<String, dynamic> _$EmployerToJson(Employer instance) => <String, dynamic>{
       'stories': instance.stories,
       'events': instance.events,
       'auth': instance.auth,
+      'role': instance.role,
       'about': instance.about,
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,

@@ -1,3 +1,5 @@
+import 'package:android/core/utils/snackBarUtils.dart';
+import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,14 +27,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
+  final TextEditingController industryTypeController = TextEditingController();
+  final TextEditingController employerStrengthsController = TextEditingController();
+  final TextEditingController countryController = TextEditingController();
+  final TextEditingController stateController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController pincodeController = TextEditingController();
+  final TextEditingController officialAddressController = TextEditingController();
+  final TextEditingController verificationDocTypeController = TextEditingController();
+
+  final List<String> industryTypes = ['Tech', 'Finance', 'Healthcare', 'Education', 'Other']; // Customize as needed
+  final List<String> employerStrengthOptions = [
+    '1-5', '6-10', '11-15', '16-20', '21-25', '26-30', '31-35', '36-40', '41-45', '46-50', 'More than 50'
+  ];
+  final List<String> verificationDocTypes = [
+    'Business Registration', 'GST Certificate', 'License', 'PAN Card', 'Trademark Certificate', 'Share Stock Certificate', 'Other'
+  ];
 
   Map<String, Map<String, String>> documentUrls = {
     'logo': {'url': '', 'publicId': ''},
-    'verification': {'url': '', 'publicId': ''},
     'profile': {'url': '', 'publicId': ''},
+    'verification': {'url': '', 'publicId': ''},
   };
   String? verificationToken;
   int step = 1;
+  String currentUploadingDocType = '';
 
   @override
   Widget build(BuildContext context) {
@@ -43,30 +62,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         listener: (context, state) {
           print("Listener received state: $state");
           if (state is RegistrationFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error), backgroundColor: Colors.red),
-            );
+            SnackBarUtils.showRedSnackBar(state.error, context);
+
           } else if (state is CompanyExists) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            SnackBarUtils.showGreenSnackBar(state.message, context);
           } else if (state is CompanyNotFound) {
             print("Moving to Step 2");
             setState(() => step = 2);
           } else if (state is DocumentUploaded) {
             setState(() {
-              if (documentUrls['logo']!['url']!.isEmpty) {
-                documentUrls['logo'] = {'url': state.url, 'publicId': state.publicId};
-              } else if (documentUrls['verification']!['url']!.isEmpty) {
-                documentUrls['verification'] = {'url': state.url, 'publicId': state.publicId};
-              } else if (documentUrls['profile']!['url']!.isEmpty) {
-                documentUrls['profile'] = {'url': state.url, 'publicId': state.publicId};
-              }
+              documentUrls[currentUploadingDocType] = {'url': state.url, 'publicId': state.publicId};
             });
           } else if (state is OtpSent) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('OTP sent to ${emailController.text}')),
-            );
+
+            SnackBarUtils.showGreenSnackBar('OTP sent to ${emailController.text}', context);
+
           } else if (state is OtpVerified) {
             setState(() {
               verificationToken = state.token;
@@ -74,7 +84,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             // Auto-submit after OTP verification
             _submitRegistration(context);
           } else if (state is RegistrationSuccess) {
-           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen(isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle,userType: "employer"),));
+           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
+          create: (context) => LoginBloc(),
+          child: LoginScreen(isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle,userType: "employer"),
+        ),));
           }
         },
         builder: (context, state) {
@@ -227,10 +240,137 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             validator: (value) => value!.isEmpty ? 'Please enter about company' : null,
           ),
           SizedBox(height: screenSize.height * 0.02),
-          _buildUploadButton(context, 'Company Logo', 'logo', screenSize),
-          _buildUploadButton(context, 'Verification Document', 'verification', screenSize),
-          _buildUploadButton(context, 'Company Profile', 'profile', screenSize),
+          DropdownButtonFormField<String>(
+            value: industryTypeController.text.isEmpty ? null : industryTypeController.text,
+            decoration: InputDecoration(
+              labelText: 'Industry Type',
+              prefixIcon: Icon(Icons.category),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            items: industryTypes.map((String type) {
+              return DropdownMenuItem<String>(value: type, child: Text(type));
+            }).toList(),
+            onChanged: (value) => industryTypeController.text = value ?? '',
+            validator: (value) => value == null ? 'Please select industry type' : null,
+          ),
           SizedBox(height: screenSize.height * 0.02),
+          DropdownButtonFormField<String>(
+            value: employerStrengthsController.text.isEmpty ? null : employerStrengthsController.text,
+            decoration: InputDecoration(
+              labelText: 'Employer Strengths',
+              prefixIcon: Icon(Icons.group),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            items: employerStrengthOptions.map((String strength) {
+              return DropdownMenuItem<String>(value: strength, child: Text(strength));
+            }).toList(),
+            onChanged: (value) => employerStrengthsController.text = value ?? '',
+            validator: (value) => value == null ? 'Please select employer strength' : null,
+          ),
+          SizedBox(height: screenSize.height * 0.02),
+          TextFormField(
+            controller: officialAddressController,
+            decoration: InputDecoration(
+              labelText: 'Official Address',
+              prefixIcon: Icon(Icons.location_on),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            validator: (value) => value!.isEmpty ? 'Please enter official address' : null,
+          ),
+          SizedBox(height: screenSize.height * 0.02),
+          TextFormField(
+            controller: countryController,
+            decoration: InputDecoration(
+              labelText: 'Country',
+              prefixIcon: Icon(Icons.public),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            validator: (value) => value!.isEmpty ? 'Please enter country' : null,
+          ),
+          SizedBox(height: screenSize.height * 0.02),
+          TextFormField(
+            controller: stateController,
+            decoration: InputDecoration(
+              labelText: 'State',
+              prefixIcon: Icon(Icons.map),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            validator: (value) => value!.isEmpty ? 'Please enter state' : null,
+          ),
+          SizedBox(height: screenSize.height * 0.02),
+          TextFormField(
+            controller: cityController,
+            decoration: InputDecoration(
+              labelText: 'City',
+              prefixIcon: Icon(Icons.location_city),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            validator: (value) => value!.isEmpty ? 'Please enter city' : null,
+          ),
+          SizedBox(height: screenSize.height * 0.02),
+          TextFormField(
+            controller: pincodeController,
+            decoration: InputDecoration(
+              labelText: 'Pincode',
+              prefixIcon: Icon(Icons.pin_drop),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            validator: (value) => value!.isEmpty ? 'Please enter pincode' : null,
+          ),
+
+          SizedBox(height: screenSize.height * 0.04),
+          Text(
+            "Company Documents",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: screenSize.height * 0.02),
+
+          // Enhanced document upload section
+          _buildDocumentUploadCard(
+              context,
+              'Company Logo',
+              'Upload a high-quality logo (PNG or JPG)',
+              'logo',
+              Icons.image_outlined,
+              screenSize
+          ),
+          _buildDocumentUploadCard(
+              context,
+              'Company Profile',
+              'Upload company profile document (PDF preferred)',
+              'profile',
+              Icons.business_outlined,
+              screenSize
+          ),
+
+          DropdownButtonFormField<String>(
+            value: verificationDocTypeController.text.isEmpty ? null : verificationDocTypeController.text,
+            decoration: InputDecoration(
+              labelText: 'Verification Document Type',
+              prefixIcon: Icon(Icons.description_outlined),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            items: verificationDocTypes.map((String type) {
+              return DropdownMenuItem<String>(value: type, child: Text(type));
+            }).toList(),
+            onChanged: (value) => verificationDocTypeController.text = value ?? '',
+            validator: (value) => value == null ? 'Please select document type' : null,
+          ),
+
+          SizedBox(height: screenSize.height * 0.02),
+
+          _buildDocumentUploadCard(
+              context,
+              'Verification Document',
+              'Upload document for verification',
+              'verification',
+              Icons.verified_outlined,
+              screenSize
+          ),
+          SizedBox(height: screenSize.height * 0.04),
           SizedBox(
             width: double.infinity,
             height: screenSize.height * 0.07,
@@ -243,41 +383,173 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               }
                   : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: documentUrls.values.every((doc) => doc['url']!.isNotEmpty) ? Colors.blue : Colors.grey,
+                backgroundColor: documentUrls.values.every((doc) => doc['url']!.isNotEmpty) ? Colors.blue : Colors.grey.shade300,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: documentUrls.values.every((doc) => doc['url']!.isNotEmpty) ? 2 : 0,
               ),
-              child: Text('Next', style: TextStyle(color: Colors.white)),
+              child: Text(
+                  'Next',
+                  style: TextStyle(
+                    color: documentUrls.values.every((doc) => doc['url']!.isNotEmpty) ? Colors.white : Colors.grey.shade700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  )
+              ),
             ),
           ),
+
+          SizedBox(height: screenSize.height * 0.02),
+          if (!documentUrls.values.every((doc) => doc['url']!.isNotEmpty))
+            Text(
+              'Please upload all required documents to proceed',
+              style: TextStyle(
+                color: Colors.orange.shade800,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildUploadButton(BuildContext context, String label, String type, Size screenSize) {
-    return Column(
-      children: [
-        ElevatedButton(
-          onPressed: documentUrls[type]!['url']!.isNotEmpty
-              ? null
-              : () async {
-            FilePickerResult? result = await FilePicker.platform.pickFiles();
-            if (result != null) {
+  Widget _buildDocumentUploadCard(BuildContext context, String label, String description, String type, IconData icon, Size screenSize) {
+    bool isUploaded = documentUrls[type]!['url']!.isNotEmpty;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: screenSize.height * 0.02),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isUploaded ? Colors.green.shade300 : Colors.grey.shade300),
+        color: isUploaded ? Colors.green.shade50 : Colors.grey.shade50,
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        leading: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isUploaded ? Colors.green.shade100 : Colors.blue.shade100,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isUploaded ? Icons.check : icon,
+            color: isUploaded ? Colors.green.shade700 : Colors.blue.shade700,
+          ),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        subtitle: Text(
+          isUploaded ? 'Document uploaded successfully' : description,
+          style: TextStyle(
+            color: isUploaded ? Colors.green.shade700 : Colors.grey.shade700,
+            fontSize: 12,
+          ),
+        ),
+        trailing: isUploaded
+            ? IconButton(
+          icon: Icon(Icons.refresh, color: Colors.blue),
+          onPressed: () {
+            // Allow replacing the uploaded document
+            setState(() {
+              documentUrls[type] = {'url': '', 'publicId': ''};
+            });
+          },
+        )
+            : ElevatedButton(
+          onPressed: () async {
+
+            setState(() {
+              currentUploadingDocType = type;
+            });
+
+            FilePickerResult? result;
+            if (type == 'profile') {
+              result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: ['pdf', 'doc', 'docx'],
+              );
+            } else {
+              // For logo and verification docs, use image type instead
+              result = await FilePicker.platform.pickFiles(
+                type: FileType.image,
+              );
+            }
+
+            if (result != null && result.files.isNotEmpty && result.files.single.path != null) {
+              // Show loading indicator before starting upload
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return Dialog(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            LoadingAnimationWidget.hexagonDots(
+                              color: Colors.blue,
+                              size: 40,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Uploading $label...',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+
+              // Add upload event
               BlocProvider.of<RegistrationBloc>(context).add(
                 UploadDocumentEvent(filePath: result.files.single.path!),
               );
+
+              // Close dialog after a brief delay
+              Future.delayed(Duration(milliseconds: 500), () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+              });
             }
           },
-          child: Text(documentUrls[type]!['url']!.isEmpty ? 'Upload $label' : '$label Uploaded'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: documentUrls[type]!['url']!.isEmpty ? Colors.blue : Colors.grey,
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 16),
           ),
+          child: Text('Upload'),
         ),
-        SizedBox(height: screenSize.height * 0.02),
-      ],
+      ),
     );
   }
-
   Widget _buildPersonalDetailsStep(BuildContext context, Size screenSize) {
     return Form(
       key: _formKey,
@@ -396,13 +668,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       'companyName': companyNameController.text,
       'website': websiteController.text,
       'about': aboutController.text,
-      'industryType': 'Tech',
-      'employerStrengths': '1-5',
-      'location': {'country': 'Country', 'state': 'State', 'city': 'City', 'pincode': '123456'},
-      'officialAddress': 'Address',
-      'billingDetails': {'GSTNo': '', 'PANNo': '123', 'MSME': 'Yes'},
-      'verificationDocument': {'type': 'Business Registration'},
-      'socialAccount': {'linkedin': '', 'instagram': '', 'twitter': ''},
+      'industryType': industryTypeController.text,
+      'employerStrengths': employerStrengthsController.text,
+      'location': {
+        'country': countryController.text,
+        'state': stateController.text,
+        'city': cityController.text,
+        'pincode': pincodeController.text,
+      },
+      'officialAddress': officialAddressController.text,
+      'billingDetails': {'GSTNo': '', 'PANNo': '', 'MSME': ''}, // Still optional
+      'verificationDocument': {'type': verificationDocTypeController.text},
+      'socialAccount': {'linkedin': '', 'instagram': '', 'twitter': ''}, // Still optional
     };
     final employerData = {
       'fullName': fullNameController.text,
@@ -431,6 +708,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     passwordController.dispose();
     phoneController.dispose();
     otpController.dispose();
+    industryTypeController.dispose();
+    employerStrengthsController.dispose();
+    countryController.dispose();
+    stateController.dispose();
+    cityController.dispose();
+    pincodeController.dispose();
+    officialAddressController.dispose();
+    verificationDocTypeController.dispose();
     super.dispose();
   }
 }

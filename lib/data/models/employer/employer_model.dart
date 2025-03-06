@@ -22,6 +22,9 @@ class Employer {
   final Auth auth;
 
   @JsonKey(defaultValue: '')
+  final String role;
+
+  @JsonKey(defaultValue: '')
   final String about;
 
   @JsonKey(defaultValue: '')
@@ -41,6 +44,7 @@ class Employer {
     this.stories = const UserStories(),
     this.events = const UserEvents(),
     this.auth = const Auth(),
+    this.role = '',
     this.about = '',
     this.createdAt = '',
     this.updatedAt = '',

@@ -25,6 +25,8 @@ import '../../Chat/ui/chat.dart';
 import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
+import '../../Team Member/bloc/team_member_bloc.dart';
+import '../../Team Member/ui/team_member_screen.dart';
 import '../../profile/ui/employer_profile.dart';
 import 'dashboard_stats.dart';
 import 'employer_dashboard_shimmer.dart';
@@ -295,6 +297,22 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   ),
                 );
               },
+            ),
+            _buildDrawerItem(
+              icon: Icons.group,
+              title: 'Team Members',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) => TeamMembersBloc(),
+                    child: TeamMembersScreen(
+                      currentEmployer: employerData!,
+                      companyId: companyData!.id,
+                    ),
+                  ),
+                ),
+              ),
             ),
             _buildDrawerItem(
               icon: Icons.web_stories,
