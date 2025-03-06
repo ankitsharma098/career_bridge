@@ -33,8 +33,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileError('No data found'));
         return;
       }
-
-      emit(ProfileDataLoaded(Employer.fromJson(employerData), CompanyDetails.fromJson(companyData)));
+      print("before profile data loaded");
+      Employer employer = Employer.fromJson(employerData);
+      print("employer $employer");
+      CompanyDetails company = CompanyDetails.fromJson(companyData);
+      print("company $company");
+      emit(ProfileDataLoaded(employer,company));
+      print("after profile data loaded");
     } catch (e) {
       emit(ProfileError(e.toString()));
     }

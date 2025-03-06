@@ -455,7 +455,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   ),
                   child: ClipOval(
                     child: CachedNetworkImage(
-                      imageUrl: company.companyLogo,
+                      imageUrl: company.companyLogo.url,
                       placeholder: (context, url) => CircularProgressIndicator(color: Theme.of(context).primaryColor),
                       errorWidget: (context, url, error) => Icon(
                         Icons.business,

@@ -3,6 +3,8 @@ import 'package:android/core/utils/snackBarUtils.dart';
 import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/data/auth_api_service.dart';
+import 'package:android/features/auth/registration_bloc/registration_bloc.dart';
+import 'package:android/features/auth/ui/registration_screen.dart';
 import 'package:android/features/auth/ui/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -253,7 +255,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
+                                create: (context) => RegistrationBloc(),
+                                child: RegistrationScreen(isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
+                              ),));
+                              },
                             child: Text(
                               'Sign Up',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(

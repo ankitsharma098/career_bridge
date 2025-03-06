@@ -19,8 +19,8 @@ class CompanyDetails {
   @JsonKey(defaultValue: '')
   final String about;
 
-  @JsonKey(defaultValue: '')
-  final String companyLogo;
+
+  final MediaItem companyLogo;
 
   @JsonKey(defaultValue: '')
   final String industryType;
@@ -37,8 +37,7 @@ class CompanyDetails {
 
   final BillingDetails billingDetails;
 
-  @JsonKey(defaultValue: '')
-  final String companyProfile;
+  final MediaItem companyProfile;
 
 
   final VerificationDocument verificationDocument;
@@ -52,13 +51,13 @@ class CompanyDetails {
      this.companyName = 'companyName',
      this.website = '',
      this.about = '',
-     this.companyLogo = '',
+    this.companyLogo = const MediaItem(),
      this.industryType = '',
      this.employerStrengths = '',
      this.location =const Location(),
      this.officialAddress='',
      this.billingDetails=const BillingDetails(),
-     this.companyProfile = '',
+    this.companyProfile = const MediaItem(),
      this.verificationDocument=const VerificationDocument(),
      this.socialAccount=const SocialAccount(),
   });
@@ -127,12 +126,16 @@ class VerificationDocument {
   @JsonKey(defaultValue: '')
   final String type;
 
-  @JsonKey(name: 'URL',defaultValue: '')
+  @JsonKey(name: 'url',defaultValue: '')
   final String url;
+
+  @JsonKey(name: 'publicId',defaultValue: '')
+  final String publicId;
 
   const VerificationDocument({
      this.type='',
      this.url='',
+    this.publicId=''
   });
 
   factory VerificationDocument.fromJson(Map<String, dynamic> json) =>
@@ -165,4 +168,23 @@ class SocialAccount {
       _$SocialAccountFromJson(json);
 
   Map<String, dynamic> toJson() => _$SocialAccountToJson(this);
+}
+
+@JsonSerializable()
+class MediaItem {
+  @JsonKey(defaultValue: '')
+  final String url;
+
+  @JsonKey(defaultValue: '')
+  final String publicId;
+
+  const MediaItem({
+    this.url = '',
+    this.publicId = '',
+  });
+
+  factory MediaItem.fromJson(Map<String, dynamic> json) =>
+      _$MediaItemFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MediaItemToJson(this);
 }

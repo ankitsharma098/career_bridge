@@ -6,7 +6,7 @@ import '../bloc/auth_bloc.dart';
 import 'login.dart';
 
 class AuthenticationScreen extends StatefulWidget {
-  late final bool isDarkMode;
+   final bool isDarkMode;
   final VoidCallback toggleTheme;
 
   const AuthenticationScreen({
@@ -77,7 +77,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
                     color: Theme.of(context).primaryColor,
                   ),
                   onPressed:(){
-                    widget.isDarkMode=!widget.isDarkMode;
+                 //   widget.isDarkMode=!widget.isDarkMode;
                     widget.toggleTheme;
                   },
                 ),

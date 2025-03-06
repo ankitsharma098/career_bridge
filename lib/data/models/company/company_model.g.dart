@@ -13,7 +13,9 @@ CompanyDetails _$CompanyDetailsFromJson(Map<String, dynamic> json) =>
       companyName: json['companyName'] as String? ?? '',
       website: json['website'] as String? ?? '',
       about: json['about'] as String? ?? '',
-      companyLogo: json['companyLogo'] as String? ?? '',
+      companyLogo: json['companyLogo'] == null
+          ? const MediaItem()
+          : MediaItem.fromJson(json['companyLogo'] as Map<String, dynamic>),
       industryType: json['industryType'] as String? ?? '',
       employerStrengths: json['employerStrengths'] as String? ?? '',
       location: json['location'] == null
@@ -24,7 +26,9 @@ CompanyDetails _$CompanyDetailsFromJson(Map<String, dynamic> json) =>
           ? const BillingDetails()
           : BillingDetails.fromJson(
               json['billingDetails'] as Map<String, dynamic>),
-      companyProfile: json['companyProfile'] as String? ?? '',
+      companyProfile: json['companyProfile'] == null
+          ? const MediaItem()
+          : MediaItem.fromJson(json['companyProfile'] as Map<String, dynamic>),
       verificationDocument: json['verificationDocument'] == null
           ? const VerificationDocument()
           : VerificationDocument.fromJson(
@@ -85,14 +89,16 @@ VerificationDocument _$VerificationDocumentFromJson(
         Map<String, dynamic> json) =>
     VerificationDocument(
       type: json['type'] as String? ?? '',
-      url: json['URL'] as String? ?? '',
+      url: json['url'] as String? ?? '',
+      publicId: json['publicId'] as String? ?? '',
     );
 
 Map<String, dynamic> _$VerificationDocumentToJson(
         VerificationDocument instance) =>
     <String, dynamic>{
       'type': instance.type,
-      'URL': instance.url,
+      'url': instance.url,
+      'publicId': instance.publicId,
     };
 
 SocialAccount _$SocialAccountFromJson(Map<String, dynamic> json) =>
@@ -107,4 +113,14 @@ Map<String, dynamic> _$SocialAccountToJson(SocialAccount instance) =>
       'linkedin': instance.linkedin,
       'instagram': instance.instagram,
       'twitter': instance.twitter,
+    };
+
+MediaItem _$MediaItemFromJson(Map<String, dynamic> json) => MediaItem(
+      url: json['url'] as String? ?? '',
+      publicId: json['publicId'] as String? ?? '',
+    );
+
+Map<String, dynamic> _$MediaItemToJson(MediaItem instance) => <String, dynamic>{
+      'url': instance.url,
+      'publicId': instance.publicId,
     };

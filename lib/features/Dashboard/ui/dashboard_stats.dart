@@ -218,6 +218,31 @@ class _DashboardContentState extends State<DashboardContent> {
   }
 
   Widget _buildJobTypeBreakdown(List<dynamic> employmentType,Size screenSize) {
+    if (employmentType.isEmpty) {
+      return Column(
+        children: [
+          Text(
+            'Employment Type',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: screenSize.width*0.04
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: screenSize.width*0.015),
+          Text(
+            'No data',
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w400,
+              fontSize: screenSize.width * 0.04,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -239,6 +264,31 @@ class _DashboardContentState extends State<DashboardContent> {
   }
 
   Widget _buildJobLocationBreakdown(List<dynamic> jobsByLocation,Size screenSize) {
+    if (jobsByLocation.isEmpty) {
+      return Column(
+        children: [
+          Text(
+            'Job Location',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: screenSize.width*0.04
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: screenSize.width*0.015),
+          Text(
+            'No data',
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w400,
+              fontSize: screenSize.width * 0.04,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -534,7 +584,12 @@ class _DashboardContentState extends State<DashboardContent> {
               ),),
             SizedBox(height: screenSize.height*0.02),
             recentApplications.isEmpty? SizedBox(
-              child: Center(child: Text("No Applications")),
+              child: Center(child: Text("No Applications",  overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w400,
+                  fontSize: screenSize.width * 0.04,
+                  color: Colors.grey,
+                ),)),
             ):ListView.builder(
               shrinkWrap: true,
               itemCount: recentApplications.length,

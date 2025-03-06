@@ -196,7 +196,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                   child: Opacity(
                     opacity: 0.15,
                     child: Image.network(
-                      companyDetails.companyLogo,
+                      companyDetails.companyLogo.url,
                       fit: BoxFit.cover,
                     ),
                   ),

@@ -13,7 +13,7 @@ part 'auth_state.dart';
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
 
-   final LoginApiService _loginApiService =LoginApiService();
+   final AuthApiServices _loginApiService =AuthApiServices();
 
   LoginBloc()
   :super(LoginInitial()){
