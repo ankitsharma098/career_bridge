@@ -37,6 +37,30 @@ class HiveUtils {
     }
   }
 
+  static Future<void> storeCandidateData(Map<String,dynamic> data) async {
+
+    try{
+
+      final box = await Hive.openBox(USER_BOX);
+      print("Box opened");
+      await box.put("accessToken", data["accessToken"]);
+      await box.put("refreshToken", data["refreshToken"]);
+      print("accession stored");
+      await box.put("candidate", data["candidate"]);
+      print("candidate data ${data['candidate'].runtimeType}");
+
+
+      await box.put("userType", "candidate");
+
+      await box.put("isLoggedIn", true);
+
+
+    }catch(e){
+      print('Error storing user data: $e');
+      throw Exception('Failed to store user data');
+    }
+  }
+
   static Future<Map<String, dynamic>> getEmployerData() async {
     try {
       final box = await Hive.openBox(USER_BOX);
@@ -56,6 +80,29 @@ class HiveUtils {
       return employer;
     } catch (e) {
       print('Detailed Error getting Employer data: $e');
+      return {};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getCandidateData() async {
+    try {
+      final box = await Hive.openBox(USER_BOX);
+      dynamic rawCandidate = box.get('candidate');
+
+      // Aggressive type conversion
+      Map<String, dynamic> candidate = {};
+
+      if (rawCandidate is Map) {
+        // Deep conversion of nested maps
+        candidate = _deepConvertMap(rawCandidate);
+      }
+
+      print('candidate Data Retrieved: $candidate');
+      print('rawCandidate Data Type: ${rawCandidate.runtimeType}');
+
+      return candidate;
+    } catch (e) {
+      print('Detailed Error getting candidate data: $e');
       return {};
     }
   }

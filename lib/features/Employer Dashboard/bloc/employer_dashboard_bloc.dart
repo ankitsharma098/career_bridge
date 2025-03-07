@@ -17,7 +17,7 @@ class EmployerDashboardBloc extends Bloc<EmployerDashboardEvent, EmployerDashboa
    emit(EmployerDashboardLoading());
     try{
      Map<String,dynamic> data =await apiService.dashboardStats();
-      print("Dashboard Data $data");
+      print("Employer Dashboard Data $data");
       emit(EmployerDashboardLoaded(data));
 
 

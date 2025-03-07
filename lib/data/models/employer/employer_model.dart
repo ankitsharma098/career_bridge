@@ -17,7 +17,6 @@ class Employer {
 
   final UserStories stories;
 
-  final UserEvents events;
 
   final Auth auth;
 
@@ -33,8 +32,7 @@ class Employer {
   @JsonKey(defaultValue: '')
   final String updatedAt;
 
-  @JsonKey(defaultValue: '')
-  final String fcmToken; // Added from login response
+
 
   Employer({
     this.id = '',
@@ -42,13 +40,11 @@ class Employer {
     this.companyDetails = const MinimalCompanyDetails(),
     this.postedJobs = const [],
     this.stories = const UserStories(),
-    this.events = const UserEvents(),
     this.auth = const Auth(),
     this.role = '',
     this.about = '',
     this.createdAt = '',
     this.updatedAt = '',
-    this.fcmToken = '',
   });
 
   factory Employer.fromJson(Map<String, dynamic> json) => _$EmployerFromJson(json);
@@ -126,26 +122,6 @@ class UserStories {
   Map<String, dynamic> toJson() => _$UserStoriesToJson(this);
 }
 
-@JsonSerializable()
-class UserEvents {
-  @JsonKey(defaultValue: [])
-  final List<String> myEvents;
-
-  @JsonKey(defaultValue: [])
-  final List<String> savedEvents;
-
-  @JsonKey(defaultValue: [])
-  final List<String> registeredEvents;
-
-  const UserEvents({
-    this.myEvents = const [],
-    this.savedEvents = const [],
-    this.registeredEvents = const [],
-  });
-
-  factory UserEvents.fromJson(Map<String, dynamic> json) => _$UserEventsFromJson(json);
-  Map<String, dynamic> toJson() => _$UserEventsToJson(this);
-}
 
 @JsonSerializable()
 class Auth {

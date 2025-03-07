@@ -1,60 +1,51 @@
 import 'package:android/core/constants/colors.dart';
-import 'package:android/core/utils/customErrorUtils.dart';
-import 'package:android/data/models/company/company_model.dart';
-import 'package:android/data/models/employer/employer_model.dart';
-import 'package:android/features/Chat/bloc/chat_bloc.dart';
+import 'package:android/data/models/candidate/candidate_model.dart';
 import 'package:android/features/Chat/converstation%20bloc/conversations_bloc.dart';
 import 'package:android/features/Chat/data%20service/chat_service.dart';
-import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/Stories/bloc/story_bloc.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
-import 'package:android/features/auth/ui/login.dart';
 import 'package:android/features/auth/ui/splash_screen.dart';
 import 'package:android/features/profile/bloc/profile_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:percent_indicator/percent_indicator.dart';
 import '../../../core/utils/hiveUtils.dart';
-import '../../../core/utils/snackBarUtils.dart';
 import '../../About Us/ui/about_us.dart';
 import '../../Chat/ui/chat.dart';
 import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
-import '../../Team Member/bloc/team_member_bloc.dart';
-import '../../Team Member/ui/team_member_screen.dart';
 import '../../profile/ui/employer_profile.dart';
-import 'dashboard_stats.dart';
-import 'employer_dashboard_shimmer.dart';
+import '../bloc/candidate_dashboard_bloc.dart';
+import 'candidate_dashboard_content.dart';
 
 
 
 
-class EmployerDashboardScreen extends StatefulWidget {
+
+class CandidateDashboardScreen extends StatefulWidget {
   final bool isDarkMode;
   final VoidCallback onThemeToggle;
-  const EmployerDashboardScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
+  const CandidateDashboardScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
 
 
   @override
-  State<EmployerDashboardScreen> createState() => _EmployerDashboardScreenState();
+  State<CandidateDashboardScreen> createState() => _CandidateDashboardScreenState();
 }
 
-class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
-  CompanyDetails? companyData;
-  Employer? employerData;
+class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
+
+  Candidate? candidateData;
   bool isLoading = true;
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
-   Future<void>  logout() async {
+  Future<void>  logout() async {
 
     return await HiveUtils.clearUserData();
-   }
+  }
   bool _isDarkMode = false;
 
   void toggleTheme() {
@@ -89,7 +80,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               onPressed: ()  {
 
 
-                 logout();
+                logout();
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
@@ -108,18 +99,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
   Future<void> _initializeData() async {
     try {
-      Map<String,dynamic> employerMap = await HiveUtils.getEmployerData();
-      Map<String,dynamic> companyMap = await HiveUtils.getCompanyData();
+      Map<String,dynamic> candidateMap = await HiveUtils.getCandidateData();
 
       setState(() {
-        employerData = employerMap.isNotEmpty
-            ? Employer.fromJson(employerMap)
-            : Employer.fromJson({});
-
-        companyData = companyMap.isNotEmpty
-            ? CompanyDetails.fromJson(companyMap)
-            : CompanyDetails.fromJson({});
-
+        candidateData = candidateMap.isNotEmpty
+            ? Candidate.fromJson(candidateMap)
+            : Candidate.fromJson({});
         isLoading = false;
       });
     } catch (e) {
@@ -180,12 +165,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         },
         children: [
           BlocProvider(
-            create: (context) => EmployerDashboardBloc(),
-            child: DashboardContent(),
+            create: (context) => CandidateDashboardBloc(),
+            child: CandidateDashboardContent(),
           ),
           BlocProvider(
             create: (context) => StoryBloc(),
-            child: StoriesScreen(currentUserId: employerData!.id, currentUserType: 'employer',),
+            child: StoriesScreen(currentUserId: candidateData!.id, currentUserType: 'candidate',),
           )
         ],
       ),
@@ -218,7 +203,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           padding: EdgeInsets.zero,
           children: [
             SizedBox(
-               height: screenSize.height*0.26,
+              height: screenSize.height*0.26,
               child: DrawerHeader(
                 // decoration: BoxDecoration(
                 //   color: AppColors.primary,
@@ -229,11 +214,11 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   children: [
                     CircleAvatar(
                       radius: screenSize.width*0.15,
-                      backgroundImage: employerData?.personalInfo.profilePic != null
-                          ? NetworkImage(employerData!.personalInfo.profilePic.toString())
+                      backgroundImage: candidateData?.personalInfo.profilePic != null
+                          ? NetworkImage(candidateData!.personalInfo.profilePic.toString())
                           : null,
                       // backgroundColor: AppColors.background,
-                      child: employerData?.personalInfo.profilePic == null
+                      child: candidateData?.personalInfo.profilePic == null
                           ? Icon(
                         Icons.person,
                         size: 50,
@@ -242,7 +227,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                           : null,
                     ),
                     Text(
-                        employerData!.personalInfo.fullName ,
+                        candidateData!.personalInfo.fullName ,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontSize: screenSize.width*0.045,
@@ -250,7 +235,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                         )
                     ),
                     Text(
-                        employerData!.personalInfo.email,
+                        candidateData!.personalInfo.email,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontSize: screenSize.width*0.03,
@@ -263,7 +248,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             ),
             _buildDrawerItem(
               icon: Icons.dashboard,
-              title: 'Dashboard',
+              title: 'Candidate Dashboard',
               onTap: () {
                 // Current screen, so just close the drawer
                 Navigator.pop(context);
@@ -298,22 +283,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                 );
               },
             ),
-            _buildDrawerItem(
-              icon: Icons.group,
-              title: 'Team Members',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => TeamMembersBloc(),
-                    child: TeamMembersScreen(
-                      currentEmployer: employerData!,
-                      companyId: companyData!.id,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+
             _buildDrawerItem(
               icon: Icons.web_stories,
               title: 'My Stories',
@@ -324,7 +294,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => StoryStatsBloc(),
-                      child: StoryStatsTab(employerId: employerData!.id,),
+                      child: StoryStatsTab(employerId: candidateData!.id,),
                     ), // You'll need to create this screen
                   ),
                 );
@@ -339,26 +309,13 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
-                    create: (context) => ConversationsBloc(ChatRepository(), employerData?.id , "employer"),
-                    child: ConversationsScreen(userId: employerData!.id, userType: 'employer',),
-                  ), // You'll need to create this screen
+                      create: (context) => ConversationsBloc(ChatRepository(), candidateData?.id , "candidate"),
+                      child: ConversationsScreen(userId: candidateData!.id, userType: 'candidate',),
+                    ), // You'll need to create this screen
                   ),
                 );
               },
             ),
-            // _buildDrawerItem(
-            //   icon: Icons.event,
-            //   title: 'Events',
-            //   onTap: () {
-            //     // Navigator.pop(context);
-            //     // Navigator.push(
-            //     //   context,
-            //     //   MaterialPageRoute(
-            //     //     builder: (context) => EventsScreen(), // You'll need to create this screen
-            //     //   ),
-            //     // );
-            //   },
-            // ),
             _buildDrawerItem(
               icon: CupertinoIcons.person_2_fill,
               title: 'About Us',

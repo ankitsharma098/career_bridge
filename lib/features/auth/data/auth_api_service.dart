@@ -16,8 +16,10 @@ class AuthApiServices {
 
   final dio = Dio();
 
+//Employer Side APIs
 
-  Future<void> login(String email, String password) async {
+
+  Future<void> employerLogin(String email, String password) async {
 
 
     try{
@@ -274,4 +276,57 @@ class AuthApiServices {
     }
   }
 
+
+
+
+
+  //Candidate side apis
+
+  Future<void> candidateLogin(String email, String password) async {
+
+
+    try{
+      final response = await dio.post("${AppConstants.baseUrl}/candidate/login",
+
+        data: {
+          "email":email,
+          "password":password
+        },
+
+      );
+      if(response.statusCode==200){
+        print("Full Response: ${jsonEncode(response.data)}");
+
+        final candidateData = Map<String, dynamic>.from(response.data['user']);
+
+        Map<String, String> tokens = Map<String, String>.from(response.data['tokens']);
+
+
+        print("////candidateData tokens ${tokens}");
+        Map<String,dynamic> data={
+          "candidate": candidateData,
+          'accessToken':tokens['accessToken'],
+          'refreshToken':tokens['refreshToken'],
+        };
+
+        print("data $data");
+        await HiveUtils.storeCandidateData(data);
+
+      }
+
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
 }

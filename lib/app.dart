@@ -1,17 +1,12 @@
 import 'package:android/core/utils/hiveUtils.dart';
-import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
-import 'package:android/features/Dashboard/ui/employer_dashboard.dart';
-import 'package:android/features/auth/bloc/auth_bloc.dart';
-import 'package:android/features/auth/data/auth_api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import 'core/constants/colors.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/ui/login.dart';
+import 'features/Candidate Dashboard/ui/candidate_dashboard.dart';
+import 'features/Employer Dashboard/ui/employer_dashboard.dart';
 import 'features/auth/ui/onboading_Screen.dart';
-import 'features/auth/ui/splash_screen.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -70,7 +65,7 @@ class _MyAppState extends State<MyApp> {
     ? (userType == "employer"
     ? EmployerDashboardScreen(isDarkMode: _isDarkMode, onThemeToggle: toggleTheme)
         : userType == "candidate"
-    ? SizedBox()
+    ? CandidateDashboardScreen(isDarkMode: _isDarkMode, onThemeToggle: toggleTheme)
         : OnboardingScreen(isDarkMode: _isDarkMode, toggleTheme: toggleTheme))
         : OnboardingScreen(isDarkMode: _isDarkMode, toggleTheme: toggleTheme),
     );

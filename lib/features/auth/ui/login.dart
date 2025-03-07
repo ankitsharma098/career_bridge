@@ -1,6 +1,5 @@
 import 'package:android/core/theme/app_theme.dart';
 import 'package:android/core/utils/snackBarUtils.dart';
-import 'package:android/features/Dashboard/bloc/employer_dashboard_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/data/auth_api_service.dart';
 import 'package:android/features/auth/registration_bloc/registration_bloc.dart';
@@ -11,7 +10,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../core/constants/colors.dart';
-import '../../Dashboard/ui/employer_dashboard.dart';
+import '../../Candidate Dashboard/ui/candidate_dashboard.dart';
+import '../../Employer Dashboard/bloc/employer_dashboard_bloc.dart';
+import '../../Employer Dashboard/ui/employer_dashboard.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -42,12 +43,20 @@ class _LoginScreenState extends State<LoginScreen> {
       SnackBarUtils.showRedSnackBar(state.error.toString(), context);
     }
     if(state is LoginSuccess){
-      // print("SUccess ${state.data}");
 
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
+      if(widget.userType=="candidate"){
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
+          create: (context) => EmployerDashboardBloc(),
+          child: CandidateDashboardScreen (isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
+        ),));
+
+      }else if(widget.userType=="employer"){
+
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
           create: (context) => EmployerDashboardBloc(),
           child: EmployerDashboardScreen (isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
         ),));
+      }
             }
           },
         child: Scaffold(

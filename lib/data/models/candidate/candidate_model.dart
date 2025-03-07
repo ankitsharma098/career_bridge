@@ -33,21 +33,20 @@ class Candidate {
 
   final UserStories stories;
 
-  final UserEvents events;
 
   final Auth auth;
 
   @JsonKey(defaultValue: [])
-  final List<String> projects;
+  final List<Project> projects;
 
   @JsonKey(defaultValue: [])
-  final List<String> internships;
+  final List<Internship> internships;
 
   @JsonKey(defaultValue: [])
-  final List<String> workExperience;
+  final List<WorkExperience> workExperience;
 
   @JsonKey(defaultValue: [])
-  final List<String> certifications;
+  final List<Certification> certifications;
 
   @JsonKey(defaultValue: '')
   final String createdAt;
@@ -55,8 +54,6 @@ class Candidate {
   @JsonKey(defaultValue: '')
   final String updatedAt;
 
-  @JsonKey(defaultValue: '')
-  final String fcmToken; // Added for consistency with Employer login response
 
   Candidate({
     this.id = '',
@@ -70,7 +67,6 @@ class Candidate {
     this.jobPreferences = const JobPreferences(),
     this.jobs = const CandidateJobs(),
     this.stories = const UserStories(),
-    this.events = const UserEvents(),
     this.auth = const Auth(),
     this.projects = const [],
     this.internships = const [],
@@ -78,7 +74,6 @@ class Candidate {
     this.certifications = const [],
     this.createdAt = '',
     this.updatedAt = '',
-    this.fcmToken = '',
   });
 
   factory Candidate.fromJson(Map<String, dynamic> json) => _$CandidateFromJson(json);
@@ -99,6 +94,9 @@ class DisabilityDetails {
   @JsonKey(defaultValue: '')
   final String certificateDoc;
 
+  @JsonKey(defaultValue: '')
+  final String publicId;
+
   @JsonKey(defaultValue: [])
   final List<String> accommodationsNeeded;
 
@@ -110,6 +108,7 @@ class DisabilityDetails {
     this.percentage = 0,
     this.certificateNumber = '',
     this.certificateDoc = '',
+    this.publicId = '',
     this.accommodationsNeeded = const [],
     this.assistiveTechnology = const [],
   });
@@ -198,6 +197,166 @@ class JobPreferences {
 
   factory JobPreferences.fromJson(Map<String, dynamic> json) => _$JobPreferencesFromJson(json);
   Map<String, dynamic> toJson() => _$JobPreferencesToJson(this);
+}
+
+@JsonSerializable()
+class Project {
+  @JsonKey(defaultValue: '')
+  final String projectName;
+
+  @JsonKey(defaultValue: '')
+  final String startDate;
+
+  @JsonKey(defaultValue: '')
+  final String endDate;
+
+  @JsonKey(defaultValue: '')
+  final String descriptions;
+
+  @JsonKey(defaultValue: [])
+  final List<String> skills;
+
+  @JsonKey(defaultValue: '')
+  final String projectUrl;
+
+  @JsonKey(name: '_id', defaultValue: '')
+  final String id;
+
+  const Project({
+    this.projectName = '',
+    this.startDate = '',
+    this.endDate = '',
+    this.descriptions = '',
+    this.skills = const [],
+    this.projectUrl = '',
+    this.id = '',
+  });
+
+  factory Project.fromJson(Map<String, dynamic> json) => _$ProjectFromJson(json);
+  Map<String, dynamic> toJson() => _$ProjectToJson(this);
+}
+
+@JsonSerializable()
+class Internship {
+  @JsonKey(defaultValue: '')
+  final String company;
+
+  @JsonKey(defaultValue: '')
+  final String startDate;
+
+  @JsonKey(defaultValue: '')
+  final String endDate;
+
+  @JsonKey(defaultValue: false)
+  final bool isCurrentlyWorking;
+
+  @JsonKey(defaultValue: '')
+  final String projectName;
+
+  @JsonKey(defaultValue: '')
+  final String descriptions;
+
+  @JsonKey(defaultValue: [])
+  final List<String> skills;
+
+  @JsonKey(defaultValue: '')
+  final String projectUrl;
+
+  @JsonKey(name: '_id', defaultValue: '')
+  final String id;
+
+  const Internship({
+    this.company = '',
+    this.startDate = '',
+    this.endDate = '',
+    this.isCurrentlyWorking = false,
+    this.projectName = '',
+    this.descriptions = '',
+    this.skills = const [],
+    this.projectUrl = '',
+    this.id = '',
+  });
+
+  factory Internship.fromJson(Map<String, dynamic> json) => _$InternshipFromJson(json);
+  Map<String, dynamic> toJson() => _$InternshipToJson(this);
+}
+
+@JsonSerializable()
+class WorkExperience {
+  @JsonKey(defaultValue: '')
+  final String company;
+
+  @JsonKey(defaultValue: '')
+  final String position;
+
+  @JsonKey(defaultValue: '')
+  final String startDate;
+
+  @JsonKey(defaultValue: '')
+  final String endDate;
+
+  @JsonKey(defaultValue: false)
+  final bool isCurrentlyWorking;
+
+  @JsonKey(defaultValue: [])
+  final List<String> descriptions;
+
+  @JsonKey(name: '_id', defaultValue: '')
+  final String id;
+
+  const WorkExperience({
+    this.company = '',
+    this.position = '',
+    this.startDate = '',
+    this.endDate = '',
+    this.isCurrentlyWorking = false,
+    this.descriptions = const [],
+    this.id = '',
+  });
+
+  factory WorkExperience.fromJson(Map<String, dynamic> json) => _$WorkExperienceFromJson(json);
+  Map<String, dynamic> toJson() => _$WorkExperienceToJson(this);
+}
+
+@JsonSerializable()
+class Certification {
+  @JsonKey(defaultValue: '')
+  final String name;
+
+  @JsonKey(defaultValue: '')
+  final String issuingOrganization;
+
+  @JsonKey(defaultValue: '')
+  final String issueDate;
+
+  @JsonKey(defaultValue: '')
+  final String expiryDate;
+
+  @JsonKey(defaultValue: '')
+  final String credentialID;
+
+  @JsonKey(defaultValue: '')
+  final String url;
+
+  @JsonKey(defaultValue: '')
+  final String publicId;
+
+  @JsonKey(name: '_id', defaultValue: '')
+  final String id;
+
+  const Certification({
+    this.name = '',
+    this.issuingOrganization = '',
+    this.issueDate = '',
+    this.expiryDate = '',
+    this.credentialID = '',
+    this.url = '',
+    this.publicId = '',
+    this.id = '',
+  });
+
+  factory Certification.fromJson(Map<String, dynamic> json) => _$CertificationFromJson(json);
+  Map<String, dynamic> toJson() => _$CertificationToJson(this);
 }
 
 @JsonSerializable()

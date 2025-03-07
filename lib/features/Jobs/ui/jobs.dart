@@ -79,7 +79,7 @@ class JobStatsScreen extends StatelessWidget {
             ],
           ),
           title: Text(
-            'Job Dashboard',
+            'Job Employer Dashboard',
           ),
         ),
         body: TabBarView(

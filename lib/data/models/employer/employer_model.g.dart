@@ -22,9 +22,6 @@ Employer _$EmployerFromJson(Map<String, dynamic> json) => Employer(
       stories: json['stories'] == null
           ? const UserStories()
           : UserStories.fromJson(json['stories'] as Map<String, dynamic>),
-      events: json['events'] == null
-          ? const UserEvents()
-          : UserEvents.fromJson(json['events'] as Map<String, dynamic>),
       auth: json['auth'] == null
           ? const Auth()
           : Auth.fromJson(json['auth'] as Map<String, dynamic>),
@@ -32,7 +29,6 @@ Employer _$EmployerFromJson(Map<String, dynamic> json) => Employer(
       about: json['about'] as String? ?? '',
       createdAt: json['createdAt'] as String? ?? '',
       updatedAt: json['updatedAt'] as String? ?? '',
-      fcmToken: json['fcmToken'] as String? ?? '',
     );
 
 Map<String, dynamic> _$EmployerToJson(Employer instance) => <String, dynamic>{
@@ -41,13 +37,11 @@ Map<String, dynamic> _$EmployerToJson(Employer instance) => <String, dynamic>{
       'companyDetails': instance.companyDetails,
       'postedJobs': instance.postedJobs,
       'stories': instance.stories,
-      'events': instance.events,
       'auth': instance.auth,
       'role': instance.role,
       'about': instance.about,
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
-      'fcmToken': instance.fcmToken,
     };
 
 PersonalInfo _$PersonalInfoFromJson(Map<String, dynamic> json) => PersonalInfo(
@@ -100,28 +94,6 @@ Map<String, dynamic> _$UserStoriesToJson(UserStories instance) =>
     <String, dynamic>{
       'myStories': instance.myStoryIds,
       'savedStories': instance.savedStoryIds,
-    };
-
-UserEvents _$UserEventsFromJson(Map<String, dynamic> json) => UserEvents(
-      myEvents: (json['myEvents'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
-      savedEvents: (json['savedEvents'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
-      registeredEvents: (json['registeredEvents'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
-    );
-
-Map<String, dynamic> _$UserEventsToJson(UserEvents instance) =>
-    <String, dynamic>{
-      'myEvents': instance.myEvents,
-      'savedEvents': instance.savedEvents,
-      'registeredEvents': instance.registeredEvents,
     };
 
 Auth _$AuthFromJson(Map<String, dynamic> json) => Auth(
