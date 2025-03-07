@@ -31,6 +31,7 @@ class TeamMembersBloc extends Bloc<TeamMembersEvent, TeamMembersState> {
     try {
       await _service.addTeamMember(event.companyId, event.employerData);
       final teamMembers = await _service.fetchTeamMembers(event.companyId);
+      emit(TeamMemberAdded());
       emit(TeamMembersLoaded(teamMembers: teamMembers));
     } catch (e) {
       emit(TeamMembersFailure(error: e.toString()));
@@ -42,6 +43,7 @@ class TeamMembersBloc extends Bloc<TeamMembersEvent, TeamMembersState> {
     try {
       await _service.deleteTeamMember(event.employerId);
       final teamMembers = await _service.fetchTeamMembers(event.companyId);
+      emit(TeamMemberDeleted());
       emit(TeamMembersLoaded(teamMembers: teamMembers));
     } catch (e) {
       emit(TeamMembersFailure(error: e.toString()));

@@ -1,3 +1,4 @@
+import 'package:android/core/constants/app_constants.dart';
 import 'package:dio/dio.dart';
 import 'package:android/data/models/employer/employer_model.dart';
 
@@ -15,7 +16,7 @@ class TeamMembersService {
       if(accessToken==null || accessToken.isEmpty){
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('http://192.168.1.6:8000/employer/team-members/$companyId',
+      final response = await dio.get('${AppConstants.baseUrl}/employer/team-members/$companyId',
         options:  Options(
             headers: {
               'Authorization':'Bearer $accessToken'
@@ -55,47 +56,6 @@ class TeamMembersService {
 
   }
 
-  Future<void> deleteTeamMember(String employerId) async {
-    try{
-      print("deleteTeamMember api");
-
-      String? accessToken = await HiveUtils.getAccessToken();
-
-      if(accessToken==null || accessToken.isEmpty){
-        throw Exception("AccessToken not found");
-      }
-      final response = await dio.delete('http://192.168.1.6:8000/employer/$employerId',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
-      );
-
-      if (response.statusCode == 200) {
-
-        return;
-      }else{
-        throw Exception('Failed to delete member ${response.statusMessage}');
-      }
-
-
-    }on DioException catch (e) {
-      if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
-        throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
-        throw Exception('Network error occurred');
-      }
-    }
-    catch(e){
-      print("Error: $e");
-      throw Exception('An unexpected error occurred');
-    }
-  }
-
   Future<void> addTeamMember(String companyId, Map<String, dynamic> employerData) async {
 
     try{
@@ -106,7 +66,7 @@ class TeamMembersService {
       if(accessToken==null || accessToken.isEmpty){
         throw Exception("AccessToken not found");
       }
-      final response = await dio.delete('http://192.168.1.6:8000/employer/register',
+      final response = await dio.post('${AppConstants.baseUrl}/employer/register',
         options:  Options(
             headers: {
               'Authorization':'Bearer $accessToken'
@@ -138,5 +98,48 @@ class TeamMembersService {
       throw Exception('An unexpected error occurred');
     }
   }
+
+  Future<void> deleteTeamMember(String employerId) async {
+    try{
+      print("deleteTeamMember api");
+
+      String? accessToken = await HiveUtils.getAccessToken();
+
+      if(accessToken==null || accessToken.isEmpty){
+        throw Exception("AccessToken not found");
+      }
+      final response = await dio.delete('${AppConstants.baseUrl}/employer/$employerId',
+        options:  Options(
+            headers: {
+              'Authorization':'Bearer $accessToken'
+            }
+        ),
+      );
+
+      if (response.statusCode == 200) {
+
+        return;
+      }else{
+        throw Exception('Failed to delete member ${response.statusMessage}');
+      }
+
+
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
+
+
 
 }

@@ -100,6 +100,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
          await _loginApiService.login(event.email, event.password);
        }else if(event.userType=="candidate"){
 
+         print("candiate call");
          //candidate api call
        }
 

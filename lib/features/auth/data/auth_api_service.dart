@@ -169,7 +169,7 @@ class AuthApiServices {
       });
 
       final response = await dio.post(
-        "http://192.168.1.6:8000/media/upload",
+        "${AppConstants.baseUrl}/media/upload",
         data: formData,
         options: token != null ? Options(headers: {'Authorization': 'Bearer $token'}) : null,
       );

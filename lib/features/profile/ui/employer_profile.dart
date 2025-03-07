@@ -634,7 +634,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             TextButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => Navigator.pop(dialogContext),
                               child: Text(
                                 'Cancel',
                                 style: Theme.of(context).textTheme.bodySmall,

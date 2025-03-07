@@ -70,6 +70,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onFetchLastSeen(FetchLastSeen event, Emitter<ChatState> emit) async {
     try {
       final lastSeen = await _repository.getLastSeen(receiverId, receiverType);
+
+      print("last seen $lastSeen");
       if (state is MessagesLoaded) {
         final currentState = state as MessagesLoaded;
         emit(MessagesLoaded(currentState.messages, lastSeen: lastSeen));

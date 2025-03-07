@@ -216,11 +216,15 @@ class ChatRepository {
       );
 
       if (response.statusCode == 200) {
-        return DateTime.parse(response.data['lastSeen']);
-      } else if (response.statusCode == 404) {
-        return null; // No last seen recorded yet
-      } else {
-        throw Exception('Failed to fetch last seen');
+
+        final lastSeen =response.data['lastSeen'];
+        if(lastSeen!=null){
+          return DateTime.parse(response.data['lastSeen']);
+        }
+        return null;
+      }else {
+
+        return null;
       }
     } on DioException catch (e) {
       if (e.response != null) {

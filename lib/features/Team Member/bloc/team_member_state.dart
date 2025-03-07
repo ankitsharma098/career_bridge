@@ -14,6 +14,8 @@ abstract class TeamMembersState extends Equatable {
 class TeamMembersInitial extends TeamMembersState {}
 
 class TeamMembersLoading extends TeamMembersState {}
+class TeamMemberAdded extends TeamMembersState {}
+class TeamMemberDeleted extends TeamMembersState {}
 
 class TeamMembersLoaded extends TeamMembersState {
   final List<Employer> teamMembers;
