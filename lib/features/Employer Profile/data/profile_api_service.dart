@@ -68,7 +68,7 @@ class EmployerProfileService{
                 'profilePic',
                 await MultipartFile.fromFile(
                     profilePicFile.path,
-                    filename: 'profile.$extension',
+                    filename: 'Employer Profile.$extension',
                     contentType: MediaType.parse(mimeType)
                 )
             )

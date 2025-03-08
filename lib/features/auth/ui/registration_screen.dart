@@ -46,7 +46,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   Map<String, Map<String, String>> documentUrls = {
     'logo': {'url': '', 'publicId': ''},
-    'profile': {'url': '', 'publicId': ''},
+    'Employer Profile': {'url': '', 'publicId': ''},
     'verification': {'url': '', 'publicId': ''},
   };
   String? verificationToken;
@@ -340,8 +340,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           _buildDocumentUploadCard(
               context,
               'Company Profile',
-              'Upload company profile document (PDF preferred)',
-              'profile',
+              'Upload company Employer Profile document (PDF preferred)',
+              'Employer Profile',
               Icons.business_outlined,
               screenSize
           ),
@@ -468,7 +468,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             });
 
             FilePickerResult? result;
-            if (type == 'profile') {
+            if (type == 'Employer Profile') {
               result = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
                 allowedExtensions: ['pdf', 'doc', 'docx'],

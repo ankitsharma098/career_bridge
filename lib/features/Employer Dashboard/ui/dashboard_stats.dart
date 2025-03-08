@@ -91,7 +91,7 @@ class _DashboardContentState extends State<DashboardContent> {
   }
 
   Widget _buildProfileCompletionSection(Map<String, dynamic> dashboardStats,Size screenSize) {
-    // Extract profile stats from the dashboard data
+    // Extract Employer Profile stats from the dashboard data
     final profileStats = dashboardStats['profileStats'] ?? {};
     final employerProfileCompletion = profileStats['employerProfileCompletion'] ?? {};
     final companyProfileCompletion = profileStats['companyProfileCompletion'] ?? {};

@@ -87,7 +87,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               children: [
                 Icon(Icons.person_off_outlined, size: 48, color: Theme.of(context).iconTheme.color?.withOpacity(0.6)),
                 SizedBox(height: 16),
-                Text('No profile data available', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)),
+                Text('No Employer Profile data available', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)),
               ],
             ),
           );
@@ -160,7 +160,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Hero(
-                  tag: 'profile',
+                  tag: 'Employer Profile',
                   child: Container(
                     width: screenSize.width * 0.25,
                     height: screenSize.width * 0.25,
@@ -177,7 +177,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                     child: ClipOval(
                       child: CachedNetworkImage(
-                        imageUrl: user.personalInfo.profilePic ?? 'default-profile-pic-url',
+                        imageUrl: user.personalInfo.profilePic ?? 'default-Employer Profile-pic-url',
                         placeholder: (context, url) => CircularProgressIndicator(color: Theme.of(context).primaryColor),
                         errorWidget: (context, url, error) => Icon(
                           Icons.person,

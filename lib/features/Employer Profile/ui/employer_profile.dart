@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:android/core/constants/colors.dart';
 import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
-import 'package:android/features/profile/bloc/profile_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/employer/employer_model.dart';
+import '../bloc/profile_bloc.dart';
 
 class EmployerProfileScreen extends StatefulWidget {
 
@@ -60,7 +60,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         );
         Navigator.pop(context);
       } catch (e) {
-        SnackBarUtils.showRedSnackBar("Failed to Update profile picture", context);
+        SnackBarUtils.showRedSnackBar("Failed to Update Employer Profile picture", context);
       }
     }
   }
@@ -147,7 +147,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
   Widget _buildSliverAppBar(Employer employer, CompanyDetails companyDetails,Size screenSize) {
 
     return SliverAppBar(
-      expandedHeight: 300,
+      expandedHeight: screenSize.height * 0.25,
       floating: false,
       pinned: true,
       stretch: true,

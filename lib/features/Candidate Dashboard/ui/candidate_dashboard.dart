@@ -6,18 +6,20 @@ import 'package:android/features/Stories/bloc/story_bloc.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/splash_screen.dart';
-import 'package:android/features/profile/bloc/profile_bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../About Us/ui/about_us.dart';
+import '../../Candidate Profile/bloc/candidate_profile_bloc.dart';
+import '../../Candidate Profile/ui/candidate_profile.dart';
 import '../../Chat/ui/chat.dart';
+import '../../Employer Profile/bloc/profile_bloc.dart';
+import '../../Employer Profile/ui/employer_profile.dart';
 import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
-import '../../profile/ui/employer_profile.dart';
 import '../bloc/candidate_dashboard_bloc.dart';
 import 'candidate_dashboard_content.dart';
 
@@ -259,12 +261,12 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
               title: 'Jobs',
               onTap: () {
                 //  Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => JobStatsScreen(), // You'll need to create this screen
-                  ),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => JobStatsScreen(), // You'll need to create this screen
+                //   ),
+                // );
               },
             ),
             _buildDrawerItem(
@@ -276,8 +278,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
-                      create: (context) => ProfileBloc(),
-                      child: EmployerProfileScreen(),
+                      create: (context) => CandidateProfileBloc(),
+                      child: CandidateProfile(),
                     ),
                   ),
                 );

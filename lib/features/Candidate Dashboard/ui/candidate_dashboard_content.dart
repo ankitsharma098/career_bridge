@@ -9,6 +9,7 @@ import '../../../core/constants/colors.dart';
 import '../../../core/utils/customErrorUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../bloc/candidate_dashboard_bloc.dart';
+import 'candidate_dashboard_shimmer.dart';
 
 class CandidateDashboardContent extends StatefulWidget {
   const CandidateDashboardContent({super.key});
@@ -51,22 +52,7 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
       },
       builder: (context, state) {
         if (state is CandidateDashboardLoading) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(
-                  'Loading your dashboard...',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          );
+          return CandidateDashboardShimmer();
         }
         if (state is CandidateDashboardError) {
           return CustomErrorScreen(
@@ -252,7 +238,7 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
 
   Widget _buildMissingFields(List<dynamic> missingFields, Size screenSize) {
     return Container(
-      width: screenSize.width*0.45,
+      width: screenSize.width*0.5,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.orange.withOpacity(0.1),

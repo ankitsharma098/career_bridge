@@ -137,7 +137,7 @@ class User {
     this.id = '',
     this.type = '',
     this.name = 'Unknown User',
-    this.profilePic = 'default-profile-pic-url',
+    this.profilePic = 'default-Employer Profile-pic-url',
   });
   User copyWith({
     String? id,

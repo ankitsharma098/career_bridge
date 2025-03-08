@@ -15,7 +15,7 @@ class UserProfileApi {
       final token = await HiveUtils.getAccessToken();
 
       final response = await dio.get(
-        '${AppConstants.baseUrl}/user/profile/$userType/$userId',
+        '${AppConstants.baseUrl}/user/Employer Profile/$userType/$userId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       print(response.data);

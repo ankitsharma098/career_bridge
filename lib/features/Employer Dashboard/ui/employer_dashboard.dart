@@ -1,35 +1,28 @@
 import 'package:android/core/constants/colors.dart';
-import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
 import 'package:android/data/models/employer/employer_model.dart';
-import 'package:android/features/Chat/bloc/chat_bloc.dart';
 import 'package:android/features/Chat/converstation%20bloc/conversations_bloc.dart';
 import 'package:android/features/Chat/data%20service/chat_service.dart';
 import 'package:android/features/Stories/bloc/story_bloc.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
-import 'package:android/features/auth/ui/login.dart';
 import 'package:android/features/auth/ui/splash_screen.dart';
-import 'package:android/features/profile/bloc/profile_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:percent_indicator/percent_indicator.dart';
 import '../../../core/utils/hiveUtils.dart';
-import '../../../core/utils/snackBarUtils.dart';
 import '../../About Us/ui/about_us.dart';
 import '../../Chat/ui/chat.dart';
+import '../../Employer Profile/bloc/profile_bloc.dart';
+import '../../Employer Profile/ui/employer_profile.dart';
 import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
 import '../../Team Member/bloc/team_member_bloc.dart';
 import '../../Team Member/ui/team_member_screen.dart';
-import '../../profile/ui/employer_profile.dart';
 import '../bloc/employer_dashboard_bloc.dart';
 import 'dashboard_stats.dart';
-import 'employer_dashboard_shimmer.dart';
 
 
 
