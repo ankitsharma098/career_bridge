@@ -69,6 +69,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(ProfileError(e.toString()));
     }
   }
+
   Future<void> _onUpdateSocialMedia(UpdateSocialMediaDialog event, Emitter<ProfileState> emit) async {
     try {
       // Update implementation

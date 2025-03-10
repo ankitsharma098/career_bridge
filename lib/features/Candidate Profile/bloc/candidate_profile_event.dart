@@ -4,7 +4,9 @@ part of 'candidate_profile_bloc.dart';
 sealed class CandidateProfileEvent {}
 
 class FetchProfileData extends CandidateProfileEvent {}
-class UpdateProfile extends CandidateProfileEvent { final PersonalInfo info; UpdateProfile(this.info); }
+
+class UpdatePersonalProfile extends CandidateProfileEvent { final Map<String, dynamic> personalInfo;  UpdatePersonalProfile(this.personalInfo); }
+
 class UpdateProfileSummary extends CandidateProfileEvent { final String summary; UpdateProfileSummary(this.summary); }
 class UpdateAbout extends CandidateProfileEvent { final String about; UpdateAbout(this.about); }
 class UpdateDisabilityDetails extends CandidateProfileEvent { final DisabilityDetails details; UpdateDisabilityDetails(this.details); }

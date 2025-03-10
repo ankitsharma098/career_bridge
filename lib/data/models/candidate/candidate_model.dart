@@ -120,13 +120,7 @@ class DisabilityDetails {
 @JsonSerializable()
 class Education {
   @JsonKey(defaultValue: '')
-  final String degree;
-
-  @JsonKey(defaultValue: '')
   final String course;
-
-  @JsonKey(defaultValue: '')
-  final String courseType;
 
   @JsonKey(defaultValue: '')
   final String specialization;
@@ -147,9 +141,7 @@ class Education {
   final String id;
 
   const Education({
-    this.degree = '',
     this.course = '',
-    this.courseType = '',
     this.specialization = '',
     this.institution = '',
     this.startingYear = '',
@@ -242,13 +234,13 @@ class Internship {
   final String company;
 
   @JsonKey(defaultValue: '')
+  final String role;
+
+  @JsonKey(defaultValue: '')
   final String startDate;
 
   @JsonKey(defaultValue: '')
   final String endDate;
-
-  @JsonKey(defaultValue: false)
-  final bool isCurrentlyWorking;
 
   @JsonKey(defaultValue: '')
   final String projectName;
@@ -267,9 +259,9 @@ class Internship {
 
   const Internship({
     this.company = '',
+    this.role = '',
     this.startDate = '',
     this.endDate = '',
-    this.isCurrentlyWorking = false,
     this.projectName = '',
     this.descriptions = '',
     this.skills = const [],
@@ -295,8 +287,6 @@ class WorkExperience {
   @JsonKey(defaultValue: '')
   final String endDate;
 
-  @JsonKey(defaultValue: false)
-  final bool isCurrentlyWorking;
 
   @JsonKey(defaultValue: [])
   final List<String> descriptions;
@@ -309,7 +299,6 @@ class WorkExperience {
     this.position = '',
     this.startDate = '',
     this.endDate = '',
-    this.isCurrentlyWorking = false,
     this.descriptions = const [],
     this.id = '',
   });
@@ -330,16 +319,10 @@ class Certification {
   final String issueDate;
 
   @JsonKey(defaultValue: '')
-  final String expiryDate;
-
-  @JsonKey(defaultValue: '')
   final String credentialID;
 
   @JsonKey(defaultValue: '')
   final String url;
-
-  @JsonKey(defaultValue: '')
-  final String publicId;
 
   @JsonKey(name: '_id', defaultValue: '')
   final String id;
@@ -348,10 +331,8 @@ class Certification {
     this.name = '',
     this.issuingOrganization = '',
     this.issueDate = '',
-    this.expiryDate = '',
     this.credentialID = '',
     this.url = '',
-    this.publicId = '',
     this.id = '',
   });
 

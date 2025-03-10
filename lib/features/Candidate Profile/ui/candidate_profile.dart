@@ -287,6 +287,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   Widget _buildSectionHeader(String title, VoidCallback onAdd) {
     final screenSize = MediaQuery.of(context).size;
     return Row(
@@ -328,14 +329,6 @@ class _CandidateProfileState extends State<CandidateProfile> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: screenSize.width * 0.12,
-                backgroundImage: candidate.personalInfo.profilePic != null
-                    ? NetworkImage(candidate.personalInfo.profilePic!)
-                    : AssetImage('assets/default_profile.png') as ImageProvider,
-                backgroundColor: AppColors.lightSurface,
-              ),
-              SizedBox(width: screenSize.width * 0.04),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1077,7 +1070,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 phoneNumber: phoneController.text,
                 profilePic: candidate.personalInfo.profilePic, // Preserve existing pic
               );
-              BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateProfile(updatedInfo));
+              BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdatePersonalProfile(updatedInfo));
               Navigator.pop(dialogContext);
             },
             style: ElevatedButton.styleFrom(
