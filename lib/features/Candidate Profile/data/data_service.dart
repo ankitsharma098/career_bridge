@@ -118,23 +118,21 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
+      Map<String,dynamic> date ={
         'summary': summary,
-      });
+      };
 
       final response = await dio.put(
         "${AppConstants.baseUrl}/candidate/update/profileSummary",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
+          contentType: 'application/json',
         ),
-        data: formData,
+        data: date,
       );
 
       if (response.statusCode == 200) {
-        return response.data['updatedUser']['profileSummary'] as String;
+        return response.data['profileSummary'] as String;
       } else {
         throw Exception("Failed to Update Profile Summary");
       }
@@ -158,23 +156,20 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
+      Map<String,dynamic> data = {
         'about': about,
-      });
+      };
 
       final response = await dio.put(
         "${AppConstants.baseUrl}/candidate/update/about",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 200) {
-        return response.data['updatedUser']['about'] as String;
+        return response.data['about'] as String;
       } else {
         throw Exception("Failed to Update About");
       }
@@ -246,13 +241,13 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateJobPreferences({
+  Future<JobPreferences> updateJobPreferences({
     required List<String>? industries,
     required List<String>? roles,
     required String? preferredSalary,
-    required String? location,
+    required List<String>? location,
     required String? workMode,
-    required String? employmentType,
+    required List<String>? employmentType,
     required String? experienceLevel,
   }) async {
     try {
@@ -283,7 +278,9 @@ class CandidateProfileApi {
       );
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['jobPreferences']);
+        Map<String, dynamic> rawJobPreferences= Map<String, dynamic>.from(response.data['jobPreferences']);
+
+        return JobPreferences.fromJson(rawJobPreferences ?? {});
       } else {
         throw Exception("Failed to Update Job Preferences");
       }
@@ -307,23 +304,20 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
-        'skills': skills?.join(','),
-      });
+      Map<String,dynamic> data = {
+        'skills':skills,
+      };
 
       final response = await dio.put(
         "${AppConstants.baseUrl}/candidate/update/skills",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: skills,
       );
 
       if (response.statusCode == 200) {
-        return List<String>.from(response.data['updatedUser']['skills']);
+        return List<String>.from(response.data['skills']);
       } else {
         throw Exception("Failed to Update Skills");
       }
@@ -338,7 +332,7 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> addEducation({
+  Future<Education> addEducation({
     required String? course,
     required String? specialization,
     required String? institution,
@@ -354,28 +348,30 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
+      Map<String,dynamic> data = {
         'course': course,
         'specialization': specialization,
         'institution': institution,
         'startingYear': startingYear,
         'passingYear': passingYear?.toString(),
         'cgpa': cgpa,
-      });
+      };
 
       final response = await dio.post(
         "${AppConstants.baseUrl}/candidate/education/add",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['education'].last);
+
+        Map<String,dynamic> rawAddedEducation =  Map<String, dynamic>.from(response.data['education'].last);
+
+        Education education =Education.fromJson(rawAddedEducation);
+
+        return education;
       } else {
         throw Exception("Failed to Add Education");
       }
@@ -390,7 +386,7 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateEducation({
+  Future<Education> updateEducation({
     required String? id,
     required String? course,
     required String? specialization,
@@ -407,33 +403,33 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
-        'id': id,
+      Map<String,dynamic> data = {
+        'educationId': id,
         'course': course,
         'specialization': specialization,
         'institution': institution,
         'startingYear': startingYear,
         'passingYear': passingYear?.toString(),
         'cgpa': cgpa,
-      });
+      };
 
       if (id == null || id.isEmpty) {
         throw Exception("Education ID is required");
       }
 
       final response = await dio.put(
-        "${AppConstants.baseUrl}/candidate/education/update",
+        "${AppConstants.baseUrl}/candidate/update/education",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['education'].last);
+        Map<String, dynamic> updatedEducation = Map<String, dynamic>.from(response.data['education'].last);
+
+        Education education = Education.fromJson(updatedEducation);
+        return education;
       } else {
         throw Exception("Failed to Update Education");
       }
@@ -462,13 +458,10 @@ class CandidateProfileApi {
       }
 
       final response = await dio.delete(
-        "${AppConstants.baseUrl}/candidate/education/delete",
+        "${AppConstants.baseUrl}/candidate/delete/education/$id",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
         ),
-        queryParameters: {'id': id},
       );
 
       if (response.statusCode != 200) {
@@ -485,12 +478,12 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> addWorkExperience({
+  Future<WorkExperience> addWorkExperience({
     required String? company,
     required String? position,
     required String? startDate,
     required String? endDate,
-    required List<String>? descriptions,
+    required String? descriptions,
   }) async {
     try {
       print("addWorkExperience");
@@ -500,27 +493,29 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
+      Map<String,dynamic> data = {
         'company': company,
         'position': position,
         'startDate': startDate,
         'endDate': endDate,
-        'descriptions': descriptions?.join(','),
-      });
+        'descriptions': descriptions,
+      };
 
       final response = await dio.post(
         "${AppConstants.baseUrl}/candidate/workExperience/add",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['workExperience'].last);
+
+        Map<String,dynamic> rawWorkExperience = Map<String, dynamic>.from(response.data['workExperience'].last);
+
+        WorkExperience workExperience= WorkExperience.fromJson(rawWorkExperience);
+
+        return workExperience;
       } else {
         throw Exception("Failed to Add Work Experience");
       }
@@ -535,13 +530,13 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateWorkExperience({
+  Future<WorkExperience> updateWorkExperience({
     required String? id,
     required String? company,
     required String? position,
     required String? startDate,
     required String? endDate,
-    required List<String>? descriptions,
+    required String? descriptions,
   }) async {
     try {
       print("updateWorkExperience");
@@ -551,32 +546,30 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
-        'id': id,
+      Map<String,dynamic> data = {
+        'experienceId': id,
         'company': company,
         'position': position,
         'startDate': startDate,
         'endDate': endDate,
-        'descriptions': descriptions?.join(','),
-      });
+        'descriptions': descriptions,
+      };
 
       if (id == null || id.isEmpty) {
         throw Exception("Work Experience ID is required");
       }
 
       final response = await dio.put(
-        "${AppConstants.baseUrl}/candidate/workExperience/update",
+        "${AppConstants.baseUrl}/candidate/update/workExperience",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['workExperience'].last);
+        Map<String, dynamic> rawWorkEducation = Map<String, dynamic>.from(response.data['workExperience'].last);
+        return  WorkExperience.fromJson(rawWorkEducation);
       } else {
         throw Exception("Failed to Update Work Experience");
       }
@@ -605,13 +598,9 @@ class CandidateProfileApi {
       }
 
       final response = await dio.delete(
-        "${AppConstants.baseUrl}/candidate/workExperience/delete",
+        "${AppConstants.baseUrl}/candidate/delete/workExperience/$id",
         options: Options(
-          headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
         ),
-        queryParameters: {'id': id},
       );
 
       if (response.statusCode != 200) {
@@ -628,14 +617,14 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> addInternship({
+  Future<Internship> addInternship({
     required String? company,
     required String? role,
     required String? startDate,
     required String? endDate,
     required String? projectName,
     required List<String>? skills,
-    required List<String>? descriptions,
+    required String? descriptions,
     required String? projectUrl,
   }) async {
     try {
@@ -646,30 +635,30 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
+      Map<String,dynamic> data = {
         'company': company,
         'role': role,
         'startDate': startDate,
         'endDate': endDate,
         'projectName': projectName,
-        'skills': skills?.join(','),
-        'descriptions': descriptions?.join(','),
+        'skills': skills,
+        'descriptions': descriptions,
         'projectUrl': projectUrl,
-      });
+      };
 
       final response = await dio.post(
         "${AppConstants.baseUrl}/candidate/internship/add",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['internships'].last);
+
+        Map<String, dynamic> rawInternShips= Map<String, dynamic>.from(response.data['internships'].last);
+
+        return Internship.fromJson(rawInternShips);
       } else {
         throw Exception("Failed to Add Internship");
       }
@@ -684,7 +673,7 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateInternship({
+  Future<Internship> updateInternship({
     required String? id,
     required String? company,
     required String? role,
@@ -703,8 +692,8 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
-        'id': id,
+      Map<String,dynamic> data = {
+        'internshipId': id,
         'company': company,
         'role': role,
         'startDate': startDate,
@@ -713,25 +702,23 @@ class CandidateProfileApi {
         'skills': skills?.join(','),
         'description': description,
         'projectUrl': projectUrl,
-      });
+      };
 
       if (id == null || id.isEmpty) {
         throw Exception("Internship ID is required");
       }
 
       final response = await dio.put(
-        "${AppConstants.baseUrl}/candidate/internship/update",
+        "${AppConstants.baseUrl}/candidate/update/internship",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['internships'].last);
+        Map<String,dynamic> rawInternships= Map<String, dynamic>.from(response.data['internships'].last);
+        return Internship.fromJson(rawInternships);
       } else {
         throw Exception("Failed to Update Internship");
       }
@@ -760,13 +747,10 @@ class CandidateProfileApi {
       }
 
       final response = await dio.delete(
-        "${AppConstants.baseUrl}/candidate/internship/delete",
+        "${AppConstants.baseUrl}/candidate/delete/internship/$id",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
         ),
-        queryParameters: {'id': id},
       );
 
       if (response.statusCode != 200) {
@@ -783,11 +767,11 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> addProject({
+  Future<Project> addProject({
     required String? projectName,
     required String? startDate,
     required String? endDate,
-    required List<String>? descriptions,
+    required String? descriptions,
     required List<String>? skills,
     required String? projectUrl,
   }) async {
@@ -799,28 +783,26 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
+      Map<String,dynamic> data = {
         'projectName': projectName,
         'startDate': startDate,
         'endDate': endDate,
-        'descriptions': descriptions?.join(','),
-        'skills': skills?.join(','),
+        'descriptions': descriptions,
+        'skills': skills,
         'projectUrl': projectUrl,
-      });
+      };
 
       final response = await dio.post(
         "${AppConstants.baseUrl}/candidate/project/add",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['projects'].last);
+        Map<String,dynamic> rawProjects=Map<String, dynamic>.from(response.data['projects'].last);
+        return Project.fromJson(rawProjects);
       } else {
         throw Exception("Failed to Add Project");
       }
@@ -835,12 +817,12 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateProject({
+  Future<Project> updateProject({
     required String? id,
     required String? projectName,
     required String? startDate,
     required String? endDate,
-    required List<String>? descriptions,
+    required String? descriptions,
     required List<String>? skills,
     required String? projectUrl,
   }) async {
@@ -852,33 +834,32 @@ class CandidateProfileApi {
         throw Exception("AccessToken not found");
       }
 
-      FormData formData = FormData.fromMap({
-        'id': id,
+      Map<String,dynamic> data = {
+        'projectId': id,
         'projectName': projectName,
         'startDate': startDate,
         'endDate': endDate,
-        'descriptions': descriptions?.join(','),
-        'skills': skills?.join(','),
+        'descriptions': descriptions,
+        'skills': skills,
         'projectUrl': projectUrl,
-      });
+      };
 
       if (id == null || id.isEmpty) {
         throw Exception("Project ID is required");
       }
 
       final response = await dio.put(
-        "${AppConstants.baseUrl}/candidate/project/update",
+        "${AppConstants.baseUrl}/candidate/update/project",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'multipart/form-data',
         ),
-        data: formData,
+        data: data,
       );
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['projects'].last);
+
+        Map<String, dynamic> rawProject=Map<String, dynamic>.from(response.data['updatedUser']['projects'].last);
+        return Project.fromJson(rawProject);
       } else {
         throw Exception("Failed to Update Project");
       }
@@ -907,13 +888,10 @@ class CandidateProfileApi {
       }
 
       final response = await dio.delete(
-        "${AppConstants.baseUrl}/candidate/project/delete",
+        "${AppConstants.baseUrl}/candidate/delete/project/$id",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
         ),
-        queryParameters: {'id': id},
       );
 
       if (response.statusCode != 200) {
@@ -930,13 +908,13 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> addCertification({
+  Future<Certification> addCertification({
     required String? name,
     required String? issuingOrganization,
     required String? issueDate,
     required String? credentialID,
     required String? url,
-    required String? id,
+
   }) async {
     try {
       print("addCertification");
@@ -951,23 +929,20 @@ class CandidateProfileApi {
         'issuingOrganization': issuingOrganization,
         'issueDate': issueDate,
         'credentialID': credentialID,
-        'url': url,
-        'id': id,
+        'certificateUrl': url,
       };
 
       final response = await dio.post(
         "${AppConstants.baseUrl}/candidate/certification/add",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'application/json',
         ),
         data: data,
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['certifications'].last);
+        Map<String, dynamic> rawCertifications=Map<String, dynamic>.from(response.data['certifications'].last);
+        return Certification.fromJson(rawCertifications);
       } else {
         throw Exception("Failed to Add Certification");
       }
@@ -982,7 +957,7 @@ class CandidateProfileApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateCertification({
+  Future<Certification> updateCertification({
     required String? id,
     required String? name,
     required String? issuingOrganization,
@@ -999,7 +974,7 @@ class CandidateProfileApi {
       }
 
       final data = {
-        'id': id,
+        'certificationId': id,
         'name': name,
         'issuingOrganization': issuingOrganization,
         'issueDate': issueDate,
@@ -1012,18 +987,17 @@ class CandidateProfileApi {
       }
 
       final response = await dio.put(
-        "${AppConstants.baseUrl}/candidate/certification/update",
+        "${AppConstants.baseUrl}/candidate/update/certification",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
-          contentType: 'application/json',
         ),
         data: data,
       );
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']['certifications'].last);
+        Map<String, dynamic> rawCertifications= Map<String, dynamic>.from(response.data['certifications'].last);
+
+        return Certification.fromJson(rawCertifications);
       } else {
         throw Exception("Failed to Update Certification");
       }
@@ -1052,13 +1026,10 @@ class CandidateProfileApi {
       }
 
       final response = await dio.delete(
-        "${AppConstants.baseUrl}/candidate/certification/delete",
+        "${AppConstants.baseUrl}/candidate/delete/certification/$id",
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
-          sendTimeout: const Duration(minutes: 2),
-          receiveTimeout: const Duration(minutes: 2),
         ),
-        queryParameters: {'id': id},
       );
 
       if (response.statusCode != 200) {
@@ -1075,7 +1046,7 @@ class CandidateProfileApi {
     }
   }
 
-  Future<String?> deleteResume() async {
+  Future<String?> updateResume() async {
     try {
       print("deleteResume");
 

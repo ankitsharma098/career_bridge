@@ -562,7 +562,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${edu.degree} in ${edu.course}',
+                          '${edu.course}',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: screenSize.width * 0.04,

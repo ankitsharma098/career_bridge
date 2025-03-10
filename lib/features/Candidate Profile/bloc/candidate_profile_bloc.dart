@@ -1,9 +1,8 @@
+import 'package:android/data/models/employer/employer_model.dart';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
-
 import '../../../core/utils/hiveUtils.dart';
 import '../../../data/models/candidate/candidate_model.dart';
-import '../../../data/models/employer/employer_model.dart';
 import '../data/data_service.dart';
 
 part 'candidate_profile_event.dart';
@@ -120,12 +119,13 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
       // Update implementation
       final updatedDisabilityDetails = await apiService.updateDisabilityDetails(
         type: event.details.type,
-        percentage: event.details.percentage,
+        percentage: event.details.percentage.toString(),
         certificateNumber: event.details.certificateNumber,
         certificateDoc: event.details.certificateDoc,
         publicId: event.details.publicId,
         accommodationsNeeded: event.details.accommodationsNeeded,
         assistiveTechnology: event.details.assistiveTechnology,
+        preferredCommunicationMethod: event.details.preferredCommunicationMethod,
       );
       await HiveUtils.updateCandidateData({
         'disabilityDetails': updatedDisabilityDetails, // API returns updated disabilityDetails
@@ -144,7 +144,7 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
       final updatedJobPreferences = await apiService.updateJobPreferences(
         industries: event.prefs.industries,
         roles: event.prefs.roles,
-        preferredSalary: event.prefs.preferredSalary,
+        preferredSalary: event.prefs.preferredSalary.toString(),
         location: event.prefs.location,
         workMode: event.prefs.workMode,
         employmentType: event.prefs.employmentType,
@@ -324,7 +324,7 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
       // Update implementation
       final updatedInternship = await apiService.updateInternship(
         id: event.intern.id,
-        companyName: event.intern.company,
+        company: event.intern.company,
         role: event.intern.role,
         startDate: event.intern.startDate,
         endDate: event.intern.endDate,
@@ -428,7 +428,6 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         issueDate: event.cert.issueDate,
         credentialID: event.cert.credentialID,
         url: event.cert.url,
-        publicId: event.cert.publicId,
       );
       await HiveUtils.updateCandidateData({
         'certifications': [newCertification], // API returns complete certification with id
@@ -451,7 +450,6 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         issueDate: event.cert.issueDate,
         credentialID: event.cert.credentialID,
         url: event.cert.url,
-        publicId: event.cert.publicId,
       );
       await HiveUtils.updateCandidateData({
         'certifications': [updatedCertification], // API returns updated certification
@@ -482,10 +480,10 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
   Future<void> _onDeleteResume(DeleteResume event, Emitter<CandidateProfileState> emit) async {
     try {
       // Update implementation
-      final updatedResume = await apiService.deleteResume(); // Assume API returns empty string or null
-      await HiveUtils.updateCandidateData({
-        'resume': updatedResume ?? '', // API returns updated resume (empty)
-      });
+      // final updatedResume = await apiService.deleteResume(); // Assume API returns empty string or null
+      // await HiveUtils.updateCandidateData({
+      //   'resume': updatedResume ?? '', // API returns updated resume (empty)
+      // });
       emit(ProfileUpdateSuccess('Resume deleted successfully'));
       // Refresh data
       add(FetchProfileData());

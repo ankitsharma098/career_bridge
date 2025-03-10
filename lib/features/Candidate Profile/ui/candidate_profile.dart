@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'dart:io';
 
@@ -23,6 +24,33 @@ class CandidateProfile extends StatefulWidget {
 }
 
 class _CandidateProfileState extends State<CandidateProfile> {
+  String formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return 'Not provided';
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('dd/MM/yyyy').format(date);
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
+  Future<DateTime?> _pickDate(BuildContext context, {DateTime? initialDate}) async {
+    return await showDatePicker(
+      context: context,
+      initialDate: initialDate ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: Colors.blue.shade700),
+          ),
+          child: child!,
+        );
+      },
+    );
+  }
   @override
   void initState() {
     super.initState();
@@ -317,11 +345,15 @@ class _CandidateProfileState extends State<CandidateProfile> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [Theme.of(context).cardTheme.shadowColor != null ? BoxShadow(
-          color: Theme.of(context).cardTheme.shadowColor!,
-          blurRadius: 10,
-          offset: const Offset(0, 5),
-        ) : const BoxShadow()],
+        boxShadow: [
+          Theme.of(context).cardTheme.shadowColor != null
+              ? BoxShadow(
+            color: Theme.of(context).cardTheme.shadowColor!,
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          )
+              : const BoxShadow(),
+        ],
       ),
       padding: EdgeInsets.all(screenSize.width * 0.04),
       child: Column(
@@ -337,7 +369,6 @@ class _CandidateProfileState extends State<CandidateProfile> {
                       candidate.personalInfo.fullName,
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        //color: AppColors.lightText,
                       ),
                     ),
                     SizedBox(height: screenSize.height * 0.01),
@@ -353,6 +384,24 @@ class _CandidateProfileState extends State<CandidateProfile> {
                         color: AppColors.lightSecondaryText,
                       ),
                     ),
+                    Text(
+                      candidate.personalInfo.address,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.lightSecondaryText,
+                      ),
+                    ),
+                    Text(
+                      'DOB: ${candidate.personalInfo.dob}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.lightSecondaryText,
+                      ),
+                    ),
+                    Text(
+                      'Gender: ${candidate.personalInfo.gender}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.lightSecondaryText,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -362,9 +411,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
-              onPressed: () => _showPersonalInfoEditDialog(context,candidate),
-              icon:  Icon(FontAwesomeIcons.edit,color: Colors.white,),
-              label:  Text('Edit'),
+              onPressed: () => _showPersonalInfoEditDialog(context, candidate),
+              icon: Icon(FontAwesomeIcons.edit, color: Colors.white),
+              label: Text('Edit'),
               style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
                 padding: MaterialStateProperty.all(
                   EdgeInsets.symmetric(
@@ -380,6 +429,56 @@ class _CandidateProfileState extends State<CandidateProfile> {
     );
   }
 
+  Widget _buildDOBField(TextEditingController dobController) {
+    Future<void> selectDate(BuildContext context) async {
+      DateTime initialDate;
+      try {
+        initialDate = dobController.text.isNotEmpty
+            ? DateFormat('dd/MM/yyyy').parse(dobController.text)
+            : DateTime.now();
+      } catch (e) {
+        initialDate = DateTime.now();
+      }
+      final DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: initialDate,
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Colors.blue.shade700,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (pickedDate != null) {
+        dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+
+      }
+    }
+
+    return TextFormField(
+      controller: dobController,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: "Date of Birth",
+        hintText: "Select date",
+        prefixIcon: Icon(Icons.calendar_today, color: Colors.blue.shade700),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+        ),
+      ),
+      onTap: () => selectDate(context),
+    );
+  }
   Widget _buildProfileSummarySection(Candidate candidate) {
     final screenSize = MediaQuery.of(context).size;
     return _buildCard(
@@ -496,7 +595,14 @@ class _CandidateProfileState extends State<CandidateProfile> {
   Widget _buildJobPreferencesSection(Candidate candidate) {
     final screenSize = MediaQuery.of(context).size;
     final jp = candidate.jobPreferences;
-    final hasJobPreferences = jp.industries.isNotEmpty || jp.roles.isNotEmpty || jp.preferredSalary > 0;
+    final hasJobPreferences = jp.industries.isNotEmpty ||
+        jp.roles.isNotEmpty ||
+        jp.preferredSalary > 0 ||
+        jp.location.isNotEmpty ||
+        jp.workMode.isNotEmpty ||
+        jp.employmentType.isNotEmpty ||
+        jp.experienceLevel.isNotEmpty;
+
     return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,8 +615,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   style: Theme.of(context).textTheme.displaySmall
               ),
               IconButton(
-                icon: Icon(FontAwesomeIcons.edit,  color: AppColors.lightPrimary),
-                onPressed: () => _showJobPreferencesEditDialog(context,candidate),
+                icon: Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
+                onPressed: () => _showJobPreferencesEditDialog(context, candidate),
               ),
             ],
           ),
@@ -519,6 +625,10 @@ class _CandidateProfileState extends State<CandidateProfile> {
             if (jp.industries.isNotEmpty) _buildInfoRow('Industries', jp.industries.join(', ')),
             if (jp.roles.isNotEmpty) _buildInfoRow('Roles', jp.roles.join(', ')),
             if (jp.preferredSalary > 0) _buildInfoRow('Salary', '\$${jp.preferredSalary}'),
+            if (jp.location.isNotEmpty) _buildInfoRow('Locations', jp.location.join(', ')),
+            if (jp.workMode.isNotEmpty) _buildInfoRow('Work Mode', jp.workMode),
+            if (jp.employmentType.isNotEmpty) _buildInfoRow('Employment Type', jp.employmentType.join(', ')),
+            if (jp.experienceLevel.isNotEmpty) _buildInfoRow('Experience Level', jp.experienceLevel),
           ] else
             Text(
               'No job preferences set yet.',
@@ -609,31 +719,26 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 final edu = candidate.education[index];
                 return ListTile(
                   contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-                  title: Text(
-                    '${edu.degree} ${edu.course}',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lightText,
-                    ),
-                  ),
+                  title: Text(edu.course),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(edu.institution, style: Theme.of(context).textTheme.bodyMedium),
-                      Text('${edu.startingYear} - ${edu.passingYear}', style: Theme.of(context).textTheme.bodySmall),
-                      if (edu.cgpa.isNotEmpty) Text('CGPA: ${edu.cgpa}', style: Theme.of(context).textTheme.bodySmall),
+                      Text(edu.institution),
+                      if (edu.specialization.isNotEmpty) Text('Specialization: ${edu.specialization}'),
+                      Text('${edu.startingYear} - ${edu.passingYear.toString()}'),
+                      if (edu.cgpa.isNotEmpty) Text('CGPA: ${edu.cgpa}'),
                     ],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(FontAwesomeIcons.edit,  color: AppColors.lightPrimary),
-                        onPressed: () => _showEditEducationDialog(context, edu),
+                        icon: Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
+                        onPressed: () => _showEditEducationDialog(context, edu, candidate),
                       ),
                       IconButton(
-                        icon:  Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, 'education', edu.id, '${edu.degree} from ${edu.institution}'),
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _confirmDelete(context, 'education', edu.id, '${edu.course} from ${edu.institution}'),
                       ),
                     ],
                   ),
@@ -683,9 +788,14 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     children: [
                       Text(exp.company, style: Theme.of(context).textTheme.bodyMedium),
                       Text(
-                        exp.isCurrentlyWorking ? '${exp.startDate} - Present' : '${exp.startDate} - ${exp.endDate}',
+                        '${formatDate(exp.startDate)} - ${exp.endDate.isEmpty ? 'Present' : formatDate(exp.endDate)}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
+                      if (exp.descriptions.isNotEmpty)
+                        Text(
+                            exp.descriptions,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                     ],
                   ),
                   trailing: Row(
@@ -734,25 +844,16 @@ class _CandidateProfileState extends State<CandidateProfile> {
               itemBuilder: (context, index) {
                 final internship = candidate.internships[index];
                 return ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-                  title: Text(
-                    internship.projectName,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lightText,
-                    ),
-                  ),
+                  title: Text(internship.projectName),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        internship.company,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Text(
-                        internship.isCurrentlyWorking ? '${internship.startDate} - Present' : '${internship.startDate} - ${internship.endDate}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                      Text(internship.company),
+                      Text('${formatDate(internship.startDate)} - ${internship.endDate.isEmpty ? 'Present' : formatDate(internship.endDate)}'),
+                      if (internship.role.isNotEmpty) Text('Role: ${internship.role}'),
+                      if (internship.descriptions.isNotEmpty) Text(internship.descriptions),
+                      if (internship.skills.isNotEmpty) Text('Skills: ${internship.skills.join(', ')}'),
+                      if (internship.projectUrl.isNotEmpty) Text('URL: ${internship.projectUrl}'),
                     ],
                   ),
                   trailing: Row(
@@ -801,17 +902,15 @@ class _CandidateProfileState extends State<CandidateProfile> {
               itemBuilder: (context, index) {
                 final project = candidate.projects[index];
                 return ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-                  title: Text(
-                    project.projectName,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lightText,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${project.startDate} - ${project.endDate}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  title: Text(project.projectName),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${formatDate(project.startDate)} - ${project.endDate.isEmpty ? 'Present' : formatDate(project.endDate)}'),
+                      if (project.descriptions.isNotEmpty) Text(project.descriptions),
+                      if (project.skills.isNotEmpty) Text('Skills: ${project.skills.join(', ')}'),
+                      if (project.projectUrl.isNotEmpty) Text('URL: ${project.projectUrl}'),
+                    ],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -859,17 +958,15 @@ class _CandidateProfileState extends State<CandidateProfile> {
               itemBuilder: (context, index) {
                 final cert = candidate.certifications[index];
                 return ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-                  title: Text(
-                    cert.name,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lightText,
-                    ),
-                  ),
-                  subtitle: Text(
-                    cert.issuingOrganization,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  title: Text(cert.name),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(cert.issuingOrganization),
+                      if (cert.issueDate.isNotEmpty) Text(formatDate(cert.issueDate)),
+                      if (cert.credentialID.isNotEmpty) Text('ID: ${cert.credentialID}'),
+                      if (cert.url.isNotEmpty) Text('URL: ${cert.url}'),
+                    ],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1008,11 +1105,31 @@ class _CandidateProfileState extends State<CandidateProfile> {
     );
   }
 
-  void _showPersonalInfoEditDialog(BuildContext parentContext,Candidate candidate) {
+  void _showPersonalInfoEditDialog(BuildContext parentContext, Candidate candidate) {
     final nameController = TextEditingController(text: candidate.personalInfo.fullName);
     final emailController = TextEditingController(text: candidate.personalInfo.email);
     final phoneController = TextEditingController(text: candidate.personalInfo.phoneNumber);
-    final screenSize = MediaQuery.of(parentContext).size;
+    final addressController = TextEditingController(text: candidate.personalInfo.address);
+    TextEditingController dobController = TextEditingController(
+        text: candidate.personalInfo.dob!.isNotEmpty
+            ? formatDate(candidate.personalInfo.dob)
+            : ''
+    );
+    final genderController = TextEditingController(text: candidate.personalInfo.gender);
+    final screenSize = MediaQuery.of(parentContext).size;Future<void> selectDate() async {
+      DateTime initialDate = dobController.text.isNotEmpty
+          ? DateFormat('dd/MM/yyyy').parse(dobController.text)
+          : DateTime.now();
+      final DateTime? pickedDate = await showDatePicker(
+        context: parentContext,
+        initialDate: initialDate,
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+      );
+      if (pickedDate != null) {
+        dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+      }
+    }
 
     showDialog(
       context: parentContext,
@@ -1023,36 +1140,37 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
+              _buildTextField(nameController, 'Full Name', Icons.person),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(emailController, 'Email', Icons.email, keyboardType: TextInputType.emailAddress),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(phoneController, 'Phone Number', Icons.phone, keyboardType: TextInputType.phone),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(addressController, 'Address', Icons.location_on),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(
+                dobController,
+                'Date of Birth',
+                Icons.calendar_today,
+                hintText: 'Select date',
+                readOnly: true,
+                onTap: selectDate,
               ),
               SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: emailController,
+              DropdownButtonFormField<String>(
+                value: genderController.text.isEmpty ? 'Male' : genderController.text,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Gender',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   filled: true,
                   fillColor: AppColors.lightSurface,
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-                keyboardType: TextInputType.phone,
+                items: ['Male', 'Female', 'Other']
+                    .map((gender) => DropdownMenuItem(value: gender, child: Text(gender)))
+                    .toList(),
+                onChanged: (value) {
+                  genderController.text = value ?? 'Male';
+                },
               ),
             ],
           ),
@@ -1064,13 +1182,17 @@ class _CandidateProfileState extends State<CandidateProfile> {
           ),
           ElevatedButton(
             onPressed: () {
-              final updatedInfo = PersonalInfo(
-                fullName: nameController.text,
-                email: emailController.text,
-                phoneNumber: phoneController.text,
-                profilePic: candidate.personalInfo.profilePic, // Preserve existing pic
-              );
-              BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdatePersonalProfile(updatedInfo));
+              final updatedInfo = {
+                "fullName": nameController.text,
+                "email": emailController.text,
+                "phoneNumber": phoneController.text,
+                "profilePic": candidate.personalInfo.profilePic,
+                "address": addressController.text,
+                "dob": dobController.text,
+                "gender": genderController.text,
+              };
+              BlocProvider.of<CandidateProfileBloc>(parentContext)
+                  .add(UpdatePersonalProfile(updatedInfo));
               Navigator.pop(dialogContext);
             },
             style: ElevatedButton.styleFrom(
@@ -1093,15 +1215,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Edit Profile Summary', style: Theme.of(dialogContext).textTheme.displaySmall),
-        content: TextField(
-          controller: controller,
-          maxLines: 5,
-          decoration: InputDecoration(
-            hintText: 'Write a brief summary...',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            filled: true,
-            fillColor: AppColors.lightSurface,
-          ),
+        content: _buildTextField(
+            controller,
+            'Profile Summary',
+            Icons.description,
+            isMultiLine: true
         ),
         actions: [
           TextButton(
@@ -1133,15 +1251,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Edit About', style: Theme.of(dialogContext).textTheme.displaySmall),
-        content: TextField(
-          controller: controller,
-          maxLines: 8,
-          decoration: InputDecoration(
-            hintText: 'Tell employers about yourself...',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            filled: true,
-            fillColor: AppColors.lightSurface,
-          ),
+        content: _buildTextField(
+          controller,
+          'About',
+          Icons.person_outline,
+          hintText: 'Tell employers about yourself...',
+          isMultiLine: true,
         ),
         actions: [
           TextButton(
@@ -1181,55 +1296,29 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: typeController,
-                decoration: InputDecoration(
-                  labelText: 'Disability Type',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(typeController, 'Disability Type', Icons.accessibility),
               SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: percentageController,
-                decoration: InputDecoration(
-                  labelText: 'Percentage (%)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
+              _buildTextField(
+                percentageController,
+                'Percentage (%)',
+                Icons.percent,
                 keyboardType: TextInputType.number,
               ),
               SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: certController,
-                decoration: InputDecoration(
-                  labelText: 'Certificate Number',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
+              _buildTextField(certController, 'Certificate Number', Icons.card_membership),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(
+                accommodationsController,
+                'Accommodations Needed',
+                Icons.support,
+                hintText: 'Comma-separated',
               ),
               SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: accommodationsController,
-                decoration: InputDecoration(
-                  labelText: 'Accommodations Needed (comma-separated)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: techController,
-                decoration: InputDecoration(
-                  labelText: 'Assistive Technology (comma-separated)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
+              _buildTextField(
+                techController,
+                'Assistive Technology',
+                Icons.assist_walker,
+                hintText: 'Comma-separated',
               ),
             ],
           ),
@@ -1261,12 +1350,16 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _showJobPreferencesEditDialog(BuildContext parentContext,Candidate candidate) {
     final jp = candidate.jobPreferences;
     final industriesController = TextEditingController(text: jp.industries.join(', '));
     final rolesController = TextEditingController(text: jp.roles.join(', '));
     final salaryController = TextEditingController(text: jp.preferredSalary.toString());
-    final screenSize = MediaQuery.of(parentContext).size;
+    final locationController = TextEditingController(text: jp.location.join(', '));
+    final workModeController = TextEditingController(text: jp.workMode);
+    final employmentTypeController = TextEditingController(text: jp.employmentType.join(', '));
+    final experienceLevelController = TextEditingController(text: jp.experienceLevel);
 
     showDialog(
       context: parentContext,
@@ -1277,35 +1370,65 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: industriesController,
-                decoration: InputDecoration(
-                  labelText: 'Industries (comma-separated)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
+              _buildTextField(
+                industriesController,
+                'Industries',
+                Icons.business,
+                hintText: 'Comma-separated',
               ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: rolesController,
-                decoration: InputDecoration(
-                  labelText: 'Roles (comma-separated)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
+              SizedBox(height: 8),
+              _buildTextField(
+                rolesController,
+                'Roles',
+                Icons.work,
+                hintText: 'Comma-separated',
               ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: salaryController,
-                decoration: InputDecoration(
-                  labelText: 'Preferred Salary',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
+              SizedBox(height: 8),
+              _buildTextField(
+                salaryController,
+                'Preferred Salary',
+                Icons.attach_money,
                 keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 8),
+              _buildTextField(
+                locationController,
+                'Locations',
+                Icons.location_on,
+                hintText: 'Comma-separated',
+              ),
+              SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: workModeController.text.isEmpty ? 'Flexible' : workModeController.text,
+                decoration: InputDecoration(
+                  labelText: 'Work Mode',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: Icon(Icons.work_outline),
+                ),
+                items: ['Remote', 'Onsite', 'Hybrid', 'Flexible']
+                    .map((mode) => DropdownMenuItem(value: mode, child: Text(mode)))
+                    .toList(),
+                onChanged: (value) => workModeController.text = value ?? 'Flexible',
+              ),
+              SizedBox(height: 8),
+              _buildTextField(
+                employmentTypeController,
+                'Employment Type',
+                Icons.schedule,
+                hintText: 'Comma-separated (Full-time, Part-time, etc.)',
+              ),
+              SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: experienceLevelController.text.isEmpty ? 'Freshers' : experienceLevelController.text,
+                decoration: InputDecoration(
+                  labelText: 'Experience Level',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: Icon(Icons.star),
+                ),
+                items: ['Freshers', 'Intermediate', 'Professional']
+                    .map((level) => DropdownMenuItem(value: level, child: Text(level)))
+                    .toList(),
+                onChanged: (value) => experienceLevelController.text = value ?? 'Freshers',
               ),
             ],
           ),
@@ -1321,6 +1444,10 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 industries: industriesController.text.split(',').map((e) => e.trim()).toList(),
                 roles: rolesController.text.split(',').map((e) => e.trim()).toList(),
                 preferredSalary: int.tryParse(salaryController.text) ?? 0,
+                location: locationController.text.split(',').map((e) => e.trim()).toList(),
+                workMode: workModeController.text,
+                employmentType: employmentTypeController.text.split(',').map((e) => e.trim()).toList(),
+                experienceLevel: experienceLevelController.text,
               );
               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateJobPreferences(updatedPrefs));
               Navigator.pop(dialogContext);
@@ -1432,13 +1559,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
   }
 
   void _showAddEducationDialog(BuildContext parentContext,Candidate candidate) {
-    final degreeController = TextEditingController();
     final courseController = TextEditingController();
+    final specializationController = TextEditingController();
     final institutionController = TextEditingController();
-    final startYearController = TextEditingController();
-    final passingYearController = TextEditingController();
     final cgpaController = TextEditingController();
-    final screenSize = MediaQuery.of(parentContext).size;
+    DateTime? startDate;
+    DateTime? passingDate;
 
     showDialog(
       context: parentContext,
@@ -1449,68 +1575,17 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: degreeController,
-                decoration: InputDecoration(
-                  labelText: 'Degree',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: courseController,
-                decoration: InputDecoration(
-                  labelText: 'Course',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: institutionController,
-                decoration: InputDecoration(
-                  labelText: 'Institution',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: startYearController,
-                decoration: InputDecoration(
-                  labelText: 'Start Year',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: passingYearController,
-                decoration: InputDecoration(
-                  labelText: 'Passing Year',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: cgpaController,
-                decoration: InputDecoration(
-                  labelText: 'CGPA (optional)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-                keyboardType: TextInputType.number,
-              ),
+              _buildTextField(courseController, 'Course', Icons.school),
+              SizedBox(height: 8),
+              _buildTextField(specializationController, 'Specialization', Icons.book),
+              SizedBox(height: 8),
+              _buildTextField(institutionController, 'Institution', Icons.account_balance),
+              SizedBox(height: 8),
+              _buildDateField('Start Date', startDate, (date) => startDate = date),
+              SizedBox(height: 8),
+              _buildDateField('Passing Date', passingDate, (date) => passingDate = date),
+              SizedBox(height: 8),
+              _buildTextField(cgpaController, 'CGPA', Icons.grade, hintText: 'Optional'),
             ],
           ),
         ),
@@ -1521,17 +1596,19 @@ class _CandidateProfileState extends State<CandidateProfile> {
           ),
           ElevatedButton(
             onPressed: () {
-              final newEducation = Education(
-                id: DateTime.now().toString(), // Temporary ID, replace with server-generated ID
-                degree: degreeController.text,
-                course: courseController.text,
-                institution: institutionController.text,
-                startingYear: startYearController.text,
-                passingYear: int.parse(passingYearController.text),
-                cgpa: cgpaController.text,
-              );
-              BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddEducation(newEducation));
-              Navigator.pop(dialogContext);
+              if (startDate != null && passingDate != null) {
+                final newEducation = Education(
+                  id: DateTime.now().toString(),
+                  course: courseController.text,
+                  specialization: specializationController.text,
+                  institution: institutionController.text,
+                  startingYear: DateFormat('yyyy').format(startDate!),
+                  passingYear: int.parse(DateFormat('yyyy').format(passingDate!)),
+                  cgpa: cgpaController.text,
+                );
+                BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddEducation(newEducation));
+                Navigator.pop(dialogContext);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lightPrimary,
@@ -1544,14 +1621,13 @@ class _CandidateProfileState extends State<CandidateProfile> {
     );
   }
 
-  void _showEditEducationDialog(BuildContext parentContext, Education education) {
-    final degreeController = TextEditingController(text: education.degree);
+  void _showEditEducationDialog(BuildContext parentContext,Education education, Candidate candidate) {
     final courseController = TextEditingController(text: education.course);
+    final specializationController = TextEditingController(text: education.specialization);
     final institutionController = TextEditingController(text: education.institution);
-    final startYearController = TextEditingController(text: education.startingYear);
-    final passingYearController = TextEditingController(text: education.passingYear.toString());
     final cgpaController = TextEditingController(text: education.cgpa);
-    final screenSize = MediaQuery.of(parentContext).size;
+    DateTime? startDate = DateTime.tryParse('${education.startingYear}-01-01');
+    DateTime? passingDate = DateTime.tryParse('${education.passingYear}-01-01');
 
     showDialog(
       context: parentContext,
@@ -1562,68 +1638,17 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: degreeController,
-                decoration: InputDecoration(
-                  labelText: 'Degree',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: courseController,
-                decoration: InputDecoration(
-                  labelText: 'Course',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: institutionController,
-                decoration: InputDecoration(
-                  labelText: 'Institution',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: startYearController,
-                decoration: InputDecoration(
-                  labelText: 'Start Year',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: passingYearController,
-                decoration: InputDecoration(
-                  labelText: 'Passing Year',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: cgpaController,
-                decoration: InputDecoration(
-                  labelText: 'CGPA (optional)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-                keyboardType: TextInputType.number,
-              ),
+              _buildTextField(courseController, 'Course', Icons.school),
+              SizedBox(height: 8),
+              _buildTextField(specializationController, 'Specialization', Icons.book),
+              SizedBox(height: 8),
+              _buildTextField(institutionController, 'Institution', Icons.account_balance),
+              SizedBox(height: 8),
+              _buildDateField('Start Date', startDate, (date) => startDate = date),
+              SizedBox(height: 8),
+              _buildDateField('Passing Date', passingDate, (date) => passingDate = date),
+              SizedBox(height: 8),
+              _buildTextField(cgpaController, 'CGPA', Icons.grade, hintText: 'Optional'),
             ],
           ),
         ),
@@ -1634,17 +1659,19 @@ class _CandidateProfileState extends State<CandidateProfile> {
           ),
           ElevatedButton(
             onPressed: () {
-              final updatedEducation = Education(
-                id: education.id,
-                degree: degreeController.text,
-                course: courseController.text,
-                institution: institutionController.text,
-                startingYear: startYearController.text,
-                passingYear: int.parse(passingYearController.text),
-                cgpa: cgpaController.text,
-              );
-              BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateEducation(updatedEducation));
-              Navigator.pop(dialogContext);
+              if (startDate != null && passingDate != null) {
+                final updatedEducation = Education(
+                  id: education.id,
+                  course: courseController.text,
+                  specialization: specializationController.text,
+                  institution: institutionController.text,
+                  startingYear: DateFormat('yyyy').format(startDate!),
+                  passingYear: int.parse(DateFormat('yyyy').format(passingDate!)),
+                  cgpa: cgpaController.text,
+                );
+                BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateEducation(updatedEducation));
+                Navigator.pop(dialogContext);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lightPrimary,
@@ -1660,9 +1687,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
   void _showAddWorkExperienceDialog(BuildContext parentContext) {
     final positionController = TextEditingController();
     final companyController = TextEditingController();
-    final startDateController = TextEditingController();
-    final endDateController = TextEditingController();
-    bool isCurrentlyWorking = false;
+    final descriptionController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
     final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
@@ -1675,53 +1702,15 @@ class _CandidateProfileState extends State<CandidateProfile> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: positionController,
-                  decoration: InputDecoration(
-                    labelText: 'Position',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: companyController,
-                  decoration: InputDecoration(
-                    labelText: 'Company',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: startDateController,
-                  decoration: InputDecoration(
-                    labelText: 'Start Date (e.g., Jan 2020)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.015),
-                if (!isCurrentlyWorking)
-                  TextField(
-                    controller: endDateController,
-                    decoration: InputDecoration(
-                      labelText: 'End Date (e.g., Dec 2021)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      filled: true,
-                      fillColor: AppColors.lightSurface,
-                    ),
-                  ),
-                SizedBox(height: screenSize.height * 0.015),
-                CheckboxListTile(
-                  title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-                  value: isCurrentlyWorking,
-                  onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-                  activeColor: AppColors.lightPrimary,
-                ),
+                _buildTextField(positionController, 'Position', Icons.work),
+                SizedBox(height: 8),
+                _buildTextField(companyController, 'Company', Icons.business),
+                SizedBox(height: 8),
+                _buildTextField(descriptionController, 'Descriptions', Icons.description, hintText: 'Comma-separated'),
+                SizedBox(height: 8),
+                _buildDateField('Start Date', startDate, (date) => startDate = date),
+                SizedBox(height: 8),
+                _buildDateField('End Date (Optional)', endDate, (date) => endDate = date),
               ],
             ),
           ),
@@ -1732,16 +1721,18 @@ class _CandidateProfileState extends State<CandidateProfile> {
             ),
             ElevatedButton(
               onPressed: () {
-                final newExperience = WorkExperience(
-                  id: DateTime.now().toString(), // Temporary ID
-                  position: positionController.text,
-                  company: companyController.text,
-                  startDate: startDateController.text,
-                  endDate: isCurrentlyWorking ? '' : endDateController.text,
-                  isCurrentlyWorking: isCurrentlyWorking,
-                );
-                BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddWorkExperience(newExperience));
-                Navigator.pop(dialogContext);
+                if (startDate != null) {
+                  final newExperience = WorkExperience(
+                    id: DateTime.now().toString(),
+                    position: positionController.text,
+                    company: companyController.text,
+                    startDate: startDate!.toIso8601String(),
+                    endDate: endDate?.toIso8601String() ?? '',
+                    descriptions: descriptionController.text,
+                  );
+                  BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddWorkExperience(newExperience));
+                  Navigator.pop(dialogContext);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.lightPrimary,
@@ -1760,7 +1751,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
     final companyController = TextEditingController(text: experience.company);
     final startDateController = TextEditingController(text: experience.startDate);
     final endDateController = TextEditingController(text: experience.endDate);
-    bool isCurrentlyWorking = experience.isCurrentlyWorking;
+    bool isCurrentlyWorking = experience.endDate.isEmpty;
     final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
@@ -1773,46 +1764,14 @@ class _CandidateProfileState extends State<CandidateProfile> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: positionController,
-                  decoration: InputDecoration(
-                    labelText: 'Position',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
+                _buildTextField(positionController, 'Position', Icons.work),
                 SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: companyController,
-                  decoration: InputDecoration(
-                    labelText: 'Company',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
+                _buildTextField(companyController, 'Company', Icons.business),
                 SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: startDateController,
-                  decoration: InputDecoration(
-                    labelText: 'Start Date (e.g., Jan 2020)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
+                _buildTextField(startDateController, 'Start Date', Icons.calendar_today, hintText: 'e.g., Jan 2020'),
                 SizedBox(height: screenSize.height * 0.015),
                 if (!isCurrentlyWorking)
-                  TextField(
-                    controller: endDateController,
-                    decoration: InputDecoration(
-                      labelText: 'End Date (e.g., Dec 2021)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      filled: true,
-                      fillColor: AppColors.lightSurface,
-                    ),
-                  ),
+                  _buildTextField(endDateController, 'End Date', Icons.event_available, hintText: 'e.g., Dec 2021'),
                 SizedBox(height: screenSize.height * 0.015),
                 CheckboxListTile(
                   title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
@@ -1836,7 +1795,6 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   company: companyController.text,
                   startDate: startDateController.text,
                   endDate: isCurrentlyWorking ? '' : endDateController.text,
-                  isCurrentlyWorking: isCurrentlyWorking,
                 );
                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateWorkExperience(updatedExperience));
                 Navigator.pop(dialogContext);
@@ -1853,13 +1811,16 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _showAddInternshipDialog(BuildContext parentContext) {
     final projectNameController = TextEditingController();
     final companyController = TextEditingController();
-    final startDateController = TextEditingController();
-    final endDateController = TextEditingController();
-    bool isCurrentlyWorking = false;
-    final screenSize = MediaQuery.of(parentContext).size;
+    final roleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final skillsController = TextEditingController();
+    final urlController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
 
     showDialog(
       context: parentContext,
@@ -1871,53 +1832,21 @@ class _CandidateProfileState extends State<CandidateProfile> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: projectNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Project Name',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: companyController,
-                  decoration: InputDecoration(
-                    labelText: 'Company',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: startDateController,
-                  decoration: InputDecoration(
-                    labelText: 'Start Date (e.g., Jan 2020)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
-                SizedBox(height: screenSize.height * 0.015),
-                if (!isCurrentlyWorking)
-                  TextField(
-                    controller: endDateController,
-                    decoration: InputDecoration(
-                      labelText: 'End Date (e.g., Dec 2021)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      filled: true,
-                      fillColor: AppColors.lightSurface,
-                    ),
-                  ),
-                SizedBox(height: screenSize.height * 0.015),
-                CheckboxListTile(
-                  title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-                  value: isCurrentlyWorking,
-                  onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-                  activeColor: AppColors.lightPrimary,
-                ),
+                _buildTextField(projectNameController, 'Project Name', Icons.folder),
+                SizedBox(height: 8),
+                _buildTextField(companyController, 'Company', Icons.business),
+                SizedBox(height: 8),
+                _buildTextField(roleController, 'Role', Icons.person),
+                SizedBox(height: 8),
+                _buildTextField(descriptionController, 'Description', Icons.description),
+                SizedBox(height: 8),
+                _buildTextField(skillsController, 'Skills', Icons.star, hintText: 'Comma-separated'),
+                SizedBox(height: 8),
+                _buildTextField(urlController, 'Project URL', Icons.link, hintText: 'Optional'),
+                SizedBox(height: 8),
+                _buildDateField('Start Date', startDate, (date) => startDate = date),
+                SizedBox(height: 8),
+                _buildDateField('End Date (Optional)', endDate, (date) => endDate = date),
               ],
             ),
           ),
@@ -1928,16 +1857,21 @@ class _CandidateProfileState extends State<CandidateProfile> {
             ),
             ElevatedButton(
               onPressed: () {
-                final newInternship = Internship(
-                  id: DateTime.now().toString(), // Temporary ID
-                  projectName: projectNameController.text,
-                  company: companyController.text,
-                  startDate: startDateController.text,
-                  endDate: isCurrentlyWorking ? '' : endDateController.text,
-                  isCurrentlyWorking: isCurrentlyWorking,
-                );
-                BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddInternship(newInternship));
-                Navigator.pop(dialogContext);
+                if (startDate != null) {
+                  final newInternship = Internship(
+                    id: DateTime.now().toString(),
+                    projectName: projectNameController.text,
+                    company: companyController.text,
+                    role: roleController.text,
+                    startDate: startDate!.toIso8601String(),
+                    endDate: endDate?.toIso8601String() ?? '',
+                    descriptions: descriptionController.text,
+                    skills: skillsController.text.split(',').map((e) => e.trim()).toList(),
+                    projectUrl: urlController.text,
+                  );
+                  BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddInternship(newInternship));
+                  Navigator.pop(dialogContext);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.lightPrimary,
@@ -1950,12 +1884,13 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _showEditInternshipDialog(BuildContext parentContext, Internship internship) {
     final projectNameController = TextEditingController(text: internship.projectName);
     final companyController = TextEditingController(text: internship.company);
     final startDateController = TextEditingController(text: internship.startDate);
     final endDateController = TextEditingController(text: internship.endDate);
-    bool isCurrentlyWorking = internship.isCurrentlyWorking;
+    bool isCurrentlyWorking = internship.endDate.isEmpty;
     final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
@@ -1968,46 +1903,14 @@ class _CandidateProfileState extends State<CandidateProfile> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: projectNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Project Name',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
+                _buildTextField(projectNameController, 'Project Name', Icons.folder),
                 SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: companyController,
-                  decoration: InputDecoration(
-                    labelText: 'Company',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
+                _buildTextField(companyController, 'Company', Icons.business),
                 SizedBox(height: screenSize.height * 0.015),
-                TextField(
-                  controller: startDateController,
-                  decoration: InputDecoration(
-                    labelText: 'Start Date (e.g., Jan 2020)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: AppColors.lightSurface,
-                  ),
-                ),
+                _buildTextField(startDateController, 'Start Date', Icons.calendar_today, hintText: 'e.g., Jan 2020'),
                 SizedBox(height: screenSize.height * 0.015),
                 if (!isCurrentlyWorking)
-                  TextField(
-                    controller: endDateController,
-                    decoration: InputDecoration(
-                      labelText: 'End Date (e.g., Dec 2021)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      filled: true,
-                      fillColor: AppColors.lightSurface,
-                    ),
-                  ),
+                  _buildTextField(endDateController, 'End Date', Icons.event_available, hintText: 'e.g., Dec 2021'),
                 SizedBox(height: screenSize.height * 0.015),
                 CheckboxListTile(
                   title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
@@ -2031,7 +1934,6 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   company: companyController.text,
                   startDate: startDateController.text,
                   endDate: isCurrentlyWorking ? '' : endDateController.text,
-                  isCurrentlyWorking: isCurrentlyWorking,
                 );
                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateInternship(updatedInternship));
                 Navigator.pop(dialogContext);
@@ -2049,9 +1951,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
   }
   void _showAddProjectDialog(BuildContext parentContext) {
     final projectNameController = TextEditingController();
-    final startDateController = TextEditingController();
-    final endDateController = TextEditingController();
-    final screenSize = MediaQuery.of(parentContext).size;
+    final descriptionController = TextEditingController();
+    final skillsController = TextEditingController();
+    final urlController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
 
     showDialog(
       context: parentContext,
@@ -2062,35 +1966,17 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: projectNameController,
-                decoration: InputDecoration(
-                  labelText: 'Project Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: startDateController,
-                decoration: InputDecoration(
-                  labelText: 'Start Date (e.g., Jan 2020)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: endDateController,
-                decoration: InputDecoration(
-                  labelText: 'End Date (e.g., Dec 2021)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(projectNameController, 'Project Name', Icons.folder),
+              SizedBox(height: 8),
+              _buildTextField(descriptionController, 'Description', Icons.description),
+              SizedBox(height: 8),
+              _buildTextField(skillsController, 'Skills', Icons.star, hintText: 'Comma-separated'),
+              SizedBox(height: 8),
+              _buildTextField(urlController, 'Project URL', Icons.link, hintText: 'Optional'),
+              SizedBox(height: 8),
+              _buildDateField('Start Date', startDate, (date) => startDate = date),
+              SizedBox(height: 8),
+              _buildDateField('End Date (Optional)', endDate, (date) => endDate = date),
             ],
           ),
         ),
@@ -2101,14 +1987,19 @@ class _CandidateProfileState extends State<CandidateProfile> {
           ),
           ElevatedButton(
             onPressed: () {
-              final newProject = Project(
-                id: DateTime.now().toString(), // Temporary ID
-                projectName: projectNameController.text,
-                startDate: startDateController.text,
-                endDate: endDateController.text,
-              );
-              BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddProject(newProject));
-              Navigator.pop(dialogContext);
+              if (startDate != null) {
+                final newProject = Project(
+                  id: DateTime.now().toString(),
+                  projectName: projectNameController.text,
+                  startDate: startDate!.toIso8601String(),
+                  endDate: endDate?.toIso8601String() ?? '',
+                  descriptions: descriptionController.text,
+                  skills: skillsController.text.split(',').map((e) => e.trim()).toList(),
+                  projectUrl: urlController.text,
+                );
+                BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddProject(newProject));
+                Navigator.pop(dialogContext);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lightPrimary,
@@ -2120,6 +2011,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _showEditProjectDialog(BuildContext parentContext, Project project) {
     final projectNameController = TextEditingController(text: project.projectName);
     final startDateController = TextEditingController(text: project.startDate);
@@ -2135,35 +2027,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: projectNameController,
-                decoration: InputDecoration(
-                  labelText: 'Project Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(projectNameController, 'Project Name', Icons.folder),
               SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: startDateController,
-                decoration: InputDecoration(
-                  labelText: 'Start Date (e.g., Jan 2020)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(startDateController, 'Start Date', Icons.calendar_today, hintText: 'e.g., Jan 2020'),
               SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: endDateController,
-                decoration: InputDecoration(
-                  labelText: 'End Date (e.g., Dec 2021)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(endDateController, 'End Date', Icons.event_available, hintText: 'e.g., Dec 2021'),
             ],
           ),
         ),
@@ -2193,10 +2061,13 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _showAddCertificationDialog(BuildContext parentContext) {
     final nameController = TextEditingController();
     final orgController = TextEditingController();
-    final screenSize = MediaQuery.of(parentContext).size;
+    final credentialController = TextEditingController();
+    final urlController = TextEditingController();
+    DateTime? issueDate;
 
     showDialog(
       context: parentContext,
@@ -2207,25 +2078,15 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Certification Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
-              SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: orgController,
-                decoration: InputDecoration(
-                  labelText: 'Issuing Organization',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(nameController, 'Certification Name', Icons.card_giftcard),
+              SizedBox(height: 8),
+              _buildTextField(orgController, 'Issuing Organization', Icons.account_balance),
+              SizedBox(height: 8),
+              _buildTextField(credentialController, 'Credential ID', Icons.verified, hintText: 'Optional'),
+              SizedBox(height: 8),
+              _buildTextField(urlController, 'URL', Icons.link, hintText: 'Optional'),
+              SizedBox(height: 8),
+              _buildDateField('Issue Date', issueDate, (date) => issueDate = date),
             ],
           ),
         ),
@@ -2236,13 +2097,18 @@ class _CandidateProfileState extends State<CandidateProfile> {
           ),
           ElevatedButton(
             onPressed: () {
-              final newCertification = Certification(
-                id: DateTime.now().toString(), // Temporary ID
-                name: nameController.text,
-                issuingOrganization: orgController.text,
-              );
-              BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddCertification(newCertification));
-              Navigator.pop(dialogContext);
+              if (issueDate != null) {
+                final newCertification = Certification(
+                  id: DateTime.now().toString(),
+                  name: nameController.text,
+                  issuingOrganization: orgController.text,
+                  issueDate: issueDate!.toIso8601String(),
+                  credentialID: credentialController.text,
+                  url: urlController.text,
+                );
+                BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddCertification(newCertification));
+                Navigator.pop(dialogContext);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lightPrimary,
@@ -2254,6 +2120,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _showEditCertificationDialog(BuildContext parentContext, Certification certification) {
     final nameController = TextEditingController(text: certification.name);
     final orgController = TextEditingController(text: certification.issuingOrganization);
@@ -2268,25 +2135,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Certification Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(nameController, 'Certification Name', Icons.card_giftcard),
               SizedBox(height: screenSize.height * 0.015),
-              TextField(
-                controller: orgController,
-                decoration: InputDecoration(
-                  labelText: 'Issuing Organization',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  filled: true,
-                  fillColor: AppColors.lightSurface,
-                ),
-              ),
+              _buildTextField(orgController, 'Issuing Organization', Icons.account_balance),
             ],
           ),
         ),
@@ -2315,6 +2166,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _uploadResume(BuildContext parentContext) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
     if (result != null) {
@@ -2368,6 +2220,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
   void _confirmDeleteResume(BuildContext parentContext) {
     final screenSize = MediaQuery.of(parentContext).size;
 
@@ -2397,2170 +2250,66 @@ class _CandidateProfileState extends State<CandidateProfile> {
       ),
     );
   }
+
+  Widget _buildTextField(
+      TextEditingController controller,
+      String label,
+      IconData icon, {
+        String? hintText,
+        bool isMultiLine = false,
+        TextInputType? keyboardType,
+        bool readOnly = false,
+        VoidCallback? onTap,
+      }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        maxLines: isMultiLine ? 3 : 1,
+        keyboardType: keyboardType,
+        readOnly: readOnly,
+        onTap: onTap,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hintText,
+          prefixIcon: Icon(icon, color: Colors.blue.shade700),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+          ),
+          filled: true,
+          fillColor: AppColors.lightSurface,
+        ),
+      ),
+    );
+  }
+  Widget _buildDateField(String label, DateTime? date, Function(DateTime?) onDateSelected) {
+    final controller = TextEditingController(
+      text: date != null ? DateFormat('dd/MM/yyyy').format(date) : '',
+    );
+    return TextField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(Icons.calendar_today, color: Colors.blue.shade700),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+        ),
+      ),
+      onTap: () async {
+        final pickedDate = await _pickDate(context, initialDate: date);
+        if (pickedDate != null) {
+          controller.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+          onDateSelected(pickedDate);
+        }
+      },
+    );
+  }
 }
 
-// class ProfileContent extends StatefulWidget {
-//   final Candidate candidate;
-//
-//   const ProfileContent({super.key, required this.candidate});
-//
-//   @override
-//   State<ProfileContent> createState() => _ProfileContentState();
-// }
-//
-// class _ProfileContentState extends State<ProfileContent> {
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     Size screenSize = MediaQuery.of(context).size;
-//     return Padding(
-//       padding: const EdgeInsets.all(16.0),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           _buildPersonalInfoSection(),
-//            SizedBox(height: screenSize.height*0.02),
-//           _buildProfileSummarySection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildAboutSection(screenSize),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildDisabilityDetailsSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildJobPreferencesSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildSkillsSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildEducationSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildWorkExperienceSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildInternshipSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildProjectsSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildCertificationsSection(),
-//           SizedBox(height: screenSize.height*0.02),
-//           _buildResumeSection(),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildSectionHeader(String title, VoidCallback onAdd) {
-//     final screenSize = MediaQuery.of(context).size;
-//     return Row(
-//       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//       children: [
-//         Text(
-//           title,
-//             style: Theme.of(context).textTheme.displaySmall
-//         ),
-//         IconButton(
-//           icon: Icon(Icons.add_circle, color: Colors.blue.shade600),
-//           onPressed: onAdd,
-//         ),
-//       ],
-//     );
-//   }
-//
-//   Widget _buildPersonalInfoSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return AnimatedContainer(
-//       duration: const Duration(milliseconds: 300),
-//       curve: Curves.easeInOut,
-//       decoration: BoxDecoration(
-//         gradient: LinearGradient(
-//           colors: [AppColors.lightBackground, AppColors.lightSurface],
-//           begin: Alignment.topLeft,
-//           end: Alignment.bottomRight,
-//         ),
-//         borderRadius: BorderRadius.circular(16),
-//         boxShadow: [Theme.of(context).cardTheme.shadowColor != null ? BoxShadow(
-//           color: Theme.of(context).cardTheme.shadowColor!,
-//           blurRadius: 10,
-//           offset: const Offset(0, 5),
-//         ) : const BoxShadow()],
-//       ),
-//       padding: EdgeInsets.all(screenSize.width * 0.04),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Row(
-//             children: [
-//               CircleAvatar(
-//                 radius: screenSize.width * 0.12,
-//                 backgroundImage: widget.candidate.personalInfo.profilePic != null
-//                     ? NetworkImage(widget.candidate.personalInfo.profilePic!)
-//                     : AssetImage('assets/default_profile.png') as ImageProvider,
-//                 backgroundColor: AppColors.lightSurface,
-//               ),
-//               SizedBox(width: screenSize.width * 0.04),
-//               Expanded(
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Text(
-//                       widget.candidate.personalInfo.fullName,
-//                       style: Theme.of(context).textTheme.displayMedium?.copyWith(
-//                         fontWeight: FontWeight.bold,
-//                         //color: AppColors.lightText,
-//                       ),
-//                     ),
-//                     SizedBox(height: screenSize.height * 0.01),
-//                     Text(
-//                         widget.candidate.personalInfo.email,
-//                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                         color: AppColors.lightSecondaryText,
-//                       ),
-//                     ),
-//                     Text(
-//                       widget.candidate.personalInfo.phoneNumber,
-//                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                         color: AppColors.lightSecondaryText,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ],
-//           ),
-//           SizedBox(height: screenSize.height * 0.02),
-//           Align(
-//             alignment: Alignment.centerRight,
-//             child: ElevatedButton.icon(
-//               onPressed: () => _showPersonalInfoEditDialog(context),
-//               icon:  Icon(FontAwesomeIcons.edit,color: Colors.white,),
-//               label:  Text('Edit'),
-//               style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-//                 padding: MaterialStateProperty.all(
-//                   EdgeInsets.symmetric(
-//                     horizontal: screenSize.width * 0.04,
-//                     vertical: screenSize.height * 0.015,
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildProfileSummarySection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//             children: [
-//               Text(
-//                 'Profile Summary',
-//                 style: Theme.of(context).textTheme.displaySmall
-//               ),
-//               IconButton(
-//                 icon: Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
-//                 onPressed: () => _showProfileSummaryEditDialog(context),
-//               ),
-//             ],
-//           ),
-//           SizedBox(height: screenSize.height * 0.015),
-//           Text(
-//             widget.candidate.profileSummary.isNotEmpty
-//                 ? widget.candidate.profileSummary
-//                 : 'No profile summary added yet.',
-//             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//               fontStyle: widget.candidate.profileSummary.isEmpty ? FontStyle.italic : FontStyle.normal,
-//               color: widget.candidate.profileSummary.isEmpty ? AppColors.lightSecondaryText : null,
-//             ),
-//             maxLines: 5,
-//             overflow: TextOverflow.ellipsis,
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildAboutSection(Size screenSize) {
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//             children: [
-//               Text(
-//                 'About',
-//                   style: Theme.of(context).textTheme.displaySmall
-//               ),
-//               IconButton(
-//                 icon: Icon(FontAwesomeIcons.edit,  color: AppColors.lightPrimary),
-//                 onPressed: () => _showAboutEditDialog(context),
-//               ),
-//             ],
-//           ),
-//           SizedBox(height: screenSize.height * 0.015),
-//           Text(
-//             widget.candidate.about.isNotEmpty
-//                 ? widget.candidate.about
-//                 : 'Tell employers about yourself.',
-//             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//               fontStyle: widget.candidate.profileSummary.isEmpty ? FontStyle.italic : FontStyle.normal,
-//               color: widget.candidate.profileSummary.isEmpty ? AppColors.lightSecondaryText : null,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildDisabilityDetailsSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     final hasDisabilityInfo = widget.candidate.disabilityDetails.type.isNotEmpty;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//             children: [
-//               Text(
-//                 'Disability Details',
-//                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
-//                   color: AppColors.lightText,
-//                 ),
-//               ),
-//               IconButton(
-//                 icon: Icon(FontAwesomeIcons.edit,  color: AppColors.lightPrimary),
-//                 onPressed: () => _showDisabilityDetailsEditDialog(context),
-//               ),
-//             ],
-//           ),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (hasDisabilityInfo) ...[
-//             _buildInfoRow('Type', widget.candidate.disabilityDetails.type),
-//             _buildInfoRow('Percentage', '${widget.candidate.disabilityDetails.percentage}%'),
-//             _buildInfoRow('Certificate No.', widget.candidate.disabilityDetails.certificateNumber),
-//             if (widget.candidate.disabilityDetails.accommodationsNeeded.isNotEmpty)
-//               _buildInfoRow('Accommodations', widget.candidate.disabilityDetails.accommodationsNeeded.join(', ')),
-//             if (widget.candidate.disabilityDetails.assistiveTechnology.isNotEmpty)
-//               _buildInfoRow('Assistive Tech', widget.candidate.disabilityDetails.assistiveTechnology.join(', ')),
-//           ] else
-//             Text(
-//               'No disability details added yet.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: Colors.grey,
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildJobPreferencesSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     final jp = widget.candidate.jobPreferences;
-//     final hasJobPreferences = jp.industries.isNotEmpty || jp.roles.isNotEmpty || jp.preferredSalary > 0;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//             children: [
-//               Text(
-//                 'Job Preferences',
-//                 style: Theme.of(context).textTheme.displaySmall
-//               ),
-//               IconButton(
-//                 icon: Icon(FontAwesomeIcons.edit,  color: AppColors.lightPrimary),
-//                 onPressed: () => _showJobPreferencesEditDialog(context),
-//               ),
-//             ],
-//           ),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (hasJobPreferences) ...[
-//             if (jp.industries.isNotEmpty) _buildInfoRow('Industries', jp.industries.join(', ')),
-//             if (jp.roles.isNotEmpty) _buildInfoRow('Roles', jp.roles.join(', ')),
-//             if (jp.preferredSalary > 0) _buildInfoRow('Salary', '\$${jp.preferredSalary}'),
-//           ] else
-//             Text(
-//               'No job preferences set yet.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: AppColors.lightSecondaryText,
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildSkillsSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           _buildSectionHeader(
-//             'Skills',
-//                 () => _showSkillsEditDialog(context),
-//           ),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (widget.candidate.skills.isNotEmpty)
-//             Container(
-//               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 64),
-//               child: Wrap(
-//                 spacing: 8,
-//                 runSpacing: 8,
-//                 children: widget.candidate.skills.map((skill) => Chip(
-//                   label: Text(
-//                     skill,
-//                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                       color: AppColors.lightPrimary,
-//                       fontWeight: FontWeight.w500,
-//                     ),
-//                   ),
-//                   backgroundColor: AppColors.lightPrimary.withOpacity(0.1),
-//                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(20),
-//                     side: BorderSide(color: AppColors.lightPrimary.withOpacity(0.2)),
-//                   ),
-//                   elevation: 1,
-//                   shadowColor: AppColors.lightText.withOpacity(0.1),
-//                 )).toList(),
-//               ),
-//             )
-//           else
-//             Text(
-//               'No skills added yet. Tap + to add your skills.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: AppColors.lightSecondaryText,
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//
-//
-//   Widget _buildEducationSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           _buildSectionHeader('Education', () => _showAddEducationDialog(context)),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (widget.candidate.education.isEmpty)
-//             Text(
-//               'No education history added yet.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: AppColors.lightSecondaryText,
-//               ),
-//             )
-//           else
-//             ListView.separated(
-//               shrinkWrap: true,
-//               physics: const NeverScrollableScrollPhysics(),
-//               itemCount: widget.candidate.education.length,
-//               separatorBuilder: (context, index) => Divider(color: AppColors.lightDivider),
-//               itemBuilder: (context, index) {
-//                 final edu = widget.candidate.education[index];
-//                 return ListTile(
-//                   contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-//                   title: Text(
-//                     '${edu.degree} ${edu.course}',
-//                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-//                       fontWeight: FontWeight.bold,
-//                       color: AppColors.lightText,
-//                     ),
-//                   ),
-//                   subtitle: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Text(edu.institution, style: Theme.of(context).textTheme.bodyMedium),
-//                       Text('${edu.startingYear} - ${edu.passingYear}', style: Theme.of(context).textTheme.bodySmall),
-//                       if (edu.cgpa.isNotEmpty) Text('CGPA: ${edu.cgpa}', style: Theme.of(context).textTheme.bodySmall),
-//                     ],
-//                   ),
-//                   trailing: Row(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: [
-//                       IconButton(
-//                         icon: Icon(FontAwesomeIcons.edit,  color: AppColors.lightPrimary),
-//                         onPressed: () => _showEditEducationDialog(context, edu),
-//                       ),
-//                       IconButton(
-//                         icon:  Icon(Icons.delete, color: Colors.red),
-//                         onPressed: () => _confirmDelete(context, 'education', edu.id, '${edu.degree} from ${edu.institution}'),
-//                       ),
-//                     ],
-//                   ),
-//                 );
-//               },
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildWorkExperienceSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           _buildSectionHeader('Work Experience', () => _showAddWorkExperienceDialog(context)),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (widget.candidate.workExperience.isEmpty)
-//             Text(
-//               'No work experience added yet.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: AppColors.lightSecondaryText,
-//               ),
-//             )
-//           else
-//             ListView.separated(
-//               shrinkWrap: true,
-//               physics: const NeverScrollableScrollPhysics(),
-//               itemCount: widget.candidate.workExperience.length,
-//               separatorBuilder: (context, index) => Divider(color: AppColors.lightDivider),
-//               itemBuilder: (context, index) {
-//                 final exp = widget.candidate.workExperience[index];
-//                 return ListTile(
-//                   contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-//                   title: Text(
-//                     exp.position,
-//                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-//                       fontWeight: FontWeight.bold,
-//                       color: AppColors.lightText,
-//                     ),
-//                   ),
-//                   subtitle: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Text(exp.company, style: Theme.of(context).textTheme.bodyMedium),
-//                       Text(
-//                         exp.isCurrentlyWorking ? '${exp.startDate} - Present' : '${exp.startDate} - ${exp.endDate}',
-//                         style: Theme.of(context).textTheme.bodySmall,
-//                       ),
-//                     ],
-//                   ),
-//                   trailing: Row(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: [
-//                       IconButton(
-//                         icon: Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
-//                         onPressed: () => _showEditWorkExperienceDialog(context, exp),
-//                       ),
-//                       IconButton(
-//                         icon: const Icon(Icons.delete, color: Colors.red),
-//                         onPressed: () => _confirmDelete(context, 'work-experience', exp.id, '${exp.position} at ${exp.company}'),
-//                       ),
-//                     ],
-//                   ),
-//                 );
-//               },
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildInternshipSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           _buildSectionHeader('Internships', () => _showAddInternshipDialog(context)),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (widget.candidate.internships.isEmpty)
-//             Text(
-//               'No internships added yet.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: AppColors.lightSecondaryText,
-//               ),
-//             )
-//           else
-//             ListView.separated(
-//               shrinkWrap: true,
-//               physics: const NeverScrollableScrollPhysics(),
-//               itemCount: widget.candidate.internships.length,
-//               separatorBuilder: (context, index) => Divider(color: AppColors.lightDivider),
-//               itemBuilder: (context, index) {
-//                 final internship = widget.candidate.internships[index];
-//                 return ListTile(
-//                   contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-//                   title: Text(
-//                     internship.projectName,
-//                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-//                       fontWeight: FontWeight.bold,
-//                       color: AppColors.lightText,
-//                     ),
-//                   ),
-//                   subtitle: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       Text(
-//                         internship.company,
-//                         style: Theme.of(context).textTheme.bodyMedium,
-//                       ),
-//                       Text(
-//                         internship.isCurrentlyWorking ? '${internship.startDate} - Present' : '${internship.startDate} - ${internship.endDate}',
-//                         style: Theme.of(context).textTheme.bodySmall,
-//                       ),
-//                     ],
-//                   ),
-//                   trailing: Row(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: [
-//                       IconButton(
-//                         icon: Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
-//                         onPressed: () => _showEditInternshipDialog(context, internship),
-//                       ),
-//                       IconButton(
-//                         icon: const Icon(Icons.delete, color: Colors.red),
-//                         onPressed: () => _confirmDelete(context, 'internship', internship.id, '${internship.projectName} at ${internship.company}'),
-//                       ),
-//                     ],
-//                   ),
-//                 );
-//               },
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildProjectsSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           _buildSectionHeader('Projects', () => _showAddProjectDialog(context)),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (widget.candidate.projects.isEmpty)
-//             Text(
-//               'No projects added yet.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: AppColors.lightSecondaryText,
-//               ),
-//             )
-//           else
-//             ListView.separated(
-//               shrinkWrap: true,
-//               physics: const NeverScrollableScrollPhysics(),
-//               itemCount: widget.candidate.projects.length,
-//               separatorBuilder: (context, index) => Divider(color: AppColors.lightDivider),
-//               itemBuilder: (context, index) {
-//                 final project = widget.candidate.projects[index];
-//                 return ListTile(
-//                   contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-//                   title: Text(
-//                     project.projectName,
-//                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-//                       fontWeight: FontWeight.bold,
-//                       color: AppColors.lightText,
-//                     ),
-//                   ),
-//                   subtitle: Text(
-//                     '${project.startDate} - ${project.endDate}',
-//                     style: Theme.of(context).textTheme.bodySmall,
-//                   ),
-//                   trailing: Row(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: [
-//                       IconButton(
-//                         icon: Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
-//                         onPressed: () => _showEditProjectDialog(context, project),
-//                       ),
-//                       IconButton(
-//                         icon: const Icon(Icons.delete, color: Colors.red),
-//                         onPressed: () => _confirmDelete(context, 'project', project.id, project.projectName),
-//                       ),
-//                     ],
-//                   ),
-//                 );
-//               },
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildCertificationsSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           _buildSectionHeader('Certifications', () => _showAddCertificationDialog(context)),
-//           SizedBox(height: screenSize.height * 0.015),
-//           if (widget.candidate.certifications.isEmpty)
-//             Text(
-//               'No certifications added yet.',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontStyle: FontStyle.italic,
-//                 color: AppColors.lightSecondaryText,
-//               ),
-//             )
-//           else
-//             ListView.separated(
-//               shrinkWrap: true,
-//               physics: const NeverScrollableScrollPhysics(),
-//               itemCount: widget.candidate.certifications.length,
-//               separatorBuilder: (context, index) => Divider(color: AppColors.lightDivider),
-//               itemBuilder: (context, index) {
-//                 final cert = widget.candidate.certifications[index];
-//                 return ListTile(
-//                   contentPadding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-//                   title: Text(
-//                     cert.name,
-//                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-//                       fontWeight: FontWeight.bold,
-//                       color: AppColors.lightText,
-//                     ),
-//                   ),
-//                   subtitle: Text(
-//                     cert.issuingOrganization,
-//                     style: Theme.of(context).textTheme.bodyMedium,
-//                   ),
-//                   trailing: Row(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: [
-//                       IconButton(
-//                         icon: Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
-//                         onPressed: () => _showEditCertificationDialog(context, cert),
-//                       ),
-//                       IconButton(
-//                         icon: const Icon(Icons.delete, color: Colors.red),
-//                         onPressed: () => _confirmDelete(context, 'certification', cert.id, cert.name),
-//                       ),
-//                     ],
-//                   ),
-//                 );
-//               },
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildResumeSection() {
-//     final screenSize = MediaQuery.of(context).size;
-//     return _buildCard(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Text(
-//             'Resume',
-//             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-//               color: AppColors.lightText,
-//             ),
-//           ),
-//           SizedBox(height: screenSize.height * 0.02),
-//           if (widget.candidate.resume.isNotEmpty)
-//             Column(
-//               children: [
-//                 ListTile(
-//                   leading: Icon(Icons.description, color: AppColors.lightPrimary),
-//                   title: Text('Resume.pdf', style: Theme.of(context).textTheme.bodyLarge),
-//                   subtitle: Text('Tap to view', style: Theme.of(context).textTheme.bodySmall),
-//                   trailing: IconButton(
-//                     icon: const Icon(Icons.delete, color: Colors.red),
-//                     onPressed: () => _confirmDeleteResume(context),
-//                   ),
-//                   onTap: () {},
-//                 ),
-//                 ElevatedButton.icon(
-//                   onPressed: () => _uploadResume(context),
-//                   icon: const Icon(FontAwesomeIcons.upload,color: Colors.white,),
-//                   label: const Text('Replace Resume'),
-//                   style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-//                     padding: MaterialStateProperty.all(
-//                       EdgeInsets.symmetric(
-//                         horizontal: screenSize.width * 0.04,
-//                         vertical: screenSize.height * 0.015,
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             )
-//           else
-//             Center(
-//               child: ElevatedButton.icon(
-//                 onPressed: () => _uploadResume(context),
-//                 icon: const Icon(Icons.upload_file,color: Colors.white,),
-//                 label: const Text('Upload Resume'),
-//                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-//                   padding: MaterialStateProperty.all(
-//                     EdgeInsets.symmetric(
-//                       horizontal: screenSize.width * 0.06,
-//                       vertical: screenSize.height * 0.02,
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildCard({required Widget child}) {
-//     final screenSize = MediaQuery.of(context).size;
-//     return AnimatedContainer(
-//       duration: const Duration(milliseconds: 300),
-//       curve: Curves.easeInOut,
-//       margin: EdgeInsets.symmetric(vertical: screenSize.height * 0.01),
-//       padding: EdgeInsets.all(screenSize.width * 0.04),
-//       decoration: BoxDecoration(
-//         color: Theme.of(context).cardTheme.color,
-//         borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-//             ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
-//             : BorderRadius.circular(16),
-//         boxShadow: [Theme.of(context).cardTheme.shadowColor != null ? BoxShadow(
-//           color: Theme.of(context).cardTheme.shadowColor!,
-//           blurRadius: 10,
-//           offset: const Offset(0, 5),
-//         ) : const BoxShadow()],
-//       ),
-//       child: child,
-//     );
-//   }
-//
-//   Widget _buildInfoRow(String label, String value) {
-//     final screenSize = MediaQuery.of(context).size;
-//     return Padding(
-//       padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.005),
-//       child: Row(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           SizedBox(
-//             width: screenSize.width * 0.35, // Responsive width for label
-//             child: Text(
-//               '$label:',
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 fontWeight: FontWeight.bold,
-//                 color: AppColors.lightPrimary,
-//               ),
-//             ),
-//           ),
-//           Expanded(
-//             child: Text(
-//               value,
-//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//                 color: AppColors.lightText,
-//               ),
-//               maxLines: 2,
-//               overflow: TextOverflow.ellipsis,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showPersonalInfoEditDialog(BuildContext parentContext) {
-//     final nameController = TextEditingController(text: widget.candidate.personalInfo.fullName);
-//     final emailController = TextEditingController(text: widget.candidate.personalInfo.email);
-//     final phoneController = TextEditingController(text: widget.candidate.personalInfo.phoneNumber);
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit Personal Information', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: nameController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Full Name',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: emailController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Email',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.emailAddress,
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: phoneController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Phone Number',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.phone,
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final updatedInfo = PersonalInfo(
-//                 fullName: nameController.text,
-//                 email: emailController.text,
-//                 phoneNumber: phoneController.text,
-//                 profilePic: widget.candidate.personalInfo.profilePic, // Preserve existing pic
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateProfile(updatedInfo));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showProfileSummaryEditDialog(BuildContext parentContext) {
-//     final controller = TextEditingController(text: widget.candidate.profileSummary);
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit Profile Summary', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: TextField(
-//           controller: controller,
-//           maxLines: 5,
-//           decoration: InputDecoration(
-//             hintText: 'Write a brief summary...',
-//             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//             filled: true,
-//             fillColor: AppColors.lightSurface,
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateProfileSummary(controller.text));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showAboutEditDialog(BuildContext parentContext) {
-//     final controller = TextEditingController(text: widget.candidate.about);
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit About', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: TextField(
-//           controller: controller,
-//           maxLines: 8,
-//           decoration: InputDecoration(
-//             hintText: 'Tell employers about yourself...',
-//             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//             filled: true,
-//             fillColor: AppColors.lightSurface,
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateAbout(controller.text));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showDisabilityDetailsEditDialog(BuildContext parentContext) {
-//     final typeController = TextEditingController(text: widget.candidate.disabilityDetails.type);
-//     final percentageController = TextEditingController(text: widget.candidate.disabilityDetails.percentage.toString());
-//     final certController = TextEditingController(text: widget.candidate.disabilityDetails.certificateNumber);
-//     final accommodationsController = TextEditingController(text: widget.candidate.disabilityDetails.accommodationsNeeded.join(', '));
-//     final techController = TextEditingController(text: widget.candidate.disabilityDetails.assistiveTechnology.join(', '));
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit Disability Details', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: typeController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Disability Type',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: percentageController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Percentage (%)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: certController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Certificate Number',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: accommodationsController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Accommodations Needed (comma-separated)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: techController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Assistive Technology (comma-separated)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final updatedDetails = DisabilityDetails(
-//                 type: typeController.text,
-//                 percentage: int.tryParse(percentageController.text) ?? 0,
-//                 certificateNumber: certController.text,
-//                 accommodationsNeeded: accommodationsController.text.split(',').map((e) => e.trim()).toList(),
-//                 assistiveTechnology: techController.text.split(',').map((e) => e.trim()).toList(),
-//               );
-//              // BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateDisabilityDetails(updatedDetails));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//   void _showJobPreferencesEditDialog(BuildContext parentContext) {
-//     final jp = widget.candidate.jobPreferences;
-//     final industriesController = TextEditingController(text: jp.industries.join(', '));
-//     final rolesController = TextEditingController(text: jp.roles.join(', '));
-//     final salaryController = TextEditingController(text: jp.preferredSalary.toString());
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit Job Preferences', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: industriesController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Industries (comma-separated)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: rolesController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Roles (comma-separated)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: salaryController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Preferred Salary',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final updatedPrefs = JobPreferences(
-//                 industries: industriesController.text.split(',').map((e) => e.trim()).toList(),
-//                 roles: rolesController.text.split(',').map((e) => e.trim()).toList(),
-//                 preferredSalary: int.tryParse(salaryController.text) ?? 0,
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateJobPreferences(updatedPrefs));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showSkillsEditDialog(BuildContext parentContext) {
-//     final TextEditingController skillController = TextEditingController();
-//     List<String> tempSkills = List.from(widget.candidate.skills);
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => StatefulBuilder(
-//         builder: (dialogContext, setState) => AlertDialog(
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//           title: Text('Edit Skills', style: Theme.of(dialogContext).textTheme.displaySmall),
-//           content: SizedBox(
-//             width: screenSize.width * 0.85,
-//             child: SingleChildScrollView(
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   TextField(
-//                     controller: skillController,
-//                     decoration: InputDecoration(
-//                       hintText: 'Enter a skill (e.g., Flutter, Java)',
-//                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                       filled: true,
-//                       fillColor: AppColors.lightSurface,
-//                       suffixIcon: IconButton(
-//                         icon: Icon(Icons.add, color: AppColors.lightPrimary),
-//                         onPressed: () {
-//                           final skill = skillController.text.trim();
-//                           if (skill.isNotEmpty && !tempSkills.contains(skill)) {
-//                             setState(() {
-//                               tempSkills.add(skill);
-//                               skillController.clear();
-//                             });
-//                           }
-//                         },
-//                       ),
-//                     ),
-//                   ),
-//                   SizedBox(height: screenSize.height * 0.015),
-//                   if (tempSkills.isNotEmpty) ...[
-//                     Text(
-//                       'Your Skills',
-//                       style: Theme.of(dialogContext).textTheme.bodyLarge?.copyWith(
-//                         fontWeight: FontWeight.w600,
-//                         color: AppColors.lightText,
-//                       ),
-//                     ),
-//                     SizedBox(height: screenSize.height * 0.01),
-//                     Wrap(
-//                       spacing: 8,
-//                       runSpacing: 8,
-//                       children: tempSkills.map((skill) => Chip(
-//                         label: Text(
-//                           skill,
-//                           style: Theme.of(dialogContext).textTheme.bodyMedium?.copyWith(
-//                             color: AppColors.lightPrimary,
-//                           ),
-//                         ),
-//                         backgroundColor: AppColors.lightPrimary.withOpacity(0.1),
-//                         deleteIcon: Icon(Icons.close, size: 18, color: AppColors.lightPrimary),
-//                         onDeleted: () {
-//                           setState(() => tempSkills.remove(skill));
-//                         },
-//                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-//                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-//                       )).toList(),
-//                     ),
-//                   ],
-//                 ],
-//               ),
-//             ),
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.pop(dialogContext),
-//               child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateSkills(tempSkills));
-//                 Navigator.pop(dialogContext);
-//               },
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: AppColors.lightPrimary,
-//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//               ),
-//               child: Text('Save', style: TextStyle(color: Colors.white)),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-//   void _showAddEducationDialog(BuildContext parentContext) {
-//     final degreeController = TextEditingController();
-//     final courseController = TextEditingController();
-//     final institutionController = TextEditingController();
-//     final startYearController = TextEditingController();
-//     final passingYearController = TextEditingController();
-//     final cgpaController = TextEditingController();
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Add Education', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: degreeController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Degree',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: courseController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Course',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: institutionController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Institution',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: startYearController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Start Year',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: passingYearController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Passing Year',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: cgpaController,
-//                 decoration: InputDecoration(
-//                   labelText: 'CGPA (optional)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final newEducation = Education(
-//                 id: DateTime.now().toString(), // Temporary ID, replace with server-generated ID
-//                 degree: degreeController.text,
-//                 course: courseController.text,
-//                 institution: institutionController.text,
-//                 startingYear: startYearController.text,
-//                 passingYear: int.parse(passingYearController.text),
-//                 cgpa: cgpaController.text,
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddEducation(newEducation));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Add', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showEditEducationDialog(BuildContext parentContext, Education education) {
-//     final degreeController = TextEditingController(text: education.degree);
-//     final courseController = TextEditingController(text: education.course);
-//     final institutionController = TextEditingController(text: education.institution);
-//     final startYearController = TextEditingController(text: education.startingYear);
-//     final passingYearController = TextEditingController(text: education.passingYear.toString());
-//     final cgpaController = TextEditingController(text: education.cgpa);
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit Education', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: degreeController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Degree',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: courseController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Course',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: institutionController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Institution',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: startYearController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Start Year',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: passingYearController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Passing Year',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: cgpaController,
-//                 decoration: InputDecoration(
-//                   labelText: 'CGPA (optional)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//                 keyboardType: TextInputType.number,
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final updatedEducation = Education(
-//                 id: education.id,
-//                 degree: degreeController.text,
-//                 course: courseController.text,
-//                 institution: institutionController.text,
-//                 startingYear: startYearController.text,
-//                 passingYear: int.parse(passingYearController.text),
-//                 cgpa: cgpaController.text,
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateEducation(updatedEducation));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   void _showAddWorkExperienceDialog(BuildContext parentContext) {
-//     final positionController = TextEditingController();
-//     final companyController = TextEditingController();
-//     final startDateController = TextEditingController();
-//     final endDateController = TextEditingController();
-//     bool isCurrentlyWorking = false;
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => StatefulBuilder(
-//         builder: (dialogContext, setState) => AlertDialog(
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//           title: Text('Add Work Experience', style: Theme.of(dialogContext).textTheme.displaySmall),
-//           content: SingleChildScrollView(
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               children: [
-//                 TextField(
-//                   controller: positionController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Position',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: companyController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Company',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: startDateController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Start Date (e.g., Jan 2020)',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 if (!isCurrentlyWorking)
-//                   TextField(
-//                     controller: endDateController,
-//                     decoration: InputDecoration(
-//                       labelText: 'End Date (e.g., Dec 2021)',
-//                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                       filled: true,
-//                       fillColor: AppColors.lightSurface,
-//                     ),
-//                   ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 CheckboxListTile(
-//                   title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//                   value: isCurrentlyWorking,
-//                   onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-//                   activeColor: AppColors.lightPrimary,
-//                 ),
-//               ],
-//             ),
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.pop(dialogContext),
-//               child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 final newExperience = WorkExperience(
-//                   id: DateTime.now().toString(), // Temporary ID
-//                   position: positionController.text,
-//                   company: companyController.text,
-//                   startDate: startDateController.text,
-//                   endDate: isCurrentlyWorking ? '' : endDateController.text,
-//                   isCurrentlyWorking: isCurrentlyWorking,
-//                 );
-//                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddWorkExperience(newExperience));
-//                 Navigator.pop(dialogContext);
-//               },
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: AppColors.lightPrimary,
-//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//               ),
-//               child: Text('Add', style: TextStyle(color: Colors.white)),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-//   void _showEditWorkExperienceDialog(BuildContext parentContext, WorkExperience experience) {
-//     final positionController = TextEditingController(text: experience.position);
-//     final companyController = TextEditingController(text: experience.company);
-//     final startDateController = TextEditingController(text: experience.startDate);
-//     final endDateController = TextEditingController(text: experience.endDate);
-//     bool isCurrentlyWorking = experience.isCurrentlyWorking;
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => StatefulBuilder(
-//         builder: (dialogContext, setState) => AlertDialog(
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//           title: Text('Edit Work Experience', style: Theme.of(dialogContext).textTheme.displaySmall),
-//           content: SingleChildScrollView(
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               children: [
-//                 TextField(
-//                   controller: positionController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Position',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: companyController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Company',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: startDateController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Start Date (e.g., Jan 2020)',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 if (!isCurrentlyWorking)
-//                   TextField(
-//                     controller: endDateController,
-//                     decoration: InputDecoration(
-//                       labelText: 'End Date (e.g., Dec 2021)',
-//                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                       filled: true,
-//                       fillColor: AppColors.lightSurface,
-//                     ),
-//                   ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 CheckboxListTile(
-//                   title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//                   value: isCurrentlyWorking,
-//                   onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-//                   activeColor: AppColors.lightPrimary,
-//                 ),
-//               ],
-//             ),
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.pop(dialogContext),
-//               child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 final updatedExperience = WorkExperience(
-//                   id: experience.id,
-//                   position: positionController.text,
-//                   company: companyController.text,
-//                   startDate: startDateController.text,
-//                   endDate: isCurrentlyWorking ? '' : endDateController.text,
-//                   isCurrentlyWorking: isCurrentlyWorking,
-//                 );
-//                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateWorkExperience(updatedExperience));
-//                 Navigator.pop(dialogContext);
-//               },
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: AppColors.lightPrimary,
-//
-//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//               ),
-//               child: Text('Save', style: TextStyle(color: Colors.white)),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//   void _showAddInternshipDialog(BuildContext parentContext) {
-//     final projectNameController = TextEditingController();
-//     final companyController = TextEditingController();
-//     final startDateController = TextEditingController();
-//     final endDateController = TextEditingController();
-//     bool isCurrentlyWorking = false;
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => StatefulBuilder(
-//         builder: (dialogContext, setState) => AlertDialog(
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//           title: Text('Add Internship', style: Theme.of(dialogContext).textTheme.displaySmall),
-//           content: SingleChildScrollView(
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               children: [
-//                 TextField(
-//                   controller: projectNameController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Project Name',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: companyController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Company',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: startDateController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Start Date (e.g., Jan 2020)',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 if (!isCurrentlyWorking)
-//                   TextField(
-//                     controller: endDateController,
-//                     decoration: InputDecoration(
-//                       labelText: 'End Date (e.g., Dec 2021)',
-//                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                       filled: true,
-//                       fillColor: AppColors.lightSurface,
-//                     ),
-//                   ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 CheckboxListTile(
-//                   title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//                   value: isCurrentlyWorking,
-//                   onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-//                   activeColor: AppColors.lightPrimary,
-//                 ),
-//               ],
-//             ),
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.pop(dialogContext),
-//               child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 final newInternship = Internship(
-//                   id: DateTime.now().toString(), // Temporary ID
-//                   projectName: projectNameController.text,
-//                   company: companyController.text,
-//                   startDate: startDateController.text,
-//                   endDate: isCurrentlyWorking ? '' : endDateController.text,
-//                   isCurrentlyWorking: isCurrentlyWorking,
-//                 );
-//                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddInternship(newInternship));
-//                 Navigator.pop(dialogContext);
-//               },
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: AppColors.lightPrimary,
-//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//               ),
-//               child: Text('Add', style: TextStyle(color: Colors.white)),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//   void _showEditInternshipDialog(BuildContext parentContext, Internship internship) {
-//     final projectNameController = TextEditingController(text: internship.projectName);
-//     final companyController = TextEditingController(text: internship.company);
-//     final startDateController = TextEditingController(text: internship.startDate);
-//     final endDateController = TextEditingController(text: internship.endDate);
-//     bool isCurrentlyWorking = internship.isCurrentlyWorking;
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => StatefulBuilder(
-//         builder: (dialogContext, setState) => AlertDialog(
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//           title: Text('Edit Internship', style: Theme.of(dialogContext).textTheme.displaySmall),
-//           content: SingleChildScrollView(
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               children: [
-//                 TextField(
-//                   controller: projectNameController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Project Name',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: companyController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Company',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 TextField(
-//                   controller: startDateController,
-//                   decoration: InputDecoration(
-//                     labelText: 'Start Date (e.g., Jan 2020)',
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                     filled: true,
-//                     fillColor: AppColors.lightSurface,
-//                   ),
-//                 ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 if (!isCurrentlyWorking)
-//                   TextField(
-//                     controller: endDateController,
-//                     decoration: InputDecoration(
-//                       labelText: 'End Date (e.g., Dec 2021)',
-//                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                       filled: true,
-//                       fillColor: AppColors.lightSurface,
-//                     ),
-//                   ),
-//                 SizedBox(height: screenSize.height * 0.015),
-//                 CheckboxListTile(
-//                   title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//                   value: isCurrentlyWorking,
-//                   onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-//                   activeColor: AppColors.lightPrimary,
-//                 ),
-//               ],
-//             ),
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.pop(dialogContext),
-//               child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 final updatedInternship = Internship(
-//                   id: internship.id,
-//                   projectName: projectNameController.text,
-//                   company: companyController.text,
-//                   startDate: startDateController.text,
-//                   endDate: isCurrentlyWorking ? '' : endDateController.text,
-//                   isCurrentlyWorking: isCurrentlyWorking,
-//                 );
-//                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateInternship(updatedInternship));
-//                 Navigator.pop(dialogContext);
-//               },
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: AppColors.lightPrimary,
-//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//               ),
-//               child: Text('Save', style: TextStyle(color: Colors.white)),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//   void _showAddProjectDialog(BuildContext parentContext) {
-//     final projectNameController = TextEditingController();
-//     final startDateController = TextEditingController();
-//     final endDateController = TextEditingController();
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Add Project', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: projectNameController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Project Name',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: startDateController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Start Date (e.g., Jan 2020)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: endDateController,
-//                 decoration: InputDecoration(
-//                   labelText: 'End Date (e.g., Dec 2021)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final newProject = Project(
-//                 id: DateTime.now().toString(), // Temporary ID
-//                 projectName: projectNameController.text,
-//                 startDate: startDateController.text,
-//                 endDate: endDateController.text,
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddProject(newProject));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Add', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//   void _showEditProjectDialog(BuildContext parentContext, Project project) {
-//     final projectNameController = TextEditingController(text: project.projectName);
-//     final startDateController = TextEditingController(text: project.startDate);
-//     final endDateController = TextEditingController(text: project.endDate);
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit Project', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: projectNameController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Project Name',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: startDateController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Start Date (e.g., Jan 2020)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: endDateController,
-//                 decoration: InputDecoration(
-//                   labelText: 'End Date (e.g., Dec 2021)',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final updatedProject = Project(
-//                 id: project.id,
-//                 projectName: projectNameController.text,
-//                 startDate: startDateController.text,
-//                 endDate: endDateController.text,
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateProject(updatedProject));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//   void _showAddCertificationDialog(BuildContext parentContext) {
-//     final nameController = TextEditingController();
-//     final orgController = TextEditingController();
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Add Certification', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: nameController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Certification Name',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: orgController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Issuing Organization',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final newCertification = Certification(
-//                 id: DateTime.now().toString(), // Temporary ID
-//                 name: nameController.text,
-//                 issuingOrganization: orgController.text,
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddCertification(newCertification));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Add', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//   void _showEditCertificationDialog(BuildContext parentContext, Certification certification) {
-//     final nameController = TextEditingController(text: certification.name);
-//     final orgController = TextEditingController(text: certification.issuingOrganization);
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Edit Certification', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: SingleChildScrollView(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: nameController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Certification Name',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//               SizedBox(height: screenSize.height * 0.015),
-//               TextField(
-//                 controller: orgController,
-//                 decoration: InputDecoration(
-//                   labelText: 'Issuing Organization',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//                   filled: true,
-//                   fillColor: AppColors.lightSurface,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               final updatedCertification = Certification(
-//                 id: certification.id,
-//                 name: nameController.text,
-//                 issuingOrganization: orgController.text,
-//               );
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateCertification(updatedCertification));
-//               Navigator.pop(dialogContext);
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightPrimary,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             child: Text('Save', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//   void _uploadResume(BuildContext parentContext) async {
-//     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
-//     if (result != null) {
-//       File file = File(result.files.single.path!);
-//      // BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateResume(file.path));
-//     }
-//   }
-//
-//   void _confirmDelete(BuildContext parentContext, String type, String id, String itemName) {
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Confirm Delete', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: Text('Are you sure you want to delete "$itemName"?', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightError,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             onPressed: () {
-//               switch (type) {
-//                 case 'education':
-//                   BlocProvider.of<CandidateProfileBloc>(parentContext).add(DeleteEducation(id));
-//                   break;
-//                 case 'work-experience':
-//                   BlocProvider.of<CandidateProfileBloc>(parentContext).add(DeleteWorkExperience(id));
-//                   break;
-//                 case 'internship':
-//                   BlocProvider.of<CandidateProfileBloc>(parentContext).add(DeleteInternship(id));
-//                   break;
-//                 case 'project':
-//                   BlocProvider.of<CandidateProfileBloc>(parentContext).add(DeleteProject(id));
-//                   break;
-//                 case 'certification':
-//                   BlocProvider.of<CandidateProfileBloc>(parentContext).add(DeleteCertification(id));
-//                   break;
-//               }
-//               Navigator.pop(dialogContext);
-//             },
-//             child: Text('Delete', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//   void _confirmDeleteResume(BuildContext parentContext) {
-//     final screenSize = MediaQuery.of(parentContext).size;
-//
-//     showDialog(
-//       context: parentContext,
-//       builder: (dialogContext) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text('Confirm Delete', style: Theme.of(dialogContext).textTheme.displaySmall),
-//         content: Text('Are you sure you want to delete your resume?', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(dialogContext),
-//             child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-//           ),
-//           ElevatedButton(
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: AppColors.lightError,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//             ),
-//             onPressed: () {
-//               BlocProvider.of<CandidateProfileBloc>(parentContext).add(DeleteResume());
-//               Navigator.pop(dialogContext);
-//             },
-//             child: Text('Delete', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

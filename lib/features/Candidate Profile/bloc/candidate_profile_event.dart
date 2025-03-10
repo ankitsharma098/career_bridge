@@ -5,7 +5,7 @@ sealed class CandidateProfileEvent {}
 
 class FetchProfileData extends CandidateProfileEvent {}
 
-class UpdatePersonalProfile extends CandidateProfileEvent { final Map<String, dynamic> personalInfo;  UpdatePersonalProfile(this.personalInfo); }
+class UpdatePersonalProfile extends CandidateProfileEvent { final Map<String, dynamic>  personalInfo;  UpdatePersonalProfile(this.personalInfo); }
 
 class UpdateProfileSummary extends CandidateProfileEvent { final String summary; UpdateProfileSummary(this.summary); }
 class UpdateAbout extends CandidateProfileEvent { final String about; UpdateAbout(this.about); }

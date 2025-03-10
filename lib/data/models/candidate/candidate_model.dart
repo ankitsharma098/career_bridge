@@ -100,6 +100,10 @@ class DisabilityDetails {
   @JsonKey(defaultValue: [])
   final List<String> accommodationsNeeded;
 
+  @JsonKey(defaultValue: '')
+  final String preferredCommunicationMethod;
+
+
   @JsonKey(defaultValue: [])
   final List<String> assistiveTechnology;
 
@@ -108,6 +112,7 @@ class DisabilityDetails {
     this.percentage = 0,
     this.certificateNumber = '',
     this.certificateDoc = '',
+    this.preferredCommunicationMethod = '',
     this.publicId = '',
     this.accommodationsNeeded = const [],
     this.assistiveTechnology = const [],
@@ -288,8 +293,8 @@ class WorkExperience {
   final String endDate;
 
 
-  @JsonKey(defaultValue: [])
-  final List<String> descriptions;
+  @JsonKey(defaultValue: '')
+  final String descriptions;
 
   @JsonKey(name: '_id', defaultValue: '')
   final String id;
@@ -299,7 +304,7 @@ class WorkExperience {
     this.position = '',
     this.startDate = '',
     this.endDate = '',
-    this.descriptions = const [],
+    this.descriptions = '',
     this.id = '',
   });
 
