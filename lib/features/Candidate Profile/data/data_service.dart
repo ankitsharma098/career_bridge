@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:android/data/models/candidate/candidate_model.dart';
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/hiveUtils.dart';
@@ -13,11 +14,11 @@ class CandidateProfileApi {
   Future<Map<String, dynamic>> updatePersonalInfo({
     required String? fullName,
     required File? profilePicFile,
+    required String? publicId,
     required String? email,
     required String? phoneNumber,
     required String? address,
     required String? DOB,
-    required String? designation,
     required String? gender,
   }) async {
     try {
@@ -42,8 +43,8 @@ class CandidateProfileApi {
       addIfValid('phoneNumber', phoneNumber);
       addIfValid('address', address);
       addIfValid('DOB', DOB);
-      addIfValid('designation', designation);
       addIfValid('gender', gender);
+      addIfValid('publicId', publicId);
 
       if (profilePicFile != null) {
         String extension = profilePicFile.path.split('.').last.toLowerCase();
@@ -70,6 +71,7 @@ class CandidateProfileApi {
             ),
           ),
         );
+
       }
 
       print("API hit data $formData");
@@ -91,7 +93,7 @@ class CandidateProfileApi {
       );
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data['updatedUser']);
+        return Map<String, dynamic>.from(response.data['personalInfo']);
       } else {
         throw Exception("Failed to Update Personal Info");
       }
@@ -109,6 +111,103 @@ class CandidateProfileApi {
     }
   }
 
+  Future<Map<String, String>> uploadMedia(File file) async {
+    try {
+      final token = await HiveUtils.getAccessToken();
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      print('Uploading file: ${file.path}, MIME type: $mimeType');
+
+      const allowedMimes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+      if (!allowedMimes.contains(mimeType)) {
+        throw Exception('Unsupported file type: $mimeType. Allowed types: jpg, png, gif, pdf, doc, docx');
+      }
+
+      final formData = FormData.fromMap({
+        'media': await MultipartFile.fromFile(
+          file.path,
+          contentType: MediaType.parse(mimeType),
+        ),
+      });
+
+      final response = await dio.post(
+        "${AppConstants.baseUrl}/media/upload",
+        data: formData,
+        options: token != null ? Options(headers: {'Authorization': 'Bearer $token'}) : null,
+      );
+
+      return {
+        'url': response.data['url'],
+        'publicId': response.data['publicId'],
+      };
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(e.response?.data['message'] ?? "An error occurred");
+      } else {
+        throw Exception('Network error occurred');
+      }
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+
+  Future<Map<String, dynamic>> uploadResume(File file) async {
+    try {
+      final token = await HiveUtils.getAccessToken();
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      print('Uploading file: ${file.path}, MIME type: $mimeType');
+
+      const allowedMimes = [
+        'image/jpeg',
+        'image/png',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+      if (!allowedMimes.contains(mimeType)) {
+        throw Exception('Unsupported file type: $mimeType. Allowed types: jpg, png, gif, pdf, doc, docx');
+      }
+
+      final formData = FormData.fromMap({
+        'resume': await MultipartFile.fromFile(
+          file.path,
+          contentType: MediaType.parse(mimeType),
+        ),
+      });
+
+      final response = await dio.put(
+        "${AppConstants.baseUrl}/candidate/update/resume",
+        data: formData,
+        options: token != null ? Options(headers: {'Authorization': 'Bearer $token'}) : null,
+      );
+      if (response.statusCode == 200) {
+
+
+        print("response ${response.data}");
+        print("response ${response.data['resume']}");
+        return Map<String, dynamic>.from(response.data['resume']);
+      } else {
+        throw Exception("Failed to Update resume");
+      }
+
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(e.response?.data['message'] ?? "An error occurred");
+      } else {
+        throw Exception('Network error occurred');
+      }
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
   Future<String> updateProfileSummary(String? summary) async {
     try {
       print("updateProfileSummary");
@@ -119,7 +218,7 @@ class CandidateProfileApi {
       }
 
       Map<String,dynamic> date ={
-        'summary': summary,
+        'profileSummary': summary,
       };
 
       final response = await dio.put(
@@ -263,6 +362,7 @@ class CandidateProfileApi {
         "experienceLevel":experienceLevel,
 
       };
+      print("Data $data");
 
       String? accessToken = await HiveUtils.getAccessToken();
       if (accessToken == null || accessToken.isEmpty) {
@@ -279,6 +379,8 @@ class CandidateProfileApi {
 
       if (response.statusCode == 200) {
         Map<String, dynamic> rawJobPreferences= Map<String, dynamic>.from(response.data['jobPreferences']);
+
+        print("rawJobPreferences $rawJobPreferences");
 
         return JobPreferences.fromJson(rawJobPreferences ?? {});
       } else {
@@ -313,7 +415,7 @@ class CandidateProfileApi {
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
-        data: skills,
+        data: data,
       );
 
       if (response.statusCode == 200) {
@@ -336,9 +438,9 @@ class CandidateProfileApi {
     required String? course,
     required String? specialization,
     required String? institution,
-    required String? startingYear,
-    required int? passingYear,
-    required String? cgpa,
+    required DateTime? startingYear,
+    required DateTime? passingYear,
+    required String? CGPA,
   }) async {
     try {
       print("addEducation");
@@ -352,11 +454,12 @@ class CandidateProfileApi {
         'course': course,
         'specialization': specialization,
         'institution': institution,
-        'startingYear': startingYear,
-        'passingYear': passingYear?.toString(),
-        'cgpa': cgpa,
+        'startingYear': startingYear?.toIso8601String(),
+        'passingYear': passingYear!=null ? passingYear.toIso8601String() :"",
+        'CGPA': CGPA,
       };
 
+      print("Data $data");
       final response = await dio.post(
         "${AppConstants.baseUrl}/candidate/education/add",
         options: Options(
@@ -367,9 +470,15 @@ class CandidateProfileApi {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
 
-        Map<String,dynamic> rawAddedEducation =  Map<String, dynamic>.from(response.data['education'].last);
+        print(response.data['educations'].last);
 
-        Education education =Education.fromJson(rawAddedEducation);
+        Map<String,dynamic> rawAddedEducation =  Map<String, dynamic>.from(response.data['educations'].last);
+
+        print("rawAdded Education $rawAddedEducation");
+
+        Education education =  Education.fromJson(rawAddedEducation);
+
+        print("After Parsing education $education");
 
         return education;
       } else {
@@ -379,9 +488,11 @@ class CandidateProfileApi {
       if (e.response != null) {
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
       } else {
+        print("Network ERror $e");
         throw Exception('Network error occurred');
       }
     } catch (e) {
+      print("error------------------------------------- $e");
       throw Exception('An unexpected error occurred');
     }
   }
@@ -391,9 +502,9 @@ class CandidateProfileApi {
     required String? course,
     required String? specialization,
     required String? institution,
-    required String? startingYear,
-    required int? passingYear,
-    required String? cgpa,
+    required DateTime? startingYear,
+    required DateTime? passingYear,
+    required String? CGPA,
   }) async {
     try {
       print("updateEducation");
@@ -408,9 +519,9 @@ class CandidateProfileApi {
         'course': course,
         'specialization': specialization,
         'institution': institution,
-        'startingYear': startingYear,
-        'passingYear': passingYear?.toString(),
-        'cgpa': cgpa,
+        'startingYear': startingYear?.toIso8601String(),
+        'passingYear': passingYear!=null ? passingYear.toIso8601String() :"",
+        'CGPA': CGPA,
       };
 
       if (id == null || id.isEmpty) {
@@ -481,8 +592,8 @@ class CandidateProfileApi {
   Future<WorkExperience> addWorkExperience({
     required String? company,
     required String? position,
-    required String? startDate,
-    required String? endDate,
+    required DateTime? startDate,
+    required DateTime? endDate,
     required String? descriptions,
   }) async {
     try {
@@ -496,8 +607,8 @@ class CandidateProfileApi {
       Map<String,dynamic> data = {
         'company': company,
         'position': position,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': startDate?.toIso8601String(),
+        'endDate': endDate !=null ? endDate.toIso8601String() : "",
         'descriptions': descriptions,
       };
 
@@ -511,7 +622,7 @@ class CandidateProfileApi {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
 
-        Map<String,dynamic> rawWorkExperience = Map<String, dynamic>.from(response.data['workExperience'].last);
+        Map<String,dynamic> rawWorkExperience = Map<String, dynamic>.from(response.data['workExperiences'].last);
 
         WorkExperience workExperience= WorkExperience.fromJson(rawWorkExperience);
 
@@ -521,11 +632,14 @@ class CandidateProfileApi {
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        print("error ${e.response?.data['message']}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
       } else {
+        print("error $e");
         throw Exception('Network error occurred');
       }
     } catch (e) {
+      print("error $e");
       throw Exception('An unexpected error occurred');
     }
   }
@@ -534,8 +648,8 @@ class CandidateProfileApi {
     required String? id,
     required String? company,
     required String? position,
-    required String? startDate,
-    required String? endDate,
+    required DateTime? startDate,
+    required DateTime? endDate,
     required String? descriptions,
   }) async {
     try {
@@ -550,8 +664,8 @@ class CandidateProfileApi {
         'experienceId': id,
         'company': company,
         'position': position,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': startDate?.toIso8601String(),
+        'endDate': endDate !=null ? endDate.toIso8601String() : "",
         'descriptions': descriptions,
       };
 
@@ -600,6 +714,7 @@ class CandidateProfileApi {
       final response = await dio.delete(
         "${AppConstants.baseUrl}/candidate/delete/workExperience/$id",
         options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
       );
 
@@ -608,11 +723,14 @@ class CandidateProfileApi {
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        print("error ${e.response?.data['message']}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
       } else {
+        print(" Network Error $e");
         throw Exception('Network error occurred');
       }
     } catch (e) {
+      print("Error $e");
       throw Exception('An unexpected error occurred');
     }
   }
@@ -620,8 +738,8 @@ class CandidateProfileApi {
   Future<Internship> addInternship({
     required String? company,
     required String? role,
-    required String? startDate,
-    required String? endDate,
+    required DateTime? startDate,
+    required DateTime? endDate,
     required String? projectName,
     required List<String>? skills,
     required String? descriptions,
@@ -638,8 +756,8 @@ class CandidateProfileApi {
       Map<String,dynamic> data = {
         'company': company,
         'role': role,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': startDate?.toIso8601String(),
+        'endDate': endDate !=null ? endDate.toIso8601String() : "",
         'projectName': projectName,
         'skills': skills,
         'descriptions': descriptions,
@@ -677,11 +795,11 @@ class CandidateProfileApi {
     required String? id,
     required String? company,
     required String? role,
-    required String? startDate,
-    required String? endDate,
+    required DateTime? startDate,
+    required DateTime? endDate,
     required String? projectName,
     required List<String>? skills,
-    required String? description,
+    required String? descriptions,
     required String? projectUrl,
   }) async {
     try {
@@ -696,14 +814,15 @@ class CandidateProfileApi {
         'internshipId': id,
         'company': company,
         'role': role,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': startDate?.toIso8601String(),
+        'endDate': endDate !=null ? endDate.toIso8601String() : "",
         'projectName': projectName,
         'skills': skills?.join(','),
-        'description': description,
+        'descriptions': descriptions,
         'projectUrl': projectUrl,
       };
 
+      print("Data $data");
       if (id == null || id.isEmpty) {
         throw Exception("Internship ID is required");
       }
@@ -769,8 +888,8 @@ class CandidateProfileApi {
 
   Future<Project> addProject({
     required String? projectName,
-    required String? startDate,
-    required String? endDate,
+    required DateTime? startDate,
+    required DateTime? endDate,
     required String? descriptions,
     required List<String>? skills,
     required String? projectUrl,
@@ -785,8 +904,8 @@ class CandidateProfileApi {
 
       Map<String,dynamic> data = {
         'projectName': projectName,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': startDate?.toIso8601String(),
+        'endDate': endDate !=null ? endDate.toIso8601String() : "",
         'descriptions': descriptions,
         'skills': skills,
         'projectUrl': projectUrl,
@@ -808,11 +927,14 @@ class CandidateProfileApi {
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        print("Error dio ${e.response?.data['message']}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
       } else {
+        print("Network Error $e");
         throw Exception('Network error occurred');
       }
     } catch (e) {
+      print(" Error $e");
       throw Exception('An unexpected error occurred');
     }
   }
@@ -820,8 +942,8 @@ class CandidateProfileApi {
   Future<Project> updateProject({
     required String? id,
     required String? projectName,
-    required String? startDate,
-    required String? endDate,
+    required DateTime? startDate,
+    required DateTime? endDate,
     required String? descriptions,
     required List<String>? skills,
     required String? projectUrl,
@@ -837,8 +959,8 @@ class CandidateProfileApi {
       Map<String,dynamic> data = {
         'projectId': id,
         'projectName': projectName,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': startDate?.toIso8601String(),
+        'endDate': endDate !=null ? endDate.toIso8601String() : "",
         'descriptions': descriptions,
         'skills': skills,
         'projectUrl': projectUrl,
@@ -858,18 +980,21 @@ class CandidateProfileApi {
 
       if (response.statusCode == 200) {
 
-        Map<String, dynamic> rawProject=Map<String, dynamic>.from(response.data['updatedUser']['projects'].last);
+        Map<String, dynamic> rawProject=Map<String, dynamic>.from(response.data['projects'].last);
         return Project.fromJson(rawProject);
       } else {
         throw Exception("Failed to Update Project");
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        print("Error ${e.response?.data['message']}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
       } else {
+        print("Network Error $e");
         throw Exception('Network error occurred');
       }
     } catch (e) {
+      print("Error $e");
       throw Exception('An unexpected error occurred');
     }
   }
@@ -911,7 +1036,7 @@ class CandidateProfileApi {
   Future<Certification> addCertification({
     required String? name,
     required String? issuingOrganization,
-    required String? issueDate,
+    required DateTime? issueDate,
     required String? credentialID,
     required String? url,
 
@@ -927,9 +1052,9 @@ class CandidateProfileApi {
       final data = {
         'name': name,
         'issuingOrganization': issuingOrganization,
-        'issueDate': issueDate,
+        'issueDate': issueDate?.toIso8601String(),
         'credentialID': credentialID,
-        'certificateUrl': url,
+        'url': url,
       };
 
       final response = await dio.post(
@@ -941,6 +1066,7 @@ class CandidateProfileApi {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
+        print("201 Resone");
         Map<String, dynamic> rawCertifications=Map<String, dynamic>.from(response.data['certifications'].last);
         return Certification.fromJson(rawCertifications);
       } else {
@@ -948,11 +1074,14 @@ class CandidateProfileApi {
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        print("Error dio ${e.response?.data['message']}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
       } else {
+        print("Network Eror $e");
         throw Exception('Network error occurred');
       }
     } catch (e) {
+      print("unexpected Eror $e");
       throw Exception('An unexpected error occurred');
     }
   }
@@ -961,7 +1090,7 @@ class CandidateProfileApi {
     required String? id,
     required String? name,
     required String? issuingOrganization,
-    required String? issueDate,
+    required DateTime? issueDate,
     required String? credentialID,
     required String? url,
   }) async {
@@ -977,7 +1106,7 @@ class CandidateProfileApi {
         'certificationId': id,
         'name': name,
         'issuingOrganization': issuingOrganization,
-        'issueDate': issueDate,
+        'issueDate': issueDate?.toIso8601String(),
         'credentialID': credentialID,
         'url': url,
       };
@@ -1003,11 +1132,14 @@ class CandidateProfileApi {
       }
     } on DioException catch (e) {
       if (e.response != null) {
+        print("Error dio ${e.response?.data['message']}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
       } else {
+        print("Network Eror $e");
         throw Exception('Network error occurred');
       }
     } catch (e) {
+      print("unexpected Eror $e");
       throw Exception('An unexpected error occurred');
     }
   }

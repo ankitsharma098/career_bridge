@@ -25,7 +25,9 @@ Candidate _$CandidateFromJson(Map<String, dynamic> json) => Candidate(
               ?.map((e) => e as String)
               .toList() ??
           [],
-      resume: json['resume'] as String? ?? '',
+      resume: json['resume'] == null
+          ? const Resume()
+          : Resume.fromJson(json['resume'] as Map<String, dynamic>),
       jobPreferences: json['jobPreferences'] == null
           ? const JobPreferences()
           : JobPreferences.fromJson(
@@ -80,6 +82,16 @@ Map<String, dynamic> _$CandidateToJson(Candidate instance) => <String, dynamic>{
       'updatedAt': instance.updatedAt,
     };
 
+Resume _$ResumeFromJson(Map<String, dynamic> json) => Resume(
+      url: json['url'] as String? ?? '',
+      publicId: json['publicId'] as String? ?? '',
+    );
+
+Map<String, dynamic> _$ResumeToJson(Resume instance) => <String, dynamic>{
+      'url': instance.url,
+      'publicId': instance.publicId,
+    };
+
 DisabilityDetails _$DisabilityDetailsFromJson(Map<String, dynamic> json) =>
     DisabilityDetails(
       type: json['type'] as String? ?? '',
@@ -115,9 +127,13 @@ Education _$EducationFromJson(Map<String, dynamic> json) => Education(
       course: json['course'] as String? ?? '',
       specialization: json['specialization'] as String? ?? '',
       institution: json['institution'] as String? ?? '',
-      startingYear: json['startingYear'] as String? ?? '',
-      passingYear: (json['passingYear'] as num?)?.toInt() ?? 0,
-      cgpa: json['cgpa'] as String? ?? '',
+      startingYear: json['startingYear'] == null
+          ? null
+          : DateTime.parse(json['startingYear'] as String),
+      passingYear: json['passingYear'] == null
+          ? null
+          : DateTime.parse(json['passingYear'] as String),
+      CGPA: json['CGPA'] as String? ?? '',
       id: json['_id'] as String? ?? '',
     );
 
@@ -125,9 +141,9 @@ Map<String, dynamic> _$EducationToJson(Education instance) => <String, dynamic>{
       'course': instance.course,
       'specialization': instance.specialization,
       'institution': instance.institution,
-      'startingYear': instance.startingYear,
-      'passingYear': instance.passingYear,
-      'cgpa': instance.cgpa,
+      'startingYear': instance.startingYear?.toIso8601String(),
+      'passingYear': instance.passingYear?.toIso8601String(),
+      'CGPA': instance.CGPA,
       '_id': instance.id,
     };
 
@@ -166,8 +182,12 @@ Map<String, dynamic> _$JobPreferencesToJson(JobPreferences instance) =>
 
 Project _$ProjectFromJson(Map<String, dynamic> json) => Project(
       projectName: json['projectName'] as String? ?? '',
-      startDate: json['startDate'] as String? ?? '',
-      endDate: json['endDate'] as String? ?? '',
+      startDate: json['startDate'] == null
+          ? null
+          : DateTime.parse(json['startDate'] as String),
+      endDate: json['endDate'] == null
+          ? null
+          : DateTime.parse(json['endDate'] as String),
       descriptions: json['descriptions'] as String? ?? '',
       skills: (json['skills'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -179,8 +199,8 @@ Project _$ProjectFromJson(Map<String, dynamic> json) => Project(
 
 Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
       'projectName': instance.projectName,
-      'startDate': instance.startDate,
-      'endDate': instance.endDate,
+      'startDate': instance.startDate?.toIso8601String(),
+      'endDate': instance.endDate?.toIso8601String(),
       'descriptions': instance.descriptions,
       'skills': instance.skills,
       'projectUrl': instance.projectUrl,
@@ -190,8 +210,12 @@ Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
 Internship _$InternshipFromJson(Map<String, dynamic> json) => Internship(
       company: json['company'] as String? ?? '',
       role: json['role'] as String? ?? '',
-      startDate: json['startDate'] as String? ?? '',
-      endDate: json['endDate'] as String? ?? '',
+      startDate: json['startDate'] == null
+          ? null
+          : DateTime.parse(json['startDate'] as String),
+      endDate: json['endDate'] == null
+          ? null
+          : DateTime.parse(json['endDate'] as String),
       projectName: json['projectName'] as String? ?? '',
       descriptions: json['descriptions'] as String? ?? '',
       skills: (json['skills'] as List<dynamic>?)
@@ -206,8 +230,8 @@ Map<String, dynamic> _$InternshipToJson(Internship instance) =>
     <String, dynamic>{
       'company': instance.company,
       'role': instance.role,
-      'startDate': instance.startDate,
-      'endDate': instance.endDate,
+      'startDate': instance.startDate?.toIso8601String(),
+      'endDate': instance.endDate?.toIso8601String(),
       'projectName': instance.projectName,
       'descriptions': instance.descriptions,
       'skills': instance.skills,
@@ -219,8 +243,12 @@ WorkExperience _$WorkExperienceFromJson(Map<String, dynamic> json) =>
     WorkExperience(
       company: json['company'] as String? ?? '',
       position: json['position'] as String? ?? '',
-      startDate: json['startDate'] as String? ?? '',
-      endDate: json['endDate'] as String? ?? '',
+      startDate: json['startDate'] == null
+          ? null
+          : DateTime.parse(json['startDate'] as String),
+      endDate: json['endDate'] == null
+          ? null
+          : DateTime.parse(json['endDate'] as String),
       descriptions: json['descriptions'] as String? ?? '',
       id: json['_id'] as String? ?? '',
     );
@@ -229,8 +257,8 @@ Map<String, dynamic> _$WorkExperienceToJson(WorkExperience instance) =>
     <String, dynamic>{
       'company': instance.company,
       'position': instance.position,
-      'startDate': instance.startDate,
-      'endDate': instance.endDate,
+      'startDate': instance.startDate?.toIso8601String(),
+      'endDate': instance.endDate?.toIso8601String(),
       'descriptions': instance.descriptions,
       '_id': instance.id,
     };
@@ -239,7 +267,9 @@ Certification _$CertificationFromJson(Map<String, dynamic> json) =>
     Certification(
       name: json['name'] as String? ?? '',
       issuingOrganization: json['issuingOrganization'] as String? ?? '',
-      issueDate: json['issueDate'] as String? ?? '',
+      issueDate: json['issueDate'] == null
+          ? null
+          : DateTime.parse(json['issueDate'] as String),
       credentialID: json['credentialID'] as String? ?? '',
       url: json['url'] as String? ?? '',
       id: json['_id'] as String? ?? '',
@@ -249,7 +279,7 @@ Map<String, dynamic> _$CertificationToJson(Certification instance) =>
     <String, dynamic>{
       'name': instance.name,
       'issuingOrganization': instance.issuingOrganization,
-      'issueDate': instance.issueDate,
+      'issueDate': instance.issueDate?.toIso8601String(),
       'credentialID': instance.credentialID,
       'url': instance.url,
       '_id': instance.id,

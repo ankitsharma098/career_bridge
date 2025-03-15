@@ -7,6 +7,7 @@ import 'package:android/features/Stories/bloc/story_bloc.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/splash_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -138,7 +139,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     Size screenSize = MediaQuery.of(context).size;
     if (isLoading) {
       return  Scaffold(
@@ -211,7 +212,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           padding: EdgeInsets.zero,
           children: [
             SizedBox(
-               height: screenSize.height*0.26,
+              height: screenSize.height*0.28,
               child: DrawerHeader(
                 // decoration: BoxDecoration(
                 //   color: AppColors.primary,
@@ -221,18 +222,56 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: screenSize.width*0.15,
-                      backgroundImage: employerData?.personalInfo.profilePic != null
-                          ? NetworkImage(employerData!.personalInfo.profilePic.toString())
-                          : null,
-                      // backgroundColor: AppColors.background,
-                      child: employerData?.personalInfo.profilePic == null
-                          ? Icon(
-                        Icons.person,
-                        size: 50,
-                        // color: AppColors.primary,
+                      radius: screenSize.width * 0.15, // Consistent radius for both cases
+                      backgroundColor: employerData?.personalInfo.profilePic != null
+                          ? Colors.transparent
+                          : Theme.of(context).primaryColor.withOpacity(0.1),
+                      child: employerData?.personalInfo.profilePic != null
+                          ? ClipOval( // Using ClipOval instead of ClipRRect for perfect circle
+                        child: CachedNetworkImage(
+                          imageUrl: employerData!.personalInfo.profilePic.toString(),
+                          width: screenSize.width * 0.3,  // Double the radius
+                          height: screenSize.width * 0.3, // Double the radius
+                          fit: BoxFit.cover, // Changed to cover for better circle filling
+                          placeholder: (context, url) => Container(
+                            width: screenSize.width * 0.3,
+                            height: screenSize.width * 0.3,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: isDarkMode ? AppColors.darkSecondaryText : AppColors.lightSecondaryText,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: screenSize.width * 0.3,
+                            height: screenSize.width * 0.3,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+                            ),
+                            child: Center(
+                              child: Text(
+                                employerData!.personalInfo.fullName[0],
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: isDarkMode ? AppColors.darkText : AppColors.lightText,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       )
-                          : null,
+                          : Text(
+                        employerData!.personalInfo.fullName[0],
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     Text(
                         employerData!.personalInfo.fullName ,
@@ -256,7 +295,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             ),
             _buildDrawerItem(
               icon: Icons.dashboard,
-              title: 'Employer Dashboard',
+              title: 'Dashboard',
               onTap: () {
                 // Current screen, so just close the drawer
                 Navigator.pop(context);

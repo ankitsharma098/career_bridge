@@ -1,17 +1,21 @@
 import 'package:android/core/constants/colors.dart';
 import 'package:android/data/models/candidate/candidate_model.dart';
+import 'package:android/features/Candidate%20Job/Job%20Bloc/candidate_job_bloc.dart';
 import 'package:android/features/Chat/converstation%20bloc/conversations_bloc.dart';
 import 'package:android/features/Chat/data%20service/chat_service.dart';
 import 'package:android/features/Stories/bloc/story_bloc.dart';
 import 'package:android/features/Stories/stats_bloc/story_stats_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/ui/splash_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../About Us/ui/about_us.dart';
+import '../../Candidate Job/ui/jobs_fetch.dart';
 import '../../Candidate Profile/bloc/candidate_profile_bloc.dart';
 import '../../Candidate Profile/ui/candidate_profile.dart';
 import '../../Chat/ui/chat.dart';
@@ -21,7 +25,7 @@ import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
 import '../bloc/candidate_dashboard_bloc.dart';
-import 'candidate_dashboard_content.dart';
+import 'candidate_dashboard_stats.dart';
 
 
 
@@ -132,7 +136,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-
+    final textTheme = Theme.of(context).textTheme;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     Size screenSize = MediaQuery.of(context).size;
     if (isLoading) {
       return  Scaffold(
@@ -145,7 +150,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             ? 'Dashboard'
             : _selectedIndex == 1
             ? 'Stories'
-            : 'Settings'
+            : 'Jobs'
         ),
         actions: [
           IconButton(
@@ -173,7 +178,11 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           BlocProvider(
             create: (context) => StoryBloc(),
             child: StoriesScreen(currentUserId: candidateData!.id, currentUserType: 'candidate',),
-          )
+          ),
+          BlocProvider(
+            create: (context) => CandidateJobBloc(),
+            child: CandidateTabJobs(),
+          ),
         ],
       ),
 
@@ -189,9 +198,10 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             label: 'Stories',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: Icon(FontAwesomeIcons.joget),
+            label: 'Job',
           ),
+
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
@@ -205,7 +215,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           padding: EdgeInsets.zero,
           children: [
             SizedBox(
-              height: screenSize.height*0.26,
+              height: screenSize.height*0.28,
               child: DrawerHeader(
                 // decoration: BoxDecoration(
                 //   color: AppColors.primary,
@@ -215,19 +225,71 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: screenSize.width*0.15,
-                      backgroundImage: candidateData?.personalInfo.profilePic != null
-                          ? NetworkImage(candidateData!.personalInfo.profilePic.toString())
-                          : null,
-                      // backgroundColor: AppColors.background,
-                      child: candidateData?.personalInfo.profilePic == null
-                          ? Icon(
-                        Icons.person,
-                        size: 50,
-                        // color: AppColors.primary,
+                      radius: screenSize.width * 0.15, // Consistent radius for both cases
+                      backgroundColor: candidateData?.personalInfo.profilePic != null
+                          ? Colors.transparent
+                          : Theme.of(context).primaryColor.withOpacity(0.1),
+                      child: candidateData?.personalInfo.profilePic != null
+                          ? ClipOval( // Using ClipOval instead of ClipRRect for perfect circle
+                        child: CachedNetworkImage(
+                          imageUrl: candidateData!.personalInfo.profilePic.toString(),
+                          width: screenSize.width * 0.3,  // Double the radius
+                          height: screenSize.width * 0.3, // Double the radius
+                          fit: BoxFit.cover, // Changed to cover for better circle filling
+                          placeholder: (context, url) => Container(
+                            width: screenSize.width * 0.3,
+                            height: screenSize.width * 0.3,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: isDarkMode ? AppColors.darkSecondaryText : AppColors.lightSecondaryText,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: screenSize.width * 0.3,
+                            height: screenSize.width * 0.3,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+                            ),
+                            child: Center(
+                              child: Text(
+                                candidateData!.personalInfo.fullName[0],
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: isDarkMode ? AppColors.darkText : AppColors.lightText,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       )
-                          : null,
+                          : Text(
+                        candidateData!.personalInfo.fullName[0],
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
+                    // CircleAvatar(
+                    //   radius: screenSize.width*0.15,
+                    //   backgroundImage: candidateData?.personalInfo.profilePic != null
+                    //       ? NetworkImage(candidateData!.personalInfo.profilePic.toString())
+                    //       : null,
+                    //   // backgroundColor: AppColors.background,
+                    //   child: candidateData?.personalInfo.profilePic == null
+                    //       ? Icon(
+                    //     Icons.person,
+                    //     size: 50,
+                    //     // color: AppColors.primary,
+                    //   )
+                    //       : null,
+                    // ),
                     Text(
                         candidateData!.personalInfo.fullName ,
                         overflow: TextOverflow.ellipsis,
@@ -250,7 +312,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             ),
             _buildDrawerItem(
               icon: Icons.dashboard,
-              title: 'Candidate Dashboard',
+              title: 'Dashboard',
               onTap: () {
                 // Current screen, so just close the drawer
                 Navigator.pop(context);

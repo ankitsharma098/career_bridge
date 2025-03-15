@@ -7,6 +7,14 @@ final class CandidateProfileInitial extends CandidateProfileState {}
 
 class ProfileDataLoading extends CandidateProfileState{}
 
+class DocumentUploaded extends CandidateProfileState {
+  final String url;
+  final String publicId;
+
+   DocumentUploaded({required this.url, required this.publicId});
+
+}
+
 class ProfileDataLoaded extends CandidateProfileState{
   final Candidate candidate;
 

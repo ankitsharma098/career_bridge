@@ -56,7 +56,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
     super.initState();
     BlocProvider.of<CandidateProfileBloc>(context).add(FetchProfileData());
   }
-  Future<void> _updateProfilePicture(BuildContext context) async {
+  Future<void> _updateProfilePicture(BuildContext context,String previousPublicId) async {
     final ImagePicker picker = ImagePicker();
 
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -67,31 +67,38 @@ class _CandidateProfileState extends State<CandidateProfile> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
-            child: CircularProgressIndicator(),
+            child: LoadingAnimationWidget.hexagonDots(color: Theme.of(context).brightness ==Brightness.dark ?AppColors.lightPrimary :AppColors.lightPrimary, size: 30),
           );
         },
       );
       try {
         File imageFile = File(image.path);
         Map<String, dynamic> personalInfo = {
-          'profilePic': imageFile, // Replace with actual URL after upload
+          'profilePic': imageFile,
+          'publicId':previousPublicId
         };
 
-        // BlocProvider.of<CandidateProfileBloc>(context).add(
-        //     UpdatePersonalInfoDialog(personalInfo)
-        // );
+        BlocProvider.of<CandidateProfileBloc>(context).add(
+            UpdatePersonalProfile(personalInfo)
+
+        );
         Navigator.pop(context);
       } catch (e) {
         SnackBarUtils.showRedSnackBar("Failed to Update Employer Profile picture", context);
       }
     }
   }
+
+  Map<String, Map<String, String>> documentUrl = {
+    'disabledCertificate': {'url': '', 'publicId': ''},
+  };
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
 
     return BlocConsumer<CandidateProfileBloc, CandidateProfileState>(
       listener: (context, state) {
+
 
         if(state is ProfileUpdateSuccess){
 
@@ -107,14 +114,13 @@ class _CandidateProfileState extends State<CandidateProfile> {
           return Center(child: LoadingAnimationWidget.hexagonDots(color: Theme.of(context).brightness ==Brightness.dark ?AppColors.lightPrimary :AppColors.lightPrimary, size: 30),);
 
         } else if (state is ProfileDataLoaded) {
-
-          return _buildLoadedState(context, state,screenSize);
-
-        } else if (state is ProfileError) {
-          return CustomErrorScreen(message: state.error,onRetry: (){
-            BlocProvider.of<CandidateProfileBloc>(context).add(FetchProfileData());
-          },);
+          return _buildLoadedState(context, state, screenSize);
         }
+        // } else if (state is ProfileError) {
+        //   return CustomErrorScreen(message: state.error,onRetry: (){
+        //     BlocProvider.of<CandidateProfileBloc>(context).add(FetchProfileData());
+        //   },);
+        // }
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -236,7 +242,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                           bottom: 0,
                           right: 0,
                           child: GestureDetector(
-                            onTap: () => _updateProfilePicture(context),
+                            onTap: () => _updateProfilePicture(context,candidate.personalInfo.publicId),
                             child: Container(
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -391,7 +397,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                       ),
                     ),
                     Text(
-                      'DOB: ${candidate.personalInfo.dob}',
+                      'DOB: ${formatDate(candidate.personalInfo.dob.toString())}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.lightSecondaryText,
                       ),
@@ -429,56 +435,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
     );
   }
 
-  Widget _buildDOBField(TextEditingController dobController) {
-    Future<void> selectDate(BuildContext context) async {
-      DateTime initialDate;
-      try {
-        initialDate = dobController.text.isNotEmpty
-            ? DateFormat('dd/MM/yyyy').parse(dobController.text)
-            : DateTime.now();
-      } catch (e) {
-        initialDate = DateTime.now();
-      }
-      final DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: initialDate,
-        firstDate: DateTime(1900),
-        lastDate: DateTime.now(),
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: Colors.blue.shade700,
-              ),
-            ),
-            child: child!,
-          );
-        },
-      );
-      if (pickedDate != null) {
-        dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
 
-      }
-    }
-
-    return TextFormField(
-      controller: dobController,
-      readOnly: true,
-      decoration: InputDecoration(
-        labelText: "Date of Birth",
-        hintText: "Select date",
-        prefixIcon: Icon(Icons.calendar_today, color: Colors.blue.shade700),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
-        ),
-      ),
-      onTap: () => selectDate(context),
-    );
-  }
   Widget _buildProfileSummarySection(Candidate candidate) {
     final screenSize = MediaQuery.of(context).size;
     return _buildCard(
@@ -624,7 +581,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
           if (hasJobPreferences) ...[
             if (jp.industries.isNotEmpty) _buildInfoRow('Industries', jp.industries.join(', ')),
             if (jp.roles.isNotEmpty) _buildInfoRow('Roles', jp.roles.join(', ')),
-            if (jp.preferredSalary > 0) _buildInfoRow('Salary', '\$${jp.preferredSalary}'),
+            if (jp.preferredSalary > 0) _buildInfoRow('Salary', '\₹${jp.preferredSalary}'),
             if (jp.location.isNotEmpty) _buildInfoRow('Locations', jp.location.join(', ')),
             if (jp.workMode.isNotEmpty) _buildInfoRow('Work Mode', jp.workMode),
             if (jp.employmentType.isNotEmpty) _buildInfoRow('Employment Type', jp.employmentType.join(', ')),
@@ -725,8 +682,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     children: [
                       Text(edu.institution),
                       if (edu.specialization.isNotEmpty) Text('Specialization: ${edu.specialization}'),
-                      Text('${edu.startingYear} - ${edu.passingYear.toString()}'),
-                      if (edu.cgpa.isNotEmpty) Text('CGPA: ${edu.cgpa}'),
+                      Text('${edu.startingYear.toString().split(" ")[0]} - ${edu.passingYear.toString().split(" ")[0]}'),
+                      if (edu.CGPA.isNotEmpty) Text('CGPA: ${edu.CGPA}'),
                     ],
                   ),
                   trailing: Row(
@@ -738,7 +695,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
                       ),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, 'education', edu.id, '${edu.course} from ${edu.institution}'),
+                        onPressed: () {
+
+                          print("EduId ${edu.id}");
+                          _confirmDelete(context, 'education', edu.id, '${edu
+                              .course} from ${edu.institution}');
+                        },
                       ),
                     ],
                   ),
@@ -788,7 +750,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     children: [
                       Text(exp.company, style: Theme.of(context).textTheme.bodyMedium),
                       Text(
-                        '${formatDate(exp.startDate)} - ${exp.endDate.isEmpty ? 'Present' : formatDate(exp.endDate)}',
+                        '${formatDate(exp.startDate.toString())} - ${exp.endDate==null ? 'Present' : formatDate(exp.endDate.toString())}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       if (exp.descriptions.isNotEmpty)
@@ -849,7 +811,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(internship.company),
-                      Text('${formatDate(internship.startDate)} - ${internship.endDate.isEmpty ? 'Present' : formatDate(internship.endDate)}'),
+                      Text('${formatDate(internship.startDate.toString())} - ${internship.endDate==null  ? 'Present' : formatDate(internship.endDate.toString())}'),
                       if (internship.role.isNotEmpty) Text('Role: ${internship.role}'),
                       if (internship.descriptions.isNotEmpty) Text(internship.descriptions),
                       if (internship.skills.isNotEmpty) Text('Skills: ${internship.skills.join(', ')}'),
@@ -906,7 +868,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${formatDate(project.startDate)} - ${project.endDate.isEmpty ? 'Present' : formatDate(project.endDate)}'),
+                      Text('${formatDate(project.startDate.toString())} - ${project.endDate==null  ? 'Present' : formatDate(project.endDate.toString())}'),
                       if (project.descriptions.isNotEmpty) Text(project.descriptions),
                       if (project.skills.isNotEmpty) Text('Skills: ${project.skills.join(', ')}'),
                       if (project.projectUrl.isNotEmpty) Text('URL: ${project.projectUrl}'),
@@ -963,7 +925,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(cert.issuingOrganization),
-                      if (cert.issueDate.isNotEmpty) Text(formatDate(cert.issueDate)),
+                      if (cert.issueDate!=null ) Text(formatDate(cert.issueDate.toString())),
                       if (cert.credentialID.isNotEmpty) Text('ID: ${cert.credentialID}'),
                       if (cert.url.isNotEmpty) Text('URL: ${cert.url}'),
                     ],
@@ -991,6 +953,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
 
   Widget _buildResumeSection(Candidate candidate) {
     final screenSize = MediaQuery.of(context).size;
+    Map<String, String> resumeUrl = {
+      'url': candidate.resume.url,
+      'publicId': candidate.resume.publicId,
+    };
+
     return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1002,50 +969,27 @@ class _CandidateProfileState extends State<CandidateProfile> {
             ),
           ),
           SizedBox(height: screenSize.height * 0.02),
-          if (candidate.resume.isNotEmpty)
-            Column(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.description, color: AppColors.lightPrimary),
-                  title: Text('Resume.pdf', style: Theme.of(context).textTheme.bodyLarge),
-                  subtitle: Text('Tap to view', style: Theme.of(context).textTheme.bodySmall),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDeleteResume(context),
-                  ),
-                  onTap: () {},
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _uploadResume(context),
-                  icon: const Icon(FontAwesomeIcons.upload,color: Colors.white,),
-                  label: const Text('Replace Resume'),
-                  style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-                    padding: MaterialStateProperty.all(
-                      EdgeInsets.symmetric(
-                        horizontal: screenSize.width * 0.04,
-                        vertical: screenSize.height * 0.015,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          else
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () => _uploadResume(context),
-                icon: const Icon(Icons.upload_file,color: Colors.white,),
-                label: const Text('Upload Resume'),
-                style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-                  padding: MaterialStateProperty.all(
-                    EdgeInsets.symmetric(
-                      horizontal: screenSize.width * 0.06,
-                      vertical: screenSize.height * 0.02,
-                    ),
-                  ),
-                ),
+          StatefulBuilder(
+            builder: (context, setState) => BlocListener<CandidateProfileBloc, CandidateProfileState>(
+              listener: (context, state) {
+                if (state is ProfileUpdateSuccess) {
+                  print("State $state");
+                  SnackBarUtils.showGreenSnackBar('Resume uploaded successfully', context);
+                } else if (state is ProfileError) {
+                  SnackBarUtils.showRedSnackBar(state.error, context);
+                }
+              },
+              child: _buildResumeUploadCard(
+                context,
+                'Resume',
+                'Upload your resume (PDF, DOC, JPG, PNG)',
+                'resume',
+                Icons.description,
+                screenSize,
+                resumeUrl,
               ),
             ),
+          ),
         ],
       ),
     );
@@ -1110,26 +1054,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
     final emailController = TextEditingController(text: candidate.personalInfo.email);
     final phoneController = TextEditingController(text: candidate.personalInfo.phoneNumber);
     final addressController = TextEditingController(text: candidate.personalInfo.address);
-    TextEditingController dobController = TextEditingController(
-        text: candidate.personalInfo.dob!.isNotEmpty
-            ? formatDate(candidate.personalInfo.dob)
-            : ''
-    );
+
+    DateTime? dobController = candidate.personalInfo.dob ;
+
     final genderController = TextEditingController(text: candidate.personalInfo.gender);
-    final screenSize = MediaQuery.of(parentContext).size;Future<void> selectDate() async {
-      DateTime initialDate = dobController.text.isNotEmpty
-          ? DateFormat('dd/MM/yyyy').parse(dobController.text)
-          : DateTime.now();
-      final DateTime? pickedDate = await showDatePicker(
-        context: parentContext,
-        initialDate: initialDate,
-        firstDate: DateTime(1900),
-        lastDate: DateTime.now(),
-      );
-      if (pickedDate != null) {
-        dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-      }
-    }
+    final screenSize = MediaQuery.of(parentContext).size;
+
 
     showDialog(
       context: parentContext,
@@ -1148,14 +1078,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
               SizedBox(height: screenSize.height * 0.015),
               _buildTextField(addressController, 'Address', Icons.location_on),
               SizedBox(height: screenSize.height * 0.015),
-              _buildTextField(
-                dobController,
-                'Date of Birth',
-                Icons.calendar_today,
-                hintText: 'Select date',
-                readOnly: true,
-                onTap: selectDate,
-              ),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildDateField('DOB', dobController, (date) => dobController = date),
               SizedBox(height: screenSize.height * 0.015),
               DropdownButtonFormField<String>(
                 value: genderController.text.isEmpty ? 'Male' : genderController.text,
@@ -1186,9 +1110,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 "fullName": nameController.text,
                 "email": emailController.text,
                 "phoneNumber": phoneController.text,
-                "profilePic": candidate.personalInfo.profilePic,
                 "address": addressController.text,
-                "dob": dobController.text,
+                "DOB": dobController?.toString(),
                 "gender": genderController.text,
               };
               BlocProvider.of<CandidateProfileBloc>(parentContext)
@@ -1279,77 +1202,123 @@ class _CandidateProfileState extends State<CandidateProfile> {
     );
   }
 
-  void _showDisabilityDetailsEditDialog(BuildContext parentContext,Candidate candidate) {
+  void _showDisabilityDetailsEditDialog(BuildContext parentContext, Candidate candidate) {
     final typeController = TextEditingController(text: candidate.disabilityDetails.type);
     final percentageController = TextEditingController(text: candidate.disabilityDetails.percentage.toString());
     final certController = TextEditingController(text: candidate.disabilityDetails.certificateNumber);
     final accommodationsController = TextEditingController(text: candidate.disabilityDetails.accommodationsNeeded.join(', '));
+    final prefCommController = TextEditingController(text: candidate.disabilityDetails.preferredCommunicationMethod);
     final techController = TextEditingController(text: candidate.disabilityDetails.assistiveTechnology.join(', '));
+    String certificateDocUrl = candidate.disabilityDetails.certificateDoc;
+    String publicId = candidate.disabilityDetails.publicId;
     final screenSize = MediaQuery.of(parentContext).size;
+
+    documentUrl['disabledCertificate'] = {'url': certificateDocUrl, 'publicId': publicId};
 
     showDialog(
       context: parentContext,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Edit Disability Details', style: Theme.of(dialogContext).textTheme.displaySmall),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField(typeController, 'Disability Type', Icons.accessibility),
-              SizedBox(height: screenSize.height * 0.015),
-              _buildTextField(
-                percentageController,
-                'Percentage (%)',
-                Icons.percent,
-                keyboardType: TextInputType.number,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => BlocListener<CandidateProfileBloc, CandidateProfileState>(
+          bloc: BlocProvider.of<CandidateProfileBloc>(parentContext), // Use parentContext to get the bloc
+          listener: (context, state) {
+            if (state is DocumentUploaded) {
+              setState(() {
+                certificateDocUrl = state.url;
+                publicId = state.publicId;
+                documentUrl['disabledCertificate'] = {'url': state.url, 'publicId': state.publicId}; // Update documentUrl
+                SnackBarUtils.showGreenSnackBar('Document uploaded successfully', dialogContext);
+              });
+              Navigator.pop(dialogContext); // Close the upload dialog
+            } else if (state is ProfileError) {
+              SnackBarUtils.showRedSnackBar(state.error, dialogContext);
+              Navigator.pop(dialogContext); // Close the upload dialog on error
+            }
+          },
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text('Edit Disability Details', style: Theme.of(dialogContext).textTheme.displaySmall),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTextField(typeController, 'Disability Type', Icons.accessibility),
+                  SizedBox(height: screenSize.height * 0.015),
+                  _buildTextField(
+                    percentageController,
+                    'Percentage (%)',
+                    Icons.percent,
+                    keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: screenSize.height * 0.015),
+                  _buildTextField(certController, 'Certificate Number', Icons.card_membership),
+                  SizedBox(height: screenSize.height * 0.015),
+                  _buildTextField(
+                    accommodationsController,
+                    'Accommodations Needed',
+                    Icons.support,
+                    hintText: 'Comma-separated',
+                  ),
+                  SizedBox(height: screenSize.height * 0.015),
+                  _buildTextField(
+                    prefCommController,
+                    'Preferred Communication',
+                    Icons.phone,
+                    hintText: 'e.g., Email, Sign Language',
+                  ),
+                  SizedBox(height: screenSize.height * 0.015),
+                  _buildTextField(
+                    techController,
+                    'Assistive Technology',
+                    Icons.assist_walker,
+                    hintText: 'Comma-separated',
+                  ),
+                  SizedBox(height: screenSize.height * 0.015),
+                  _buildDocumentUploadCard(
+                    parentContext, // Pass parentContext instead of dialogContext
+                    'Disability Certificate',
+                    'Upload your disability certificate (PDF, DOC, JPG, PNG)',
+                    'disabledCertificate',
+                    Icons.description,
+                    screenSize,
+                      setState
+                  ),
+                ],
               ),
-              SizedBox(height: screenSize.height * 0.015),
-              _buildTextField(certController, 'Certificate Number', Icons.card_membership),
-              SizedBox(height: screenSize.height * 0.015),
-              _buildTextField(
-                accommodationsController,
-                'Accommodations Needed',
-                Icons.support,
-                hintText: 'Comma-separated',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
               ),
-              SizedBox(height: screenSize.height * 0.015),
-              _buildTextField(
-                techController,
-                'Assistive Technology',
-                Icons.assist_walker,
-                hintText: 'Comma-separated',
+              ElevatedButton(
+                onPressed: () {
+                  final updatedDetails = DisabilityDetails(
+                    type: typeController.text,
+                    percentage: int.tryParse(percentageController.text) ?? 0,
+                    certificateNumber: certController.text,
+                    certificateDoc: certificateDocUrl,
+                    publicId: publicId,
+                    accommodationsNeeded: accommodationsController.text.split(',').map((e) => e.trim()).toList(),
+                    preferredCommunicationMethod: prefCommController.text,
+                    assistiveTechnology: techController.text.split(',').map((e) => e.trim()).toList(),
+                  );
+                  print(updatedDetails);
+                  BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateDisabilityDetails(updatedDetails));
+                  Navigator.pop(dialogContext);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.lightPrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Save', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final updatedDetails = DisabilityDetails(
-                type: typeController.text,
-                percentage: int.tryParse(percentageController.text) ?? 0,
-                certificateNumber: certController.text,
-                accommodationsNeeded: accommodationsController.text.split(',').map((e) => e.trim()).toList(),
-                assistiveTechnology: techController.text.split(',').map((e) => e.trim()).toList(),
-              );
-              // BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateDisabilityDetails(updatedDetails));
-              Navigator.pop(dialogContext);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lightPrimary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text('Save', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
+
 
   void _showJobPreferencesEditDialog(BuildContext parentContext,Candidate candidate) {
     final jp = candidate.jobPreferences;
@@ -1387,7 +1356,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
               _buildTextField(
                 salaryController,
                 'Preferred Salary',
-                Icons.attach_money,
+                Icons.currency_rupee,
                 keyboardType: TextInputType.number,
               ),
               SizedBox(height: 8),
@@ -1602,10 +1571,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   course: courseController.text,
                   specialization: specializationController.text,
                   institution: institutionController.text,
-                  startingYear: DateFormat('yyyy').format(startDate!),
-                  passingYear: int.parse(DateFormat('yyyy').format(passingDate!)),
-                  cgpa: cgpaController.text,
+                  startingYear: startDate,
+                  passingYear: passingDate,
+                  CGPA: cgpaController.text,
                 );
+
+
                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddEducation(newEducation));
                 Navigator.pop(dialogContext);
               }
@@ -1625,9 +1596,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
     final courseController = TextEditingController(text: education.course);
     final specializationController = TextEditingController(text: education.specialization);
     final institutionController = TextEditingController(text: education.institution);
-    final cgpaController = TextEditingController(text: education.cgpa);
-    DateTime? startDate = DateTime.tryParse('${education.startingYear}-01-01');
-    DateTime? passingDate = DateTime.tryParse('${education.passingYear}-01-01');
+    final cgpaController = TextEditingController(text: education.CGPA);
+    DateTime? startDate = education.startingYear;
+    DateTime? passingDate = education.passingYear;
 
     showDialog(
       context: parentContext,
@@ -1665,9 +1636,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   course: courseController.text,
                   specialization: specializationController.text,
                   institution: institutionController.text,
-                  startingYear: DateFormat('yyyy').format(startDate!),
-                  passingYear: int.parse(DateFormat('yyyy').format(passingDate!)),
-                  cgpa: cgpaController.text,
+                  startingYear: startDate,
+                  passingYear: passingDate!,
+                  CGPA: cgpaController.text,
                 );
                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateEducation(updatedEducation));
                 Navigator.pop(dialogContext);
@@ -1726,8 +1697,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     id: DateTime.now().toString(),
                     position: positionController.text,
                     company: companyController.text,
-                    startDate: startDate!.toIso8601String(),
-                    endDate: endDate?.toIso8601String() ?? '',
+                    startDate: startDate,
+                    endDate: endDate,
                     descriptions: descriptionController.text,
                   );
                   BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddWorkExperience(newExperience));
@@ -1749,9 +1720,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
   void _showEditWorkExperienceDialog(BuildContext parentContext, WorkExperience experience) {
     final positionController = TextEditingController(text: experience.position);
     final companyController = TextEditingController(text: experience.company);
-    final startDateController = TextEditingController(text: experience.startDate);
-    final endDateController = TextEditingController(text: experience.endDate);
-    bool isCurrentlyWorking = experience.endDate.isEmpty;
+    final descriptionController = TextEditingController(text: experience.descriptions);
+    DateTime? startDate =experience.startDate;
+    DateTime? endDate=experience.endDate;
+    // final startDateController = TextEditingController(text: experience.startDate?.toIso8601String());
+    // final endDateController = TextEditingController(text: experience.endDate?.toIso8601String());
     final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
@@ -1768,17 +1741,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 SizedBox(height: screenSize.height * 0.015),
                 _buildTextField(companyController, 'Company', Icons.business),
                 SizedBox(height: screenSize.height * 0.015),
-                _buildTextField(startDateController, 'Start Date', Icons.calendar_today, hintText: 'e.g., Jan 2020'),
+                _buildTextField(descriptionController, 'Descriptions', Icons.business),
                 SizedBox(height: screenSize.height * 0.015),
-                if (!isCurrentlyWorking)
-                  _buildTextField(endDateController, 'End Date', Icons.event_available, hintText: 'e.g., Dec 2021'),
-                SizedBox(height: screenSize.height * 0.015),
-                CheckboxListTile(
-                  title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-                  value: isCurrentlyWorking,
-                  onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-                  activeColor: AppColors.lightPrimary,
-                ),
+                _buildDateField('Start Date', startDate, (date) => startDate = date),
+                SizedBox(height: 8),
+                _buildDateField('End Date (Optional)', endDate, (date) => endDate = date),
               ],
             ),
           ),
@@ -1793,8 +1760,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   id: experience.id,
                   position: positionController.text,
                   company: companyController.text,
-                  startDate: startDateController.text,
-                  endDate: isCurrentlyWorking ? '' : endDateController.text,
+                  descriptions: descriptionController.text,
+                  startDate:startDate,
+                  endDate: endDate,
                 );
                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateWorkExperience(updatedExperience));
                 Navigator.pop(dialogContext);
@@ -1822,6 +1790,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
     DateTime? startDate;
     DateTime? endDate;
 
+    Size screenSize = MediaQuery.of(context).size;
+
     showDialog(
       context: parentContext,
       builder: (dialogContext) => StatefulBuilder(
@@ -1833,19 +1803,19 @@ class _CandidateProfileState extends State<CandidateProfile> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildTextField(projectNameController, 'Project Name', Icons.folder),
-                SizedBox(height: 8),
+                SizedBox(height: screenSize.height * 0.015),
                 _buildTextField(companyController, 'Company', Icons.business),
-                SizedBox(height: 8),
+                SizedBox(height: screenSize.height * 0.015),
                 _buildTextField(roleController, 'Role', Icons.person),
-                SizedBox(height: 8),
+                SizedBox(height: screenSize.height * 0.015),
                 _buildTextField(descriptionController, 'Description', Icons.description),
-                SizedBox(height: 8),
+                SizedBox(height: screenSize.height * 0.015),
                 _buildTextField(skillsController, 'Skills', Icons.star, hintText: 'Comma-separated'),
-                SizedBox(height: 8),
+                SizedBox(height: screenSize.height * 0.015),
                 _buildTextField(urlController, 'Project URL', Icons.link, hintText: 'Optional'),
-                SizedBox(height: 8),
+                SizedBox(height: screenSize.height * 0.015),
                 _buildDateField('Start Date', startDate, (date) => startDate = date),
-                SizedBox(height: 8),
+                SizedBox(height: screenSize.height * 0.015),
                 _buildDateField('End Date (Optional)', endDate, (date) => endDate = date),
               ],
             ),
@@ -1859,12 +1829,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
               onPressed: () {
                 if (startDate != null) {
                   final newInternship = Internship(
-                    id: DateTime.now().toString(),
                     projectName: projectNameController.text,
                     company: companyController.text,
                     role: roleController.text,
-                    startDate: startDate!.toIso8601String(),
-                    endDate: endDate?.toIso8601String() ?? '',
+                    startDate: startDate,
+                    endDate: endDate,
                     descriptions: descriptionController.text,
                     skills: skillsController.text.split(',').map((e) => e.trim()).toList(),
                     projectUrl: urlController.text,
@@ -1888,9 +1857,13 @@ class _CandidateProfileState extends State<CandidateProfile> {
   void _showEditInternshipDialog(BuildContext parentContext, Internship internship) {
     final projectNameController = TextEditingController(text: internship.projectName);
     final companyController = TextEditingController(text: internship.company);
-    final startDateController = TextEditingController(text: internship.startDate);
-    final endDateController = TextEditingController(text: internship.endDate);
-    bool isCurrentlyWorking = internship.endDate.isEmpty;
+    final roleController = TextEditingController(text: internship.role);
+    final descriptionController = TextEditingController(text: internship.descriptions);
+    final skillsController = TextEditingController(text: internship.skills.join(","));
+    final projectUrlController = TextEditingController(text: internship.projectUrl);
+    DateTime? startDate =internship.startDate;
+    DateTime? endDate=internship.endDate;
+
     final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
@@ -1907,17 +1880,18 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 SizedBox(height: screenSize.height * 0.015),
                 _buildTextField(companyController, 'Company', Icons.business),
                 SizedBox(height: screenSize.height * 0.015),
-                _buildTextField(startDateController, 'Start Date', Icons.calendar_today, hintText: 'e.g., Jan 2020'),
+                _buildTextField(roleController, 'Role', Icons.person),
                 SizedBox(height: screenSize.height * 0.015),
-                if (!isCurrentlyWorking)
-                  _buildTextField(endDateController, 'End Date', Icons.event_available, hintText: 'e.g., Dec 2021'),
+                _buildTextField(descriptionController, 'Description', Icons.description),
                 SizedBox(height: screenSize.height * 0.015),
-                CheckboxListTile(
-                  title: Text('Currently Working', style: Theme.of(dialogContext).textTheme.bodyMedium),
-                  value: isCurrentlyWorking,
-                  onChanged: (value) => setState(() => isCurrentlyWorking = value ?? false),
-                  activeColor: AppColors.lightPrimary,
-                ),
+                _buildTextField(skillsController, 'Skills', Icons.star, hintText: 'Comma-separated'),
+                SizedBox(height: screenSize.height * 0.015),
+                _buildTextField(projectUrlController, 'Project URL', Icons.link, hintText: 'Optional'),
+                SizedBox(height: screenSize.height * 0.015),
+                _buildDateField('Start Date', startDate, (date) => startDate = date),
+                SizedBox(height: screenSize.height * 0.015),
+                _buildDateField('End Date (Optional)', endDate, (date) => endDate = date),
+
               ],
             ),
           ),
@@ -1932,8 +1906,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   id: internship.id,
                   projectName: projectNameController.text,
                   company: companyController.text,
-                  startDate: startDateController.text,
-                  endDate: isCurrentlyWorking ? '' : endDateController.text,
+                  role: roleController.text,
+                  startDate: startDate,
+                  endDate: endDate,
+                  descriptions: descriptionController.text,
+                  skills: skillsController.text.split(',').map((e) => e.trim()).toList(),
+                  projectUrl: projectUrlController.text,
                 );
                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateInternship(updatedInternship));
                 Navigator.pop(dialogContext);
@@ -1989,10 +1967,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
             onPressed: () {
               if (startDate != null) {
                 final newProject = Project(
-                  id: DateTime.now().toString(),
                   projectName: projectNameController.text,
-                  startDate: startDate!.toIso8601String(),
-                  endDate: endDate?.toIso8601String() ?? '',
+                  startDate: startDate,
+                  endDate: endDate,
                   descriptions: descriptionController.text,
                   skills: skillsController.text.split(',').map((e) => e.trim()).toList(),
                   projectUrl: urlController.text,
@@ -2014,8 +1991,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
 
   void _showEditProjectDialog(BuildContext parentContext, Project project) {
     final projectNameController = TextEditingController(text: project.projectName);
-    final startDateController = TextEditingController(text: project.startDate);
-    final endDateController = TextEditingController(text: project.endDate);
+    final descriptionController = TextEditingController(text: project.descriptions);
+    final skillsController = TextEditingController(text: project.skills.join(","));
+    final urlController = TextEditingController(text: project.projectUrl);
+    DateTime? startDate=project.startDate;
+    DateTime? endDate=project.endDate;
+
     final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
@@ -2029,9 +2010,15 @@ class _CandidateProfileState extends State<CandidateProfile> {
             children: [
               _buildTextField(projectNameController, 'Project Name', Icons.folder),
               SizedBox(height: screenSize.height * 0.015),
-              _buildTextField(startDateController, 'Start Date', Icons.calendar_today, hintText: 'e.g., Jan 2020'),
+              _buildTextField(descriptionController, 'Description', Icons.description),
               SizedBox(height: screenSize.height * 0.015),
-              _buildTextField(endDateController, 'End Date', Icons.event_available, hintText: 'e.g., Dec 2021'),
+              _buildTextField(skillsController, 'Skills', Icons.star, hintText: 'Comma-separated'),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(urlController, 'Project URL', Icons.link, hintText: 'Optional'),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildDateField('Start Date', startDate, (date) => startDate = date),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildDateField('End Date (Optional)', endDate, (date) => endDate = date),
             ],
           ),
         ),
@@ -2045,8 +2032,11 @@ class _CandidateProfileState extends State<CandidateProfile> {
               final updatedProject = Project(
                 id: project.id,
                 projectName: projectNameController.text,
-                startDate: startDateController.text,
-                endDate: endDateController.text,
+                startDate: startDate,
+                endDate: endDate,
+                descriptions: descriptionController.text,
+                skills: skillsController.text.split(',').map((e) => e.trim()).toList(),
+                projectUrl: urlController.text,
               );
               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateProject(updatedProject));
               Navigator.pop(dialogContext);
@@ -2068,6 +2058,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
     final credentialController = TextEditingController();
     final urlController = TextEditingController();
     DateTime? issueDate;
+    Size screenSize = MediaQuery.of(context).size;
 
     showDialog(
       context: parentContext,
@@ -2079,13 +2070,13 @@ class _CandidateProfileState extends State<CandidateProfile> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildTextField(nameController, 'Certification Name', Icons.card_giftcard),
-              SizedBox(height: 8),
+              SizedBox(height: screenSize.height * 0.015),
               _buildTextField(orgController, 'Issuing Organization', Icons.account_balance),
-              SizedBox(height: 8),
+              SizedBox(height: screenSize.height * 0.015),
               _buildTextField(credentialController, 'Credential ID', Icons.verified, hintText: 'Optional'),
-              SizedBox(height: 8),
+              SizedBox(height: screenSize.height * 0.015),
               _buildTextField(urlController, 'URL', Icons.link, hintText: 'Optional'),
-              SizedBox(height: 8),
+              SizedBox(height: screenSize.height * 0.015),
               _buildDateField('Issue Date', issueDate, (date) => issueDate = date),
             ],
           ),
@@ -2099,15 +2090,16 @@ class _CandidateProfileState extends State<CandidateProfile> {
             onPressed: () {
               if (issueDate != null) {
                 final newCertification = Certification(
-                  id: DateTime.now().toString(),
                   name: nameController.text,
                   issuingOrganization: orgController.text,
-                  issueDate: issueDate!.toIso8601String(),
+                  issueDate: issueDate,
                   credentialID: credentialController.text,
                   url: urlController.text,
                 );
                 BlocProvider.of<CandidateProfileBloc>(parentContext).add(AddCertification(newCertification));
                 Navigator.pop(dialogContext);
+              }else {
+                print("not pressed");
               }
             },
             style: ElevatedButton.styleFrom(
@@ -2124,6 +2116,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
   void _showEditCertificationDialog(BuildContext parentContext, Certification certification) {
     final nameController = TextEditingController(text: certification.name);
     final orgController = TextEditingController(text: certification.issuingOrganization);
+    final credentialController = TextEditingController(text: certification.credentialID);
+    final urlController = TextEditingController(text: certification.url);
+    DateTime? issueDate = certification.issueDate;
     final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
@@ -2138,6 +2133,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
               _buildTextField(nameController, 'Certification Name', Icons.card_giftcard),
               SizedBox(height: screenSize.height * 0.015),
               _buildTextField(orgController, 'Issuing Organization', Icons.account_balance),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(credentialController, 'Credential ID', Icons.verified, hintText: 'Optional'),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildTextField(urlController, 'URL', Icons.link, hintText: 'Optional'),
+              SizedBox(height: screenSize.height * 0.015),
+              _buildDateField('Issue Date', issueDate, (date) => issueDate = date),
             ],
           ),
         ),
@@ -2152,6 +2153,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 id: certification.id,
                 name: nameController.text,
                 issuingOrganization: orgController.text,
+                issueDate: issueDate,
+                credentialID: credentialController.text,
+                url: urlController.text,
               );
               BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateCertification(updatedCertification));
               Navigator.pop(dialogContext);
@@ -2167,13 +2171,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
     );
   }
 
-  void _uploadResume(BuildContext parentContext) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
-    if (result != null) {
-      File file = File(result.files.single.path!);
-      // BlocProvider.of<CandidateProfileBloc>(parentContext).add(UpdateResume(file.path));
-    }
-  }
+
 
   void _confirmDelete(BuildContext parentContext, String type, String id, String itemName) {
     final screenSize = MediaQuery.of(parentContext).size;
@@ -2221,35 +2219,6 @@ class _CandidateProfileState extends State<CandidateProfile> {
     );
   }
 
-  void _confirmDeleteResume(BuildContext parentContext) {
-    final screenSize = MediaQuery.of(parentContext).size;
-
-    showDialog(
-      context: parentContext,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Confirm Delete', style: Theme.of(dialogContext).textTheme.displaySmall),
-        content: Text('Are you sure you want to delete your resume?', style: Theme.of(dialogContext).textTheme.bodyMedium),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Cancel', style: Theme.of(dialogContext).textTheme.bodyMedium),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lightError,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              BlocProvider.of<CandidateProfileBloc>(parentContext).add(DeleteResume());
-              Navigator.pop(dialogContext);
-            },
-            child: Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTextField(
       TextEditingController controller,
@@ -2309,6 +2278,221 @@ class _CandidateProfileState extends State<CandidateProfile> {
           onDateSelected(pickedDate);
         }
       },
+    );
+  }
+
+  Widget _buildDocumentUploadCard(
+      BuildContext context, // This should be parentContext
+      String label,
+      String description,
+      String type,
+      IconData icon,
+      Size screenSize,
+      void Function(void Function()) setState,
+      ) {
+    bool isUploaded = documentUrl[type]!['url']!.isNotEmpty;
+
+    return Container(
+      margin: EdgeInsets.only(top: screenSize.height * 0.02),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isUploaded ? Colors.green.shade300 : Colors.grey.shade300),
+        color: isUploaded ? Colors.green.shade50 : Colors.grey.shade50,
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        leading: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isUploaded ? Colors.green.shade100 : Colors.blue.shade100,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isUploaded ? Icons.check : icon,
+            color: isUploaded ? Colors.green.shade700 : Colors.blue.shade700,
+          ),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+        ),
+        subtitle: Text(
+          isUploaded ? 'Document uploaded successfully' : description,
+          style: TextStyle(
+            color: isUploaded ? Colors.green.shade700 : Colors.grey.shade700,
+            fontSize: 12,
+          ),
+        ),
+        trailing: isUploaded
+            ? IconButton(
+          icon: Icon(Icons.refresh, color: Colors.blue),
+          onPressed: () {
+            setState(() {
+              documentUrl[type] = {'url': '', 'publicId': ''};
+            });
+          },
+        )
+            : ElevatedButton(
+          onPressed: () async {
+            FilePickerResult? result = await FilePicker.platform.pickFiles(
+              type: FileType.custom,
+              allowedExtensions: ['pdf', 'doc', 'docx', 'jpeg', 'jpg', 'png'],
+            );
+
+            if (result != null && result.files.isNotEmpty && result.files.single.path != null) {
+              showDialog(
+                context: context, // Use parentContext
+                barrierDismissible: false,
+                builder: (BuildContext dialogContext) {
+                  return Dialog(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            LoadingAnimationWidget.hexagonDots(color: Colors.blue, size: 40),
+                            SizedBox(height: 16),
+                            Text('Uploading $label...', style: TextStyle(fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+
+              BlocProvider.of<CandidateProfileBloc>(context).add(UploadDocumentEvent(filePath: result.files.single.path!));
+              // Dialog will be closed by BlocListener
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: EdgeInsets.symmetric(horizontal: 16),
+          ),
+          child: Text('Upload'),
+        ),
+      ),
+    );
+  }
+  Widget _buildResumeUploadCard(
+      BuildContext parentContext,
+      String label,
+      String description,
+      String type,
+      IconData icon,
+      Size screenSize,
+      Map<String, String> resumeUrl,
+      ) {
+    bool isUploaded = resumeUrl['url']!.isNotEmpty;
+    final candidateProfileBloc = BlocProvider.of<CandidateProfileBloc>(parentContext);
+
+    return Container(
+      margin: EdgeInsets.only(top: screenSize.height * 0.02),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isUploaded ? Colors.green.shade300 : Colors.grey.shade300),
+        color: isUploaded ? Colors.green.shade50 : Colors.grey.shade50,
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        leading: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isUploaded ? Colors.green.shade100 : Colors.blue.shade100,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isUploaded ? Icons.check : icon,
+            color: isUploaded ? Colors.green.shade700 : Colors.blue.shade700,
+          ),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+        ),
+        subtitle: Text(
+          isUploaded ? 'Resume uploaded successfully' : description,
+          style: TextStyle(
+            color: isUploaded ? Colors.green.shade700 : Colors.grey.shade700,
+            fontSize: 12,
+          ),
+        ),
+        trailing: ElevatedButton(
+          onPressed: () async {
+            FilePickerResult? result = await FilePicker.platform.pickFiles(
+              type: FileType.custom,
+              allowedExtensions: ['pdf', 'doc', 'docx', 'jpeg', 'jpg', 'png'],
+            );
+
+            if (result != null && result.files.single.path != null) {
+              // Show the loading dialog
+              showDialog(
+                context: parentContext,
+                barrierDismissible: false,
+                builder: (BuildContext dialogContext) {
+                  return BlocListener<CandidateProfileBloc, CandidateProfileState>(
+                      bloc:candidateProfileBloc,
+                    listener: (context, state) {
+                      if (state is ProfileUpdateSuccess) {
+                        Navigator.pop(dialogContext); // Close the dialog on success
+                        SnackBarUtils.showGreenSnackBar('Resume uploaded successfully', dialogContext);
+                      } else if (state is ProfileError) {
+                        Navigator.pop(dialogContext); // Close the dialog on error
+                      if(parentContext.mounted){
+                        SnackBarUtils.showRedSnackBar(state.error, dialogContext);
+                      }
+                      }
+                    },
+
+                    child: Dialog(
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      child: Center(
+                        child: Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              LoadingAnimationWidget.hexagonDots(color: Colors.blue, size: 40),
+                              SizedBox(height: 16),
+                              Text('Uploading Resume...', style: TextStyle(fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+
+
+                  candidateProfileBloc.add(UploadResume(filePath: result.files.single.path!));
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: EdgeInsets.symmetric(horizontal: 16),
+          ),
+          child: Text(isUploaded ? 'Re-upload' : 'Upload'),
+        ),
+      ),
     );
   }
 }

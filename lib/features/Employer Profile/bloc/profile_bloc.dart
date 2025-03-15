@@ -67,6 +67,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -78,6 +79,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -89,6 +91,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -104,6 +107,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }catch(e){
 
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
 
   }

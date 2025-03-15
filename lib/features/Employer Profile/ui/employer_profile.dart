@@ -34,6 +34,24 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
       return 'Invalid date';
     }
   }
+
+  Future<DateTime?> _pickDate(BuildContext context, {DateTime? initialDate}) async {
+    return await showDatePicker(
+      context: context,
+      initialDate: initialDate ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: Colors.blue.shade700),
+          ),
+          child: child!,
+        );
+      },
+    );
+  }
+
   Future<void> _updateProfilePicture(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
 
@@ -45,7 +63,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
-            child: CircularProgressIndicator(),
+            child: LoadingAnimationWidget.hexagonDots(color: Theme.of(context).brightness ==Brightness.dark ?AppColors.lightPrimary :AppColors.lightPrimary, size: 30)
           );
         },
       );
@@ -454,7 +472,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         _buildInfoListTile(
           Icons.cake,
           'Date of Birth',
-            formatDate(employer.personalInfo.dob),
+            formatDate(employer.personalInfo.dob.toString().split(" ")[0]),
             screenSize
         ),
         _buildInfoListTile(
@@ -594,11 +612,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     TextEditingController phoneController = TextEditingController(text: employer.personalInfo.phoneNumber);
     TextEditingController addressController = TextEditingController(text: employer.personalInfo.address);
     TextEditingController designationController = TextEditingController(text: employer.companyDetails.designation);
-    TextEditingController dobController = TextEditingController(
-        text: employer.personalInfo.dob!.isNotEmpty
-            ? formatDate(employer.personalInfo.dob)
-            : ''
-    );
+    DateTime? dobController = employer.personalInfo.dob ;
     TextEditingController genderController = TextEditingController(text: employer.personalInfo.gender);
 
     final BuildContext parentContext = context;
@@ -627,7 +641,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                         _buildTextField(emailController, 'Email', Icons.email),
                         _buildTextField(phoneController, 'Phone Number', Icons.phone),
                         _buildTextField(addressController, 'Address', Icons.location_on),
-                        _buildDOBField(dobController),
+                        _buildDateField('DOB', dobController, (date) => dobController = date),
                         _buildTextField(genderController, 'Gender', Icons.person_outline),
                         SizedBox(height: screenSize.height*0.03),
                         Row(
@@ -644,22 +658,14 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                             ElevatedButton(
                               onPressed: () {
                                 String dob = '';
-                                if (dobController.text.isNotEmpty) {
-                                  try {
-                                    final parsedDOB = DateFormat('dd/MM/yyyy').parse(dobController.text.trim());
-                                    dob = parsedDOB.toIso8601String();
-                                  } catch (e) {
-                                    SnackBarUtils.showRedSnackBar("Invalid date format", context);
-                                    return;
-                                  }
-                                }
+
                                 Map<String,dynamic> personalInfo = {
                                   'fullName': fullNameController.text.trim(),
                                   'designation': designationController.text.trim(),
                                   'email': emailController.text.trim(),
                                   'phoneNumber': phoneController.text.trim(),
                                   'address': addressController.text.trim(),
-                                  'DOB': dob,
+                                  'DOB': dobController?.toString(),
                                   'gender': genderController.text.trim(),
                                 };
                                 BlocProvider.of<ProfileBloc>(parentContext).add(
@@ -915,54 +921,29 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  Widget _buildDOBField(TextEditingController dobController) {
-    Future<void> selectDate(BuildContext context) async {
-      DateTime initialDate;
-      try {
-        initialDate = dobController.text.isNotEmpty
-            ? DateFormat('dd/MM/yyyy').parse(dobController.text)
-            : DateTime.now();
-      } catch (e) {
-        initialDate = DateTime.now();
-      }
-      final DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: initialDate,
-        firstDate: DateTime(1900),
-        lastDate: DateTime.now(),
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
-                primary: Colors.blue.shade700,
-              ),
-            ),
-            child: child!,
-          );
-        },
-      );
-      if (pickedDate != null) {
-          dobController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-
-      }
-    }
-
-    return TextFormField(
-      controller: dobController,
+  Widget _buildDateField(String label, DateTime? date, Function(DateTime?) onDateSelected) {
+    final controller = TextEditingController(
+      text: date != null ? DateFormat('dd/MM/yyyy').format(date) : '',
+    );
+    return TextField(
+      controller: controller,
       readOnly: true,
       decoration: InputDecoration(
-        labelText: "Date of Birth",
-        hintText: "Select date",
+        labelText: label,
         prefixIcon: Icon(Icons.calendar_today, color: Colors.blue.shade700),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
         ),
       ),
-      onTap: () => selectDate(context),
+      onTap: () async {
+        final pickedDate = await _pickDate(context, initialDate: date);
+        if (pickedDate != null) {
+          controller.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+          onDateSelected(pickedDate);
+        }
+      },
     );
   }
 

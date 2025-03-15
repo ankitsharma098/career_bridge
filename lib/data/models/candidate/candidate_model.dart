@@ -24,8 +24,7 @@ class Candidate {
   @JsonKey(defaultValue: [])
   final List<String> skills;
 
-  @JsonKey(defaultValue: '')
-  final String resume;
+  final Resume resume;
 
   final JobPreferences jobPreferences;
 
@@ -63,7 +62,7 @@ class Candidate {
     this.about = '',
     this.education = const [],
     this.skills = const [],
-    this.resume = '',
+    this.resume = const Resume(),
     this.jobPreferences = const JobPreferences(),
     this.jobs = const CandidateJobs(),
     this.stories = const UserStories(),
@@ -79,7 +78,23 @@ class Candidate {
   factory Candidate.fromJson(Map<String, dynamic> json) => _$CandidateFromJson(json);
   Map<String, dynamic> toJson() => _$CandidateToJson(this);
 }
+@JsonSerializable()
+class Resume {
+  @JsonKey(defaultValue: '')
+  final String url;
 
+
+  @JsonKey(defaultValue: '')
+  final String publicId;
+
+  const Resume({
+    this.url = '',
+    this.publicId = '',
+  });
+
+  factory Resume.fromJson(Map<String, dynamic> json) => _$ResumeFromJson(json);
+  Map<String, dynamic> toJson() => _$ResumeToJson(this);
+}
 @JsonSerializable()
 class DisabilityDetails {
   @JsonKey(defaultValue: '')
@@ -133,14 +148,14 @@ class Education {
   @JsonKey(defaultValue: '')
   final String institution;
 
-  @JsonKey(defaultValue: '')
-  final String startingYear;
+  @JsonKey(defaultValue: null)
+  final DateTime? startingYear;
 
-  @JsonKey(defaultValue: 0)
-  final int passingYear;
+  @JsonKey(defaultValue: null)
+  final DateTime? passingYear;
 
   @JsonKey(defaultValue: '')
-  final String cgpa;
+  final String CGPA;
 
   @JsonKey(name: '_id', defaultValue: '')
   final String id;
@@ -149,11 +164,14 @@ class Education {
     this.course = '',
     this.specialization = '',
     this.institution = '',
-    this.startingYear = '',
-    this.passingYear = 0,
-    this.cgpa = '',
+    this.startingYear ,
+    this.passingYear,
+    this.CGPA = '',
     this.id = '',
   });
+
+  String get startYear => startingYear?.year.toString() ?? '';
+  int get endYear => passingYear?.year ?? 0;
 
   factory Education.fromJson(Map<String, dynamic> json) => _$EducationFromJson(json);
   Map<String, dynamic> toJson() => _$EducationToJson(this);
@@ -201,11 +219,11 @@ class Project {
   @JsonKey(defaultValue: '')
   final String projectName;
 
-  @JsonKey(defaultValue: '')
-  final String startDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? startDate;
 
-  @JsonKey(defaultValue: '')
-  final String endDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? endDate;
 
   @JsonKey(defaultValue: '')
   final String descriptions;
@@ -221,8 +239,8 @@ class Project {
 
   const Project({
     this.projectName = '',
-    this.startDate = '',
-    this.endDate = '',
+    this.startDate,
+    this.endDate,
     this.descriptions = '',
     this.skills = const [],
     this.projectUrl = '',
@@ -241,11 +259,11 @@ class Internship {
   @JsonKey(defaultValue: '')
   final String role;
 
-  @JsonKey(defaultValue: '')
-  final String startDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? startDate;
 
-  @JsonKey(defaultValue: '')
-  final String endDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? endDate;
 
   @JsonKey(defaultValue: '')
   final String projectName;
@@ -265,8 +283,8 @@ class Internship {
   const Internship({
     this.company = '',
     this.role = '',
-    this.startDate = '',
-    this.endDate = '',
+    this.startDate,
+    this.endDate,
     this.projectName = '',
     this.descriptions = '',
     this.skills = const [],
@@ -286,11 +304,11 @@ class WorkExperience {
   @JsonKey(defaultValue: '')
   final String position;
 
-  @JsonKey(defaultValue: '')
-  final String startDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? startDate;
 
-  @JsonKey(defaultValue: '')
-  final String endDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? endDate;
 
 
   @JsonKey(defaultValue: '')
@@ -302,8 +320,8 @@ class WorkExperience {
   const WorkExperience({
     this.company = '',
     this.position = '',
-    this.startDate = '',
-    this.endDate = '',
+    this.startDate,
+    this.endDate ,
     this.descriptions = '',
     this.id = '',
   });
@@ -320,8 +338,8 @@ class Certification {
   @JsonKey(defaultValue: '')
   final String issuingOrganization;
 
-  @JsonKey(defaultValue: '')
-  final String issueDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? issueDate;
 
   @JsonKey(defaultValue: '')
   final String credentialID;
@@ -335,7 +353,7 @@ class Certification {
   const Certification({
     this.name = '',
     this.issuingOrganization = '',
-    this.issueDate = '',
+    this.issueDate ,
     this.credentialID = '',
     this.url = '',
     this.id = '',

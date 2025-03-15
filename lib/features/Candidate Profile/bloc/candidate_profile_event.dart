@@ -23,8 +23,13 @@ class AddProject extends CandidateProfileEvent { final Project project; AddProje
 class AddEducation extends CandidateProfileEvent { final Education education; AddEducation(this.education); }
 class UpdateEducation extends CandidateProfileEvent { final Education education; UpdateEducation(this.education); }
 class DeleteEducation extends CandidateProfileEvent { final String id; DeleteEducation(this.id); }
-class DeleteResume extends CandidateProfileEvent {}
+class UploadResume extends CandidateProfileEvent {final String filePath;
+
+  UploadResume({required this.filePath}); }
 class DeleteWorkExperience extends CandidateProfileEvent { final String id; DeleteWorkExperience(this.id); }
 class DeleteInternship extends CandidateProfileEvent { final String id; DeleteInternship(this.id); }
 class DeleteProject extends CandidateProfileEvent { final String id; DeleteProject(this.id); }
 class DeleteCertification extends CandidateProfileEvent { final String id; DeleteCertification(this.id); }
+
+class UploadDocumentEvent extends CandidateProfileEvent { final String filePath; UploadDocumentEvent(
+    {required this.filePath}); }

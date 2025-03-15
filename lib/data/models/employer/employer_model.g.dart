@@ -48,9 +48,10 @@ PersonalInfo _$PersonalInfoFromJson(Map<String, dynamic> json) => PersonalInfo(
       fullName: json['fullName'] as String? ?? '',
       email: json['email'] as String? ?? '',
       profilePic: json['profilePic'] as String? ?? '',
+      publicId: json['publicId'] as String? ?? '',
       phoneNumber: json['phoneNumber'] as String? ?? '',
       address: json['address'] as String? ?? '',
-      dob: json['dob'] as String? ?? '',
+      dob: json['DOB'] == null ? null : DateTime.parse(json['DOB'] as String),
       gender: json['gender'] as String? ?? 'Male',
     );
 
@@ -59,9 +60,10 @@ Map<String, dynamic> _$PersonalInfoToJson(PersonalInfo instance) =>
       'fullName': instance.fullName,
       'email': instance.email,
       'profilePic': instance.profilePic,
+      'publicId': instance.publicId,
       'phoneNumber': instance.phoneNumber,
       'address': instance.address,
-      'dob': instance.dob,
+      'dob': instance.dob?.toIso8601String(),
       'gender': instance.gender,
     };
 

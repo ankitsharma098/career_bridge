@@ -63,13 +63,16 @@ class PersonalInfo {
   final String? profilePic;
 
   @JsonKey(defaultValue: '')
+  final String publicId;
+
+  @JsonKey(defaultValue: '')
   final String phoneNumber;
 
   @JsonKey(defaultValue: '')
   final String address;
 
   @JsonKey(defaultValue: '')
-  final String? dob;
+  final DateTime? dob;
 
   @JsonKey(defaultValue: 'Male')
   final String gender;
@@ -78,9 +81,10 @@ class PersonalInfo {
     this.fullName = '',
     this.email = '',
     this.profilePic,
+    this.publicId='',
     this.phoneNumber = '',
     this.address = '',
-    this.dob = '',
+    this.dob,
     this.gender = 'Male',
   });
 

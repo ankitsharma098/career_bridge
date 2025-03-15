@@ -592,7 +592,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Text(
-                      '${edu.startingYear.split('-')[0]} - ${edu.passingYear}',
+                      '${edu.startingYear.toString().split('-')[0]} - ${edu.passingYear}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.w500,
@@ -611,7 +611,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         Icon(Icons.star, color: Colors.amber, size: 16),
                         SizedBox(width: 4),
                         Text(
-                          'CGPA: ${edu.cgpa}',
+                          'CGPA: ${edu.CGPA}',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.amber[800],
                             fontWeight: FontWeight.w500,

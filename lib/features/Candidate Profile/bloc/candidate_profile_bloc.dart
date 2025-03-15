@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:android/data/models/employer/employer_model.dart';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
@@ -33,7 +35,8 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     on<AddCertification>(_onAddCertification);
     on<UpdateCertification>(_onUpdateCertification);
     on<DeleteCertification>(_onDeleteCertification);
-    on<DeleteResume>(_onDeleteResume);
+    on<UploadResume>(_onUploadResume);
+    on<UploadDocumentEvent>(_onUploadDocument);
   }
   Future<void> _onFetchProfileData(FetchProfileData event, Emitter<CandidateProfileState> emit) async {
     emit(ProfileDataLoading());
@@ -70,17 +73,27 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         phoneNumber: personalInfo['phoneNumber'],
         address: personalInfo['address'],
         DOB: personalInfo['DOB'],
-        designation: personalInfo['designation'],
         gender: personalInfo['gender'],
+        publicId: personalInfo['publicId'],
       );
-      await HiveUtils.updateCandidateData({
-        'personalInfo': updatedPersonalInfo, // API returns updated personalInfo
-      });
+
+       var dob= updatedPersonalInfo["DOB"];
+
+       print("dob ${dob}");
+
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      candidateData['personalInfo'] =updatedPersonalInfo;
+      await HiveUtils.updateCandidateData(candidateData);
+
+
       emit(ProfileUpdateSuccess('Personal info updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -88,14 +101,18 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     try {
       // Update implementation
       final updatedSummary = await apiService.updateProfileSummary(event.summary);
-      await HiveUtils.updateCandidateData({
-        'profileSummary': updatedSummary, // API returns updated summary
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      candidateData['profileSummary'] = updatedSummary;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Profile summary updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -103,14 +120,18 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     try {
       // Update implementation
       final updatedAbout = await apiService.updateAbout(event.about);
-      await HiveUtils.updateCandidateData({
-        'about': updatedAbout, // API returns updated about
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      candidateData['about'] = updatedAbout;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('About updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -127,14 +148,18 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         assistiveTechnology: event.details.assistiveTechnology,
         preferredCommunicationMethod: event.details.preferredCommunicationMethod,
       );
-      await HiveUtils.updateCandidateData({
-        'disabilityDetails': updatedDisabilityDetails, // API returns updated disabilityDetails
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      candidateData['disabilityDetails'] = updatedDisabilityDetails.toJson();
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Disability details updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -150,14 +175,18 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         employmentType: event.prefs.employmentType,
         experienceLevel: event.prefs.experienceLevel,
       );
-      await HiveUtils.updateCandidateData({
-        'jobPreferences': updatedJobPreferences, // API returns updated jobPreferences
-      });
+      print('Updated Job Preferences: ${updatedJobPreferences.toJson()}');
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      candidateData['jobPreferences'] = updatedJobPreferences.toJson();
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Job preferences updated successfully'));
-      // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -165,36 +194,48 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     try {
       // Update implementation
       final updatedSkills = await apiService.updateSkills(event.skills);
-      await HiveUtils.updateCandidateData({
-        'skills': updatedSkills, // API returns updated skills
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      candidateData['skills'] = updatedSkills;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Skills updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
   Future<void> _onAddEducation(AddEducation event, Emitter<CandidateProfileState> emit) async {
     try {
-      // Update implementation
+
+      print("_onAddEducation Event");
       final newEducation = await apiService.addEducation(
         course: event.education.course,
         specialization: event.education.specialization,
         institution: event.education.institution,
         startingYear: event.education.startingYear,
         passingYear: event.education.passingYear,
-        cgpa: event.education.cgpa,
+        CGPA: event.education.CGPA,
       );
-      await HiveUtils.updateCandidateData({
-        'education': [newEducation], // API returns complete education with id
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      candidateData['education'] ??= [];
+
+      // Add new education to the list
+      candidateData['education'].add(newEducation.toJson());
+
+      print('Updated JnewEducation-----------------------------------------------------------: ${newEducation.toJson()}');
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Education added successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -208,31 +249,50 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         institution: event.education.institution,
         startingYear: event.education.startingYear,
         passingYear: event.education.passingYear,
-        cgpa: event.education.cgpa,
+        CGPA: event.education.CGPA,
       );
-      await HiveUtils.updateCandidateData({
-        'education': [updatedEducation], // API returns updated education
-      });
+
+      print('Updated Job Preferences: ${updatedEducation.toJson()}');
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      List<dynamic> educationList = candidateData['education'] ?? [];
+      for (int i = 0; i < educationList.length; i++) {
+        if (educationList[i]['_id'] == event.education.id) {
+          educationList[i] = updatedEducation.toJson();
+          break;
+        }
+      }
+      candidateData['education'] = educationList;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Education updated successfully'));
-      // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
   Future<void> _onDeleteEducation(DeleteEducation event, Emitter<CandidateProfileState> emit) async {
     try {
-      // Update implementation
+
       await apiService.deleteEducation(event.id);
-      await HiveUtils.updateCandidateData({
-        'education': [{'id': event.id, 'delete': true}], // Local delete
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      List<dynamic> educationList = candidateData['education'] ?? [];
+
+      print("Before educationList $educationList");
+      educationList.removeWhere((item) => item['_id'] == event.id);
+
+      print("After educationList $educationList");
+      candidateData['education'] = educationList;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Education deleted successfully'));
-      // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -246,14 +306,17 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         endDate: event.workExperience.endDate,
         descriptions: event.workExperience.descriptions,
       );
-      await HiveUtils.updateCandidateData({
-        'workExperience': [newWorkExperience], // API returns complete workExperience with id
-      });
-      emit(ProfileUpdateSuccess('Work experience added successfully'));
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      candidateData['workExperience'] ??= [];
+      candidateData['workExperience'].add(newWorkExperience.toJson());
+
+      await HiveUtils.updateCandidateData(candidateData);
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -269,14 +332,22 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         descriptions: event.workExperience.descriptions,
 
       );
-      await HiveUtils.updateCandidateData({
-        'workExperience': [updatedWorkExperience], // API returns updated workExperience
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> workExperienceList = candidateData['workExperience'] ?? [];
+      for (int i = 0; i < workExperienceList.length; i++) {
+        if (workExperienceList[i]['_id'] == event.workExperience.id) {
+          workExperienceList[i] = updatedWorkExperience.toJson();
+          break;
+        }
+      }
+      candidateData['workExperience'] = workExperienceList;
+      await HiveUtils.updateCandidateData(candidateData);
       emit(ProfileUpdateSuccess('Work experience updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -284,14 +355,18 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     try {
       // Update implementation
       await apiService.deleteWorkExperience(event.id);
-      await HiveUtils.updateCandidateData({
-        'workExperience': [{'id': event.id, 'delete': true}], // Local delete
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> workExperienceList = candidateData['workExperience'] ?? [];
+      workExperienceList.removeWhere((item) => item['_id'] == event.id);
+      candidateData['workExperience'] = workExperienceList;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Work experience deleted successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -308,14 +383,18 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         descriptions: event.intern.descriptions,
         projectUrl: event.intern.projectUrl,
       );
-      await HiveUtils.updateCandidateData({
-        'internships': [newInternship], // API returns complete internship with id
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      candidateData['internships'] ??= [];
+      candidateData['internships'].add(newInternship.toJson());
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Internship added successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -330,17 +409,26 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         endDate: event.intern.endDate,
         projectName: event.intern.projectName,
         skills: event.intern.skills,
-        description: event.intern.descriptions,
+        descriptions: event.intern.descriptions,
         projectUrl: event.intern.projectUrl,
       );
-      await HiveUtils.updateCandidateData({
-        'internships': [updatedInternship], // API returns updated internship
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> internshipsList = candidateData['internships'] ?? [];
+      for (int i = 0; i < internshipsList.length; i++) {
+        if (internshipsList[i]['_id'] == event.intern.id) {
+          internshipsList[i] = updatedInternship.toJson();
+          break;
+        }
+      }
+      candidateData['internships'] = internshipsList;
+      await HiveUtils.updateCandidateData(candidateData);
       emit(ProfileUpdateSuccess('Internship updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
+
     }
   }
 
@@ -348,14 +436,19 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     try {
       // Update implementation
       await apiService.deleteInternship(event.id);
-      await HiveUtils.updateCandidateData({
-        'internships': [{'id': event.id, 'delete': true}], // Local delete
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> internshipsList = candidateData['internships'] ?? [];
+      internshipsList.removeWhere((item) => item['_id'] == event.id);
+      candidateData['internships'] = internshipsList;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Internship deleted successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -370,14 +463,17 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         skills: event.project.skills,
         projectUrl: event.project.projectUrl,
       );
-      await HiveUtils.updateCandidateData({
-        'projects': [newProject], // API returns complete project with id
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      candidateData['projects'] ??= [];
+      candidateData['projects'].add(newProject.toJson());
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Project added successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -393,14 +489,22 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         skills: event.project.skills,
         projectUrl: event.project.projectUrl,
       );
-      await HiveUtils.updateCandidateData({
-        'projects': [updatedProject], // API returns updated project
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> projectsList = candidateData['projects'] ?? [];
+      for (int i = 0; i < projectsList.length; i++) {
+        if (projectsList[i]['_id'] == event.project.id) {
+          projectsList[i] = updatedProject.toJson();
+          break;
+        }
+      }
+      candidateData['projects'] = projectsList;
+      await HiveUtils.updateCandidateData(candidateData);
       emit(ProfileUpdateSuccess('Project updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -408,20 +512,26 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     try {
       // Update implementation
       await apiService.deleteProject(event.id);
-      await HiveUtils.updateCandidateData({
-        'projects': [{'id': event.id, 'delete': true}], // Local delete
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> projectsList = candidateData['projects'] ?? [];
+      projectsList.removeWhere((item) => item['_id'] == event.id);
+      candidateData['projects'] = projectsList;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Project deleted successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
   Future<void> _onAddCertification(AddCertification event, Emitter<CandidateProfileState> emit) async {
     try {
-      // Update implementation
+
+      print("Add certif bloc");
       final newCertification = await apiService.addCertification(
         name: event.cert.name,
         issuingOrganization: event.cert.issuingOrganization,
@@ -429,14 +539,18 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         credentialID: event.cert.credentialID,
         url: event.cert.url,
       );
-      await HiveUtils.updateCandidateData({
-        'certifications': [newCertification], // API returns complete certification with id
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      candidateData['certifications'] ??= [];
+      candidateData['certifications'].add(newCertification.toJson());
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Certification added successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
@@ -451,14 +565,24 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
         credentialID: event.cert.credentialID,
         url: event.cert.url,
       );
-      await HiveUtils.updateCandidateData({
-        'certifications': [updatedCertification], // API returns updated certification
-      });
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> certificationsList = candidateData['certifications'] ?? [];
+      for (int i = 0; i < certificationsList.length; i++) {
+        if (certificationsList[i]['_id'] == event.cert.id) {
+          certificationsList[i] = updatedCertification.toJson();
+          break;
+        }
+      }
+      candidateData['certifications'] = certificationsList;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Certification updated successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
+
     }
   }
 
@@ -466,29 +590,62 @@ class CandidateProfileBloc extends Bloc<CandidateProfileEvent, CandidateProfileS
     try {
       // Update implementation
       await apiService.deleteCertification(event.id);
-      await HiveUtils.updateCandidateData({
-        'certifications': [{'id': event.id, 'delete': true}], // Local delete
-      });
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+      List<dynamic> certificationsList = candidateData['certifications'] ?? [];
+      certificationsList.removeWhere((item) => item['_id'] == event.id);
+      candidateData['certifications'] = certificationsList;
+      await HiveUtils.updateCandidateData(candidateData);
+
       emit(ProfileUpdateSuccess('Certification deleted successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
   }
 
-  Future<void> _onDeleteResume(DeleteResume event, Emitter<CandidateProfileState> emit) async {
+  Future<void> _onUploadResume(UploadResume event, Emitter<CandidateProfileState> emit) async {
     try {
-      // Update implementation
-      // final updatedResume = await apiService.deleteResume(); // Assume API returns empty string or null
-      // await HiveUtils.updateCandidateData({
-      //   'resume': updatedResume ?? '', // API returns updated resume (empty)
-      // });
-      emit(ProfileUpdateSuccess('Resume deleted successfully'));
+      emit(ProfileDataLoading());
+
+        print("UploadResume BLoc ");
+
+        final result = await apiService.uploadResume(File(event.filePath));
+        print("upload document ----------------$result");
+
+      Map<String, dynamic> candidateData = await HiveUtils.getCandidateData();
+
+      candidateData['resume'] = result;
+      await HiveUtils.updateCandidateData(candidateData);
+
+      emit(ProfileUpdateSuccess('Resume Uploaded successfully'));
       // Refresh data
       add(FetchProfileData());
     } catch (e) {
       emit(ProfileError(e.toString()));
+      add(FetchProfileData());
     }
+  }
+
+  Future<void> _onUploadDocument(UploadDocumentEvent event, Emitter<CandidateProfileState> emit) async{
+
+    emit(ProfileDataLoading());
+
+    try{
+      print("documnent uploadtion hit ");
+
+      final result = await apiService.uploadMedia(File(event.filePath));
+      print("upload document ----------------$result");
+
+      emit(DocumentUploaded(url: result['url'].toString(), publicId: result['publicId'].toString()));
+      add(FetchProfileData()); //
+    }catch (e) {
+      emit(ProfileError(e.toString()));
+      add(FetchProfileData());
+    }
+
+
   }
 }

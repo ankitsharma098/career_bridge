@@ -95,9 +95,6 @@ class HiveUtils {
         candidate = _deepConvertMap(rawCandidate);
       }
 
-      print('candidate Data Retrieved: $candidate');
-      print('rawCandidate Data Type: ${rawCandidate.runtimeType}');
-
       return candidate;
     } catch (e) {
       print('Detailed Error getting candidate data: $e');
@@ -167,188 +164,32 @@ class HiveUtils {
   }
 
 
-  static Future<void> updateCandidateData(Map<String, dynamic> updatedData) async {
-    if (updatedData.isEmpty) {
-      throw Exception('Updated data cannot be null or empty');
-    }
-
+  static Future<void> updateCandidateData(Map<String, dynamic> data) async {
     try {
       final box = await Hive.openBox(USER_BOX);
-      Map<String, dynamic> currentCandidateData = await getCandidateData();
-      print("Before updating candidate: $currentCandidateData");
 
-      // Update scalar fields with validation
-      if (updatedData.containsKey('personalInfo') && updatedData['personalInfo'] != null) {
-        currentCandidateData['personalInfo'] ??= {};
-        final newPersonalInfo = updatedData['personalInfo'] as Map<String, dynamic>?;
-        if (newPersonalInfo != null) {
-          currentCandidateData['personalInfo'] = _mergeNestedMap(
-            currentCandidateData['personalInfo'],
-            newPersonalInfo,
-            ['fullName', 'email', 'phoneNumber', 'profilePic', 'address', 'DOB', 'gender'],
-          );
-        }
+      if (data.containsKey('candidate')) {
+        await box.put('candidate', data['candidate']);
+        return;
       }
 
-      if (updatedData.containsKey('profileSummary') && updatedData['profileSummary'] != null) {
-        if (updatedData['profileSummary'] is String) {
-          currentCandidateData['profileSummary'] = updatedData['profileSummary'];
-        }
-      }
 
-      if (updatedData.containsKey('about') && updatedData['about'] != null) {
-        if (updatedData['about'] is String) {
-          currentCandidateData['about'] = updatedData['about'];
-        }
-      }
+      Map<String, dynamic> currentData = await getCandidateData();
 
-      if (updatedData.containsKey('disabilityDetails') && updatedData['disabilityDetails'] != null) {
-        currentCandidateData['disabilityDetails'] ??= {};
-        final newDisabilityDetails = updatedData['disabilityDetails'] as Map<String, dynamic>?;
-        if (newDisabilityDetails != null) {
-          currentCandidateData['disabilityDetails'] = _mergeNestedMap(
-            currentCandidateData['disabilityDetails'],
-            newDisabilityDetails,
-            ['type', 'percentage', 'certificateNumber', 'certificateDoc', 'publicId', 'accommodationsNeeded', 'assistiveTechnology'],
-          );
-        }
-      }
 
-      if (updatedData.containsKey('jobPreferences') && updatedData['jobPreferences'] != null) {
-        currentCandidateData['jobPreferences'] ??= {};
-        final newJobPrefs = updatedData['jobPreferences'] as Map<String, dynamic>?;
-        if (newJobPrefs != null) {
-          currentCandidateData['jobPreferences'] = _mergeNestedMap(
-            currentCandidateData['jobPreferences'],
-            newJobPrefs,
-            ['industries', 'roles', 'preferredSalary', 'location', 'workMode', 'employmentType', 'experienceLevel'],
-          );
-        }
-      }
+      data.forEach((key, value) {
+        currentData[key] = value;
+      });
 
-      if (updatedData.containsKey('skills') && updatedData['skills'] != null) {
-        if (updatedData['skills'] is List && (updatedData['skills'] as List).every((skill) => skill is String)) {
-          currentCandidateData['skills'] = List<String>.from(updatedData['skills']);
-        }
-      }
+      // Save the updated data
+      await box.put('candidate', currentData);
 
-      if (updatedData.containsKey('resume')) {
-        if (updatedData['resume'] == null || updatedData['resume'] is String) {
-          currentCandidateData['resume'] = updatedData['resume'] ?? '';
-        }
-      }
-
-      // Update list fields with validation
-      if (updatedData.containsKey('education') && updatedData['education'] != null) {
-        currentCandidateData['education'] = _mergeList(
-          currentCandidateData['education'] ?? [],
-          updatedData['education'],
-          requiredFields: ['degree', 'institution'],
-        );
-      }
-
-      if (updatedData.containsKey('workExperience') && updatedData['workExperience'] != null) {
-        currentCandidateData['workExperience'] = _mergeList(
-          currentCandidateData['workExperience'] ?? [],
-          updatedData['workExperience'],
-          requiredFields: ['companyName', 'designation'],
-        );
-      }
-
-      if (updatedData.containsKey('internships') && updatedData['internships'] != null) {
-        currentCandidateData['internships'] = _mergeList(
-          currentCandidateData['internships'] ?? [],
-          updatedData['internships'],
-          requiredFields: ['companyName', 'role'],
-        );
-      }
-
-      if (updatedData.containsKey('projects') && updatedData['projects'] != null) {
-        currentCandidateData['projects'] = _mergeList(
-          currentCandidateData['projects'] ?? [],
-          updatedData['projects'],
-          requiredFields: ['title'],
-        );
-      }
-
-      if (updatedData.containsKey('certifications') && updatedData['certifications'] != null) {
-        currentCandidateData['certifications'] = _mergeList(
-          currentCandidateData['certifications'] ?? [],
-          updatedData['certifications'],
-          requiredFields: ['title', 'issuer'],
-        );
-      }
-
-      // Update timestamp
-      currentCandidateData['updatedAt'] = DateTime.now().toIso8601String();
-
-      print("After updating candidate: $currentCandidateData");
-      await box.put('candidate', currentCandidateData);
     } catch (e) {
       print('Error updating candidate data: $e');
       throw Exception('Failed to update candidate data: $e');
     }
   }
 
-  // Helper to merge nested maps with validation
-  static Map<String, dynamic> _mergeNestedMap(
-      Map<String, dynamic> current,
-      Map<String, dynamic> updated,
-      List<String> validFields,
-      ) {
-    final merged = Map<String, dynamic>.from(current);
-    for (var key in updated.keys) {
-      if (validFields.contains(key) && updated[key] != null) {
-        merged[key] = updated[key];
-      }
-    }
-    return merged;
-  }
-
-  // Helper to merge list items with validation
-  static List<dynamic> _mergeList(
-      List<dynamic> currentList,
-      dynamic updatedListRaw,
-      {List<String> requiredFields = const []}
-      ) {
-    if (updatedListRaw == null || updatedListRaw is! List) {
-      return currentList;
-    }
-
-    final updatedList = updatedListRaw;
-    final currentMap = {for (var item in currentList) item['id']?.toString(): item};
-
-    for (var updatedItemRaw in updatedList) {
-      if (updatedItemRaw is! Map<String, dynamic>) continue;
-
-      final updatedItem = updatedItemRaw;
-      final id = updatedItem['id']?.toString();
-
-      // Validate required fields for non-delete operations
-      if (updatedItem['delete'] != true) {
-        if (id == null || id.isEmpty) {
-          print('Skipping item with missing or invalid id: $updatedItem');
-          continue;
-        }
-        for (var field in requiredFields) {
-          if (!updatedItem.containsKey(field) || updatedItem[field] == null || updatedItem[field].toString().isEmpty) {
-            print('Skipping invalid item missing required field "$field": $updatedItem');
-            continue;
-          }
-        }
-      }
-
-      if (updatedItem['delete'] == true) {
-        if (id != null && currentMap.containsKey(id)) {
-          currentMap.remove(id);
-        }
-      } else {
-        currentMap[id] = updatedItem;
-      }
-    }
-
-    return currentMap.values.toList();
-  }
 
 
   static Map<String, dynamic> _deepConvertMap(Map rawMap) {
