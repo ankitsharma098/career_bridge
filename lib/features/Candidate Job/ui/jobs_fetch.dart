@@ -1,3 +1,4 @@
+import 'package:android/features/Candidate%20Job/Apply%20Job%20Bloc/apply_job_bloc.dart';
 import 'package:android/features/Candidate%20Job/model/candidate_job_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +6,8 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/constants/colors.dart'; // Adjust import path
 import '../../../core/utils/snackBarUtils.dart'; // Adjust import path
 import '../Job Bloc/candidate_job_bloc.dart';
+import 'apply_job.dart';
+import 'full_job_detail.dart';
 
 
 class CandidateTabJobs extends StatelessWidget {
@@ -12,30 +15,66 @@ class CandidateTabJobs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Size screenSize = MediaQuery.of(context).size;
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Jobs'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Search Jobs'),
-              Tab(text: 'Recommended Jobs'),
+      child: Column(
+        children: [
+
+          TabBar(
+            labelColor: Theme.of(context).primaryColor,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Theme.of(context).primaryColor,
+            labelStyle:  TextStyle(fontWeight: FontWeight.bold),
+
+            tabs:  [
+              Tab(
+                child: SizedBox(
+                  width: screenSize.width*0.35,
+
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.analytics_outlined),
+                      SizedBox(width: 8),
+                      Text('Search Jobs',overflow: TextOverflow.ellipsis,),
+                    ],
+                  ),
+                ),
+              ),
+              Tab(
+                child: SizedBox(
+
+                  width: screenSize.width*0.46,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.work_outline),
+                      SizedBox(width: 8),
+                      Text('Recommended Jobs',overflow: TextOverflow.ellipsis,),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            BlocProvider(
-              create: (context) => CandidateJobBloc(),
-              child: SearchOrAllJobs(isRecommended: false),
+
+          Expanded(
+            child: TabBarView(
+              physics: const BouncingScrollPhysics(),
+              children: [
+                BlocProvider(
+                  create: (context) => CandidateJobBloc(),
+                  child: SearchOrAllJobs(isRecommended: false),
+                ),
+                BlocProvider(
+                  create: (context) => CandidateJobBloc(),
+                  child: RecommendationJobs(isRecommended: true),
+                ),
+              ],
             ),
-            BlocProvider(
-              create: (context) => CandidateJobBloc(),
-              child: RecommendationJobs(isRecommended: true),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -264,101 +303,249 @@ class _RecommendationJobsState extends State<RecommendationJobs> {
   }
 }
 
-// Shared Widgets
+
 Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext context) {
   return Card(
     elevation: 2,
     margin: const EdgeInsets.only(bottom: 8),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    child: Padding(
-      padding: EdgeInsets.all(screenSize.width * 0.04),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Card(
+          margin: EdgeInsets.all(0),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.only( topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),)),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical :screenSize.width * 0.025,horizontal: screenSize.width*0.015),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        job.title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        job.overview,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                            fontSize: screenSize.width*0.04
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusChip(context,job.status,screenSize),
+              ],
+            ),
+          ),
+        ),
+
+        Padding(
+          padding: EdgeInsets.symmetric(vertical :screenSize.width * 0.04,horizontal: screenSize.width*0.015),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // Key Information Row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      job.title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    _buildInfoPill(
+                      context,
+                      Icons.location_on,
+                      '${job.location.city}, ${job.location.state}', // Updated location access
                     ),
-                    SizedBox(height: screenSize.height * 0.005),
-                    Text(
-                      job.companyDetails.companyName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                    SizedBox(width: 5,),
+                    _buildInfoPill(
+                      context,
+                      Icons.work,
+                      job.employmentType, // Changed from jobType
+                    ),
+                    SizedBox(width: 5,),
+                    _buildInfoPill(
+                      context,
+                      Icons.trending_up,
+                      job.experienceLevel,
                     ),
                   ],
                 ),
               ),
-              _buildStatusChip(context,"openn", screenSize),
-            ],
-          ),
-          SizedBox(height: screenSize.height * 0.015),
-          Row(
-            children: [
-              _buildInfoPill(
-                context,
-                Icons.location_on,
-                '${job.location.city}, ${job.location.country}',
-              ),
-              SizedBox(width: screenSize.width * 0.02),
-              _buildInfoPill(context, Icons.work, job.employmentType),
-            ],
-          ),
-          SizedBox(height: screenSize.height * 0.015),
-          Text(
-            '${job.salary.currency} ${job.salary.min} - ${job.salary.max}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: screenSize.height * 0.015),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: job.skills
-                .take(3)
-                .map(
-                  (skill) => Chip(
-                label: Text(skill),
-                backgroundColor: AppColors.lightDeepPurple.withOpacity(0.1),
-                labelStyle: Theme.of(context).textTheme.bodySmall,
-              ),
-            )
-                .toList(),
-          ),
-          SizedBox(height: screenSize.height * 0.015),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => JobDetailsScreen(job: JobModel()),
-                    //   ),
-                    // );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.lightPrimary,
-                    foregroundColor: Colors.white,
+
+              SizedBox(height: screenSize.height * 0.02),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${job.salary.currency}',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${job.salary.min}-${job.salary.max}',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  child: const Text('View Details'),
+
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Deadline:',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.red[200],
+                            fontSize: screenSize.width*0.04
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${_formatDate(job.deadline)}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: screenSize.width*0.04
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              SizedBox(height: screenSize.height * 0.02),
+
+              // Key Responsibilities
+              Text(
+                'Key Responsibilities:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              SizedBox(height: screenSize.height * 0.01),
+              Column(
+                children: job.responsibilities
+                    .take(2) // Show only first 2 responsibilities
+                    .map((resp) => Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Icon(Icons.check_circle,
+                        size: 16,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        resp,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: screenSize.width*0.035
+                        ),
+                      ),
+                    ),
+                  ],
+                ))
+                    .toList(),
+              ),
+
+              SizedBox(height: screenSize.height * 0.02),
+
+              // Required Skills
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: job.skills
+                    .take(3) // Show only first 3 skills
+                    .map((skill) => Card(
+                  margin: EdgeInsets.all(0),
+                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSecondary.withOpacity(0.1):AppColors.lightDeepPurple.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  elevation: 0,
+                  child: Padding(
+                    padding:   EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Text(
+                        skill,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontSize: screenSize.width*0.035,
+                        )
+                    ),
+                  ),
+                ))
+                    .toList(),
+              ),
+
+              SizedBox(height: screenSize.height * 0.02),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => CandidateJobDetails(job: job ,)));
+                      },
+                      icon: Icon(Icons.description_outlined),
+                      label: Text('View Full Details',style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        // color: Theme.of(context).brightness == Brightness.dark
+                      ),),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark ?AppColors.darkPrimary.withOpacity(0.1):AppColors.lightDisabled,
+                        // foregroundColor: AppColors.lightPrimary,
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BlocProvider(
+                              create: (context) => ApplyJobBloc(),
+                              child: ApplyJobScreen(jobId: job.id),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.people,color: AppColors.lightDivider,),
+                      label: Text('Apply here'),
+                      style: ElevatedButton.styleFrom(
+                        //backgroundColor: AppColors.deepPurple,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     ),
   );
 }
@@ -386,7 +573,12 @@ Widget _buildInfoPill(BuildContext context, IconData icon, String text) {
   );
 }
 
-Widget _buildStatusChip(BuildContext context,String status, Size screenSize) {
+String _formatDate(String dateString) {
+  final date = DateTime.parse(dateString);
+  return '${date.day}/${date.month}/${date.year}';
+}
+
+Widget _buildStatusChip(BuildContext context,String status,Size screenSize) {
   Color chipColor;
   switch (status.toLowerCase()) {
     case 'open':
@@ -399,13 +591,20 @@ Widget _buildStatusChip(BuildContext context,String status, Size screenSize) {
       chipColor = Colors.grey;
   }
 
-  return Chip(
-    label: Text(status),
-    backgroundColor: chipColor.withOpacity(0.1),
-    labelStyle: Theme.of(context)
-        .textTheme
-        .bodySmall
-        ?.copyWith(color: chipColor, fontSize: screenSize.width * 0.035),
+  return Card(
+    elevation: 0,
+    margin: EdgeInsets.all(0),
+    color: chipColor.withOpacity(0.1),
+    child: Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Text(
+          status,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: chipColor,
+              fontSize: screenSize.width*0.04
+          )
+      ),
+    ),
   );
 }
 

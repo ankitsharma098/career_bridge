@@ -498,25 +498,6 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                 const Divider(height: 24),
                 _buildIndustriesSection(preferredIndustries, screenSize),
                 SizedBox(height: screenSize.height * 0.02),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.green,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${jobPreferences['preferenceMatch'] ?? 0} jobs match your preferences',
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      //  fontSize: screenSize.width * 0.04,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: screenSize.height * 0.01),
                 OutlinedButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.tune),
@@ -811,17 +792,19 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                 ),
                 SizedBox(width: screenSize.width * 0.03),
                 Text(
-                  type['_id'],
-                  style: GoogleFonts.poppins(
+                  type['_id']?.toString() ?? 'Unknown Job Type',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontSize: screenSize.width * 0.04,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
+                SizedBox(width: screenSize.width * 0.03),
                 Text(
                   '${type['shortlisted']} of ${type['total']}',
                   style: GoogleFonts.poppins(
                     fontSize: screenSize.width * 0.04,
-                    fontWeight: FontWeight.w600,
+
+                    fontWeight: FontWeight.w500,
                     color: Theme.of(context).brightness == Brightness.dark
                         ? AppColors.darkPrimary
                         : AppColors.lightPrimary,

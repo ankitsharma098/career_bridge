@@ -550,6 +550,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
   }
+
+
   Widget _buildPersonalDetailsStep(BuildContext context, Size screenSize) {
     return Form(
       key: _formKey,

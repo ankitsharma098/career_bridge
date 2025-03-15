@@ -79,7 +79,7 @@ class JobStatsScreen extends StatelessWidget {
             ],
           ),
           title: Text(
-            'Job Employer Dashboard',
+            'Jobs Sections',
           ),
         ),
         body: TabBarView(
@@ -145,31 +145,37 @@ class _JobStatsTabState extends State<JobStatsTab> {
 
 
         if (state is JobStatsLoaded) {
-          final jobMetrics = state.stats['jobMetrics'];
-          final performanceMetrics = state.stats['performanceMetrics'];
-          final distributionInsights = state.stats['distributionInsights'];
-          final disabilityMetrics = state.stats['disabilityMetrics'];
-          final conversionMetrics = performanceMetrics['conversionMetrics'];
+          final jobMetrics = state.stats['jobMetrics'] ?? {};
+          final performanceMetrics = state.stats['performanceMetrics'] ?? {};
+          final distributionInsights = state.stats['distributionInsights'] ?? {};
+          final disabilityMetrics = state.stats['disabilityMetrics'] ?? {};
+          final conversionMetrics = performanceMetrics['conversionMetrics'] ?? {};
 
 
 
           return SingleChildScrollView(
             padding: EdgeInsets.all(widget.screenSize.width * 0.04),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(context, widget.screenSize),
-                SizedBox(height: widget.screenSize.height * 0.02),
-                _buildOverviewCards(context, widget.screenSize, jobMetrics),
-                SizedBox(height: widget.screenSize.height * 0.03),
-                _buildDistributionSection(context, widget.screenSize, distributionInsights),
-                SizedBox(height: widget.screenSize.height * 0.03),
-                _buildConversionMetrics(context, widget.screenSize, conversionMetrics),
-                SizedBox(height: widget.screenSize.height * 0.03),
-                _buildDistributionMetrics(context, widget.screenSize, disabilityMetrics),
-                SizedBox(height: widget.screenSize.height * 0.03),
-                _buildPerformanceSection(context, widget.screenSize, performanceMetrics),
-              ],
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: widget.screenSize.height - AppBar().preferredSize.height,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(context, widget.screenSize),
+                  SizedBox(height: widget.screenSize.height * 0.02),
+                  _buildOverviewCards(context, widget.screenSize, jobMetrics),
+                  SizedBox(height: widget.screenSize.height * 0.03),
+                  _buildDistributionSection(context, widget.screenSize, distributionInsights),
+                  SizedBox(height: widget.screenSize.height * 0.03),
+                 _buildConversionMetrics(context, widget.screenSize, conversionMetrics),
+                  SizedBox(height: widget.screenSize.height * 0.03),
+                  _buildDistributionMetrics(context, widget.screenSize, disabilityMetrics),
+                  SizedBox(height: widget.screenSize.height * 0.03),
+                  _buildPerformanceSection(context, widget.screenSize, performanceMetrics),
+                ],
+              ),
             ),
           );
         }
@@ -446,17 +452,17 @@ class _JobStatsTabState extends State<JobStatsTab> {
       Size screenSize,
       Map<String, dynamic> metrics,
       ) {
-    // Add null safety and default values
+    // Add null safety checks
     final double averageViews = (metrics['averageViewsPerJob'] ?? 0).toDouble();
     final double averageApplicants = (metrics['averageApplicantsPerJob'] ?? 0).toDouble();
 
-    // Safely handle total metrics with null checks
+    // Add null checks for total metrics
     final int totalJobViews = metrics['totalJobViews']?.toInt() ?? 0;
     final int totalApplicants = metrics['totalApplicants']?.toInt() ?? 0;
 
-    // Calculate a reasonable maxY that's slightly above the highest value
+    // Calculate a reasonable maxY value
     final double maxValue = max(averageViews, averageApplicants);
-    final double roundedMaxY = (maxValue * 1.2).ceilToDouble();
+    final double roundedMaxY = (maxValue > 0) ? (maxValue * 1.2).ceilToDouble() : 1.0;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -500,34 +506,37 @@ class _JobStatsTabState extends State<JobStatsTab> {
               ],
             ),
             SizedBox(height: screenSize.height * 0.02),
-            roundedMaxY > 0 ? BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: roundedMaxY,
-                barGroups: [
-                  _createBarGroup(0, averageViews, Colors.blue[400]!),
-                  _createBarGroup(1, averageApplicants, Colors.teal[400]!),
-                ],
-                gridData: FlGridData(
-                  show: true,
-                  drawHorizontalLine: true,
-                  horizontalInterval: roundedMaxY <= 5 ? 1 : (roundedMaxY / 5).ceilToDouble(),
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey[200],
-                      strokeWidth: 1,
-                    );
-                  },
+            SizedBox(
+              height: screenSize.height * 0.2,
+              child: roundedMaxY > 0 ? BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: roundedMaxY,
+                  barGroups: [
+                    _createBarGroup(0, averageViews, Colors.blue[400]!),
+                    _createBarGroup(1, averageApplicants, Colors.teal[400]!),
+                  ],
+                  gridData: FlGridData(
+                    show: true,
+                    drawHorizontalLine: true,
+                    horizontalInterval: roundedMaxY <= 5 ? 1 : (roundedMaxY / 5).ceilToDouble(),
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey[200],
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: _createBarTitles(context, roundedMaxY),
                 ),
-                borderData: FlBorderData(show: false),
-                titlesData: _createBarTitles(context, roundedMaxY),
-              ),
-            ) : SizedBox(
-              height: screenSize.height*0.1,
-              child: Center(
-                child: Text(
-                  'No data available',
-                  style: Theme.of(context).textTheme.bodyMedium,
+              ) : SizedBox(
+                height: screenSize.height*0.1,
+                child: Center(
+                  child: Text(
+                    'No data available',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
               ),
             ),
@@ -692,19 +701,25 @@ class _JobStatsTabState extends State<JobStatsTab> {
                     ],
                   ),
                 ),
+                // Replace the existing CircularPercentIndicator code in _buildDistributionMetrics method
                 Expanded(
-                 child : CircularPercentIndicator(
+                  child: CircularPercentIndicator(
                     radius: 50.0,
                     lineWidth: 10.0,
                     percent: accessiblePercentage / 100,
-                    progressColor:  Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : Colors.teal[400],
-                    // fillColor:  Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                    center: Text('${(( accessiblePercentage / 100) * 100).toStringAsFixed(1)}%',style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : Colors.teal[400],
-                      fontSize: screenSize.width*0.04
-
-                    ),),
-                    // progressColor: AppColors.primary,
+                    progressColor: Theme.of(context).brightness == Brightness.dark ?
+                    AppColors.darkPrimary : Colors.teal[400],
+                    backgroundColor: Colors.grey,  // Add this
+                    animation: true,  // Add animation for better UX
+                    animationDuration: 1000,
+                    center: Text(
+                      '${((accessiblePercentage / 100) * 100).toStringAsFixed(1)}%',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).brightness == Brightness.dark ?
+                          AppColors.darkPrimary : Colors.teal[400],
+                          fontSize: screenSize.width * 0.04
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -839,6 +854,7 @@ class _JobStatsTabState extends State<JobStatsTab> {
         ),
         SizedBox(height: screenSize.height * 0.02),
         performance['topPerformingJobs'].isNotEmpty?
+
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -1176,7 +1192,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
       elevation: 2,
       child: Column(
         children: [
-          // Header with Job Title and Status
+          // Header with Job Title and Statuss
           Card(
             margin: EdgeInsets.all(0),
             elevation: 0,
@@ -1256,21 +1272,48 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${job.salary.currency} ${job.salary.min}-${job.salary.max}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${job.salary.currency}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${job.salary.min}-${job.salary.max}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    SizedBox(width: screenSize.width*0.02,),
-                    Text(
-                      'Deadline: ${_formatDate(job.deadline)}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[500],
-                          fontSize: screenSize.width*0.04
-                      ),
-                      overflow: TextOverflow.ellipsis,
+
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Deadline:',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.red[200],
+                              fontSize: screenSize.width*0.04
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${_formatDate(job.deadline)}',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[500],
+                              fontSize: screenSize.width*0.04
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ],
                 ),

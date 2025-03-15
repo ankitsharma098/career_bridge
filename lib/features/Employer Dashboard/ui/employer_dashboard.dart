@@ -149,7 +149,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     return  Scaffold(
       appBar: AppBar(
         title: Text(_selectedIndex == 0
-            ? 'Employer Dashboard'
+            ? 'Dashboard'
             : _selectedIndex == 1
             ? 'Stories'
             : 'Settings'
@@ -189,7 +189,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
-            label: 'Employer Dashboard',
+            label: 'Dashboard',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.article),

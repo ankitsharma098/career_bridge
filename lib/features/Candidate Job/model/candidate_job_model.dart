@@ -34,6 +34,9 @@ class CandidateJobModel {
   @JsonKey(defaultValue: '')
   final String interviewAccommodations;
 
+  @JsonKey(defaultValue: '')
+  final String status;
+
   @JsonKey(defaultValue: [])
   final List<String> skills;
 
@@ -62,6 +65,7 @@ class CandidateJobModel {
     this.benefits = const [],
     this.workspaceAccommodations = '',
     this.interviewAccommodations = '',
+    this.status = '',
     this.skills = const [],
     this.location = const LocationDetails(),
     this.salary = const SalaryDetails(),
@@ -110,6 +114,10 @@ class LocationDetails {
   @JsonKey(defaultValue: '')
   final String city;
 
+
+  @JsonKey(defaultValue: '')
+  final String address;
+
   @JsonKey(defaultValue: '')
   final String state;
 
@@ -122,6 +130,7 @@ class LocationDetails {
   const LocationDetails({
     this.type = '',
     this.city = '',
+    this.address = '',
     this.state = '',
     this.country = '',
     this.facilityAccessibility = const [],

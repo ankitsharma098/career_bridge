@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 import '../../../core/constants/colors.dart';
@@ -31,7 +32,17 @@ class _DashboardContentState extends State<DashboardContent> {
      BlocProvider.of<EmployerDashboardBloc>(context).add(FetchDashboardData());
     super.initState();
   }
-
+  String formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return 'Not provided';
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('dd/MM/yyyy').format(date);
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -620,7 +631,7 @@ class _DashboardContentState extends State<DashboardContent> {
       title: Text(name,style: Theme.of(context).textTheme.bodySmall,),
       subtitle: Text(jobTitle,style: Theme.of(context).textTheme.bodyMedium?.copyWith(
         fontWeight: FontWeight.w500,
-        fontSize: screenSize.width*0.045,
+       // fontSize: screenSize.width*0.045,
       )),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -634,7 +645,7 @@ class _DashboardContentState extends State<DashboardContent> {
             ),
           ),
           Text(
-              date, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              formatDate(date), style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.grey,
               fontSize: screenSize.width*0.025,
               fontWeight: FontWeight.w600

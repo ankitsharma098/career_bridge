@@ -127,5 +127,65 @@ class CandidateJobServices {
     }
   }
 
+  Future<Map<String, dynamic>> submitApplicationToBackend({
+    required String jobId,
+    required bool isFresher,
+    required List<Map<String, String>> experiences,
+    required Map<String, String> contactInfo,
+    required String resumeUrl,
+  }) async {
+
+    try{
+      print("_submitApplicationToBackend api");
+
+      Map<String,dynamic> data ={
+        "experiences":experiences,
+        "isFresher":isFresher,
+        "resume":resumeUrl,
+        "contactInfo":contactInfo,
+      };
+
+      print("dfata $data");
+
+      String? accessToken = await HiveUtils.getAccessToken();
+
+      if(accessToken==null || accessToken.isEmpty){
+        throw Exception("AccessToken not found");
+      }
+      final response = await dio.post('${AppConstants.baseUrl}/candidate/jobs/enrolled/$jobId',
+        options:  Options(
+            headers: {
+              'Authorization':'Bearer $accessToken'
+            }
+        ),
+        data: data
+      );
+
+      if (response.statusCode == 201) {
+        Map<String,dynamic> application= Map<String,dynamic>.from(response.data["application"]);
+
+        return application;
+      }else{
+        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+        throw Exception('Failed to apply Job ${response.statusMessage}');
+      }
+
+
+    }on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
+    }
+  }
+
 
 }

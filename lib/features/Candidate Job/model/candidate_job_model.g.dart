@@ -33,6 +33,7 @@ CandidateJobModel _$CandidateJobModelFromJson(Map<String, dynamic> json) =>
           [],
       workspaceAccommodations: json['workspaceAccommodations'] as String? ?? '',
       interviewAccommodations: json['interviewAccommodations'] as String? ?? '',
+      status: json['status'] as String? ?? '',
       skills: (json['skills'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
@@ -69,6 +70,7 @@ Map<String, dynamic> _$CandidateJobModelToJson(CandidateJobModel instance) =>
       'benefits': instance.benefits,
       'workspaceAccommodations': instance.workspaceAccommodations,
       'interviewAccommodations': instance.interviewAccommodations,
+      'status': instance.status,
       'skills': instance.skills,
       'location': instance.location,
       'salary': instance.salary,
@@ -82,6 +84,7 @@ LocationDetails _$LocationDetailsFromJson(Map<String, dynamic> json) =>
     LocationDetails(
       type: json['type'] as String? ?? '',
       city: json['city'] as String? ?? '',
+      address: json['address'] as String? ?? '',
       state: json['state'] as String? ?? '',
       country: json['country'] as String? ?? '',
       facilityAccessibility: (json['facilityAccessibility'] as List<dynamic>?)
@@ -94,6 +97,7 @@ Map<String, dynamic> _$LocationDetailsToJson(LocationDetails instance) =>
     <String, dynamic>{
       'type': instance.type,
       'city': instance.city,
+      'address': instance.address,
       'state': instance.state,
       'country': instance.country,
       'facilityAccessibility': instance.facilityAccessibility,
