@@ -152,7 +152,7 @@ class _SearchOrAllJobsState extends State<SearchOrAllJobs> {
       onSubmitted: (value) {
 
         BlocProvider.of<CandidateJobBloc>(context)
-            .add(FetchJobs(isRecommended: widget.isRecommended));
+            .add(FetchJobs(isRecommended: widget.isRecommended,search: value));
       },
     );
   }
@@ -166,7 +166,7 @@ class _SearchOrAllJobsState extends State<SearchOrAllJobs> {
       },
       builder: (context, state) {
         if (state is JobLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return  Center(child:LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20));
         }
 
         if (state is JobLoaded) {
@@ -267,6 +267,9 @@ class _RecommendationJobsState extends State<RecommendationJobs> {
         if (state is JobError) {
           SnackBarUtils.showRedSnackBar(state.error, context);
         }
+        if(state is JobSuccess){
+          SnackBarUtils.showGreenSnackBar(state.message, context);
+        }
       },
       builder: (context, state) {
         if (state is JobLoading) {
@@ -307,132 +310,248 @@ class _RecommendationJobsState extends State<RecommendationJobs> {
 Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext context) {
   return Card(
     elevation: 2,
-    margin: const EdgeInsets.only(bottom: 8),
+    margin: const EdgeInsets.only(bottom: 12),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.only( topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),)),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical :screenSize.width * 0.025,horizontal: screenSize.width*0.015),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        job.title,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        job.overview,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                            fontSize: screenSize.width*0.04
-                        ),
-                      ),
-                    ],
-                  ),
+        // Header section with company logo and save button
+        Stack(
+          children: [
+            Card(
+              margin: EdgeInsets.zero,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
-                _buildStatusChip(context,job.status,screenSize),
-              ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: screenSize.width * 0.025,
+                  horizontal: screenSize.width * 0.03,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Company Logo
+                    Container(
+                      width: 55,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 5,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: job.companyDetails.logo.url.isNotEmpty
+                            ? Image.network(
+                          job.companyDetails.logo.url,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Center(child: Icon(Icons.business, size: 30)),
+                        )
+                            : Center(child: Icon(Icons.business, size: 30)),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    // Job title and company name
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            job.title,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            job.companyDetails.companyName.isNotEmpty
+                                ? job.companyDetails.companyName
+                                : job.overview,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[600],
+                              fontSize: screenSize.width * 0.035,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          // Status chip
+                          _buildStatusChip(context, job.status, screenSize),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+            // Save/Unsave button
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 3,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    job.isSaved ? Icons.bookmark : Icons.bookmark_border,
+                    color: job.isSaved ? Theme.of(context).primaryColor : Colors.grey,
+                  ),
+                  onPressed: () {
+
+                    context.read<CandidateJobBloc>().add(
+                      ToggleSavedJobsEvent( jobId: job.id,),
+                    );
+
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
 
+        // Job details section
         Padding(
-          padding: EdgeInsets.symmetric(vertical :screenSize.width * 0.04,horizontal: screenSize.width*0.015),
+          padding: EdgeInsets.all(screenSize.width * 0.04),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Key Information Row
+              // Job info pills in a scrollable row
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildInfoPill(
                       context,
                       Icons.location_on,
-                      '${job.location.city}, ${job.location.state}', // Updated location access
+                      '${job.location.city}, ${job.location.state}',
                     ),
-                    SizedBox(width: 5,),
+                    SizedBox(width: 8),
                     _buildInfoPill(
                       context,
                       Icons.work,
-                      job.employmentType, // Changed from jobType
+                      job.employmentType,
                     ),
-                    SizedBox(width: 5,),
+                    SizedBox(width: 8),
                     _buildInfoPill(
                       context,
                       Icons.trending_up,
                       job.experienceLevel,
                     ),
+                    if (job.companyDetails.industryType.isNotEmpty) ...[
+                      SizedBox(width: 8),
+                      _buildInfoPill(
+                        context,
+                        Icons.category,
+                        job.companyDetails.industryType,
+                      ),
+                    ],
                   ],
                 ),
               ),
 
               SizedBox(height: screenSize.height * 0.02),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${job.salary.currency}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${job.salary.min}-${job.salary.max}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+              // Salary and deadline info
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor.withOpacity(0.2),
                   ),
-
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Deadline:',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.red[200],
-                            fontSize: screenSize.width*0.04
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.currency_rupee,
+                              size: 18,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Salary',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: screenSize.width * 0.035,
+                              ),
+                            ),
+                          ],
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${_formatDate(job.deadline)}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[500],
-                            fontSize: screenSize.width*0.04
+                        SizedBox(height: 4),
+                        Text(
+                          '${job.salary.currency} ${job.salary.min}-${job.salary.max}',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                    Container(
+                      height: 40,
+                      width: 1,
+                      color: Theme.of(context).dividerColor,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.timer,
+                              size: 18,
+                              color: Colors.red[300],
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Deadline',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: screenSize.width * 0.035,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          _formatDate(job.deadline),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red[300],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               SizedBox(height: screenSize.height * 0.02),
@@ -447,25 +566,35 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
               SizedBox(height: screenSize.height * 0.01),
               Column(
                 children: job.responsibilities
-                    .take(2) // Show only first 2 responsibilities
-                    .map((resp) => Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Icon(Icons.check_circle,
-                        size: 16,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        resp,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: screenSize.width*0.035
+                    .take(2)
+                    .map((resp) => Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.check,
+                          size: 14,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          resp,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: screenSize.width * 0.035,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ))
                     .toList(),
               ),
@@ -473,23 +602,33 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
               SizedBox(height: screenSize.height * 0.02),
 
               // Required Skills
+              Text(
+                'Required Skills:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: job.skills
-                    .take(3) // Show only first 3 skills
-                    .map((skill) => Card(
-                  margin: EdgeInsets.all(0),
-                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSecondary.withOpacity(0.1):AppColors.lightDeepPurple.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  elevation: 0,
-                  child: Padding(
-                    padding:   EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Text(
-                        skill,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: screenSize.width*0.035,
-                        )
+                    .take(3)
+                    .map((skill) => Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Text(
+                    skill,
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w500,
+                      fontSize: screenSize.width * 0.035,
                     ),
                   ),
                 ))
@@ -504,15 +643,21 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => CandidateJobDetails(job: job ,)));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CandidateJobDetails(job: job),
+                          ),
+                        );
                       },
                       icon: Icon(Icons.description_outlined),
-                      label: Text('View Full Details',style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        // color: Theme.of(context).brightness == Brightness.dark
-                      ),),
+                      label: Text('View Details',style: Theme.of(context).textTheme.bodyMedium?.copyWith(color :
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white:Colors.black),),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).brightness == Brightness.dark ?AppColors.darkPrimary.withOpacity(0.1):AppColors.lightDisabled,
-                        // foregroundColor: AppColors.lightPrimary,
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkPrimary.withOpacity(0.1)
+                            : AppColors.lightDisabled,
                         padding: EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
@@ -531,10 +676,9 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                           ),
                         );
                       },
-                      icon: Icon(Icons.people,color: AppColors.lightDivider,),
-                      label: Text('Apply here'),
+                      icon: Icon(Icons.people, color: AppColors.lightDivider),
+                      label: Text('Apply Now'),
                       style: ElevatedButton.styleFrom(
-                        //backgroundColor: AppColors.deepPurple,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -550,22 +694,28 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
   );
 }
 
+// Updated info pill with improved styling
 Widget _buildInfoPill(BuildContext context, IconData icon, String text) {
   return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     decoration: BoxDecoration(
-      color: AppColors.lightDeepPurple.withOpacity(0.1),
+      color: Theme.of(context).primaryColor.withOpacity(0.1),
       borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: Theme.of(context).primaryColor.withOpacity(0.2),
+      ),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.lightPrimary),
-        const SizedBox(width: 6),
+        Icon(icon, size: 16, color: Theme.of(context).primaryColor),
+        SizedBox(width: 6),
         Text(
           text,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.lightPrimary,
+          style: TextStyle(
+            color: Theme.of(context).primaryColor.withOpacity(0.8),
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
           ),
         ),
       ],
@@ -573,12 +723,8 @@ Widget _buildInfoPill(BuildContext context, IconData icon, String text) {
   );
 }
 
-String _formatDate(String dateString) {
-  final date = DateTime.parse(dateString);
-  return '${date.day}/${date.month}/${date.year}';
-}
-
-Widget _buildStatusChip(BuildContext context,String status,Size screenSize) {
+// Updated status chip with improved styling
+Widget _buildStatusChip(BuildContext context, String status, Size screenSize) {
   Color chipColor;
   switch (status.toLowerCase()) {
     case 'open':
@@ -591,22 +737,31 @@ Widget _buildStatusChip(BuildContext context,String status,Size screenSize) {
       chipColor = Colors.grey;
   }
 
-  return Card(
-    elevation: 0,
-    margin: EdgeInsets.all(0),
-    color: chipColor.withOpacity(0.1),
-    child: Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Text(
-          status,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: chipColor,
-              fontSize: screenSize.width*0.04
-          )
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: chipColor.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: chipColor.withOpacity(0.3)),
+    ),
+    child: Text(
+      status,
+      style: TextStyle(
+        color: chipColor,
+        fontWeight: FontWeight.w500,
+        fontSize: screenSize.width * 0.035,
       ),
     ),
   );
 }
+
+
+String _formatDate(String dateString) {
+  final date = DateTime.parse(dateString);
+  return '${date.day}/${date.month}/${date.year}';
+}
+
+
 
 Widget _buildEmptyState(BuildContext context,Size screenSize, String message) {
   return Center(

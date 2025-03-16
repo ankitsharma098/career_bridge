@@ -1,25 +1,23 @@
 
-
-import 'package:android/data/models/Job/job_model.dart';
+import 'package:android/core/constants/app_constants.dart';
+import 'package:android/core/utils/hiveUtils.dart';
+import 'package:android/features/Candidate%20Job/model/candidate_job_model.dart';
 import 'package:dio/dio.dart';
+class CandidateJobStatsApi {
 
-import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/hiveUtils.dart';
-import '../model/candidate_job_model.dart';
-
-class CandidateJobServices {
   final dio = Dio();
-  Future<List<CandidateJobModel>> fetchRecommendedJobs(int page) async{
+
+  Future<Map<String,dynamic>> fetchJobStats() async {
 
     try{
-      print("fetchRecommendedJobs api");
+      print("fetchJobStats api");
 
       String? accessToken = await HiveUtils.getAccessToken();
 
       if(accessToken==null || accessToken.isEmpty){
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('${AppConstants.baseUrl}/candidate/jobs-recommended?page=$page',
+      final response = await dio.get('${AppConstants.baseUrl}/candidate/jobs/stats',
         options:  Options(
             headers: {
               'Authorization':'Bearer $accessToken'
@@ -29,18 +27,13 @@ class CandidateJobServices {
 
       if (response.statusCode == 200) {
 
-        List<Map<String,dynamic>> rawRecommendedJobs=List<Map<String,dynamic>>.from(response.data['jobs']);
+        Map<String,dynamic> jobsStats=Map<String,dynamic>.from(response.data['stats']);
 
-        print("raw response $rawRecommendedJobs");
-        List<CandidateJobModel> recommendedJobs = rawRecommendedJobs
-            .map((json) => CandidateJobModel.fromJson(json))
-            .toList();
 
-        print("recommendedJobs $recommendedJobs");
-        return recommendedJobs;
+        print("job stats $jobsStats");
+        return jobsStats;
       }else{
-        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
-        throw Exception('Failed to Load stories ${response.statusMessage}');
+        throw Exception('Failed to Load Job stats ${response.statusMessage}');
       }
 
 
@@ -60,46 +53,34 @@ class CandidateJobServices {
     }
   }
 
-  Future<List<CandidateJobModel>> fetchSearchedJobs({
-    required int page,
-    int limit = 10,
-    String? search,
-  }) async {
-    try {
-      print("fetchSearchedJobs API called with page: $page");
+  Future<List<CandidateJobModel>> fetchSavedJobs(int page) async{
+
+    try{
+      print("fetchSavedJobs api");
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if (accessToken == null || accessToken.isEmpty) {
-        throw Exception("Access token not found");
+      if(accessToken==null || accessToken.isEmpty){
+        throw Exception("AccessToken not found");
       }
-
-      final queryParameters = {
-        'page': page.toString(),
-        'limit': limit.toString(),
-        if (search != null) 'search': search,
-      };
-
-      final response = await dio.get(
-        '${AppConstants.baseUrl}/candidate/jobs-search/all',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $accessToken',
-          },
+      final response = await dio.get('${AppConstants.baseUrl}/candidate/jobs/saved?page=$page',
+        options:  Options(
+            headers: {
+              'Authorization':'Bearer $accessToken'
+            }
         ),
-        queryParameters: queryParameters,
       );
 
       if (response.statusCode == 200) {
-        // Type-safe extraction of jobs from response
+
         final responseData = response.data as Map<String, dynamic>;
-        final rawSearchedJobs = List<Map<String, dynamic>>.from(responseData['jobs'] ?? []);
+        final rawSavedJobs = List<Map<String, dynamic>>.from(responseData['jobs'] ?? []);
 
-        print("Raw response jobs: $rawSearchedJobs");
+        print("Raw response jobs: $rawSavedJobs");
 
-        final searchedJobs = rawSearchedJobs.map((json) => CandidateJobModel.fromJson(json)).toList();
+        final savedJobs = rawSavedJobs.map((json) => CandidateJobModel.fromJson(json)).toList();
 
-        print("Parsed searched jobs: $searchedJobs");
+        print("Parsed searched jobs: $savedJobs");
 
         final pagination = responseData['pagination'] as Map<String, dynamic>?;
 
@@ -107,67 +88,68 @@ class CandidateJobServices {
           print("Pagination info: Current Page: ${pagination['currentPage']}, Total Pages: ${pagination['totalPages']}");
         }
 
-        return searchedJobs;
-      } else {
-        print("Error response: ${response.statusCode} - ${response.statusMessage}");
-        throw Exception('Failed to load jobs: ${response.statusMessage}');
+        return savedJobs;
+      }else{
+        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+        throw Exception('Failed to fetch saved jobs ${response.statusMessage}');
       }
-    } on DioException catch (e) {
+
+
+    }on DioException catch (e) {
       if (e.response != null) {
-        final errorMessage = e.response?.data['message'] ?? 'An error occurred';
-        print("Dio error: $errorMessage");
-        throw Exception(errorMessage);
-      } else {
-        print("Network error: ${e.message}");
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      }
+      else{
+        print("Error sending request: ${e.message}");
         throw Exception('Network error occurred');
       }
-    } catch (e) {
-      print("Unexpected error: $e");
-      throw Exception('An unexpected error occurred: $e');
+    }
+    catch(e){
+      print("Error: $e");
+      throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<Map<String, dynamic>> submitApplicationToBackend({
-    required String jobId,
-    required bool isFresher,
-    required List<Map<String, String>> experiences,
-    required Map<String, String> contactInfo,
-    required String resumeUrl,
-  }) async {
+  Future<List<CandidateJobModel>> fetchEnrolledJobs(int page) async{
 
     try{
-      print("_submitApplicationToBackend api");
-
-      Map<String,dynamic> data ={
-        "experiences":experiences,
-        "isFresher":isFresher,
-        "resume":resumeUrl,
-        "contactInfo":contactInfo,
-      };
-
-      print("dfata $data");
+      print("fetchEnrolledJobs api");
 
       String? accessToken = await HiveUtils.getAccessToken();
 
       if(accessToken==null || accessToken.isEmpty){
         throw Exception("AccessToken not found");
       }
-      final response = await dio.post('${AppConstants.baseUrl}/candidate/jobs/enrolled/$jobId',
+      final response = await dio.get('${AppConstants.baseUrl}/candidate/jobs/enrolled-jobs?page=$page',
         options:  Options(
             headers: {
               'Authorization':'Bearer $accessToken'
             }
         ),
-        data: data
       );
 
-      if (response.statusCode == 201) {
-        Map<String,dynamic> application= Map<String,dynamic>.from(response.data["application"]);
+      if (response.statusCode == 200) {
 
-        return application;
+        final responseData = response.data as Map<String, dynamic>;
+        final rawEnrolledJobs = List<Map<String, dynamic>>.from(responseData['jobs'] ?? []);
+
+        print("Raw response jobs: $rawEnrolledJobs");
+
+        final enrolledJobs = rawEnrolledJobs.map((json) => CandidateJobModel.fromJson(json)).toList();
+
+        print("Parsed searched jobs: $enrolledJobs");
+
+        final pagination = responseData['pagination'] as Map<String, dynamic>?;
+
+        if (pagination != null) {
+          print("Pagination info: Current Page: ${pagination['currentPage']}, Total Pages: ${pagination['totalPages']}");
+        }
+
+        return enrolledJobs;
       }else{
         print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
-        throw Exception('Failed to apply Job ${response.statusMessage}');
+        throw Exception('Failed to fetch enrolled jobs ${response.statusMessage}');
       }
 
 
@@ -189,7 +171,7 @@ class CandidateJobServices {
 
   Future<bool> toggleSavedJob (String jobId) async{
     try{
-      print("savedStory api");
+      print("toggleSavedJob api");
 
       String? accessToken = await HiveUtils.getAccessToken();
 
@@ -234,4 +216,7 @@ class CandidateJobServices {
       throw Exception('An unexpected error occurred');
     }
   }
+
+
+
 }

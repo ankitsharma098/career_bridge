@@ -1,5 +1,6 @@
 import 'package:android/core/constants/colors.dart';
 import 'package:android/data/models/candidate/candidate_model.dart';
+import 'package:android/features/Candidate%20Job%20Stats/Candidate%20Job%20Stats%20Bloc/candidate_job_stats_bloc.dart';
 import 'package:android/features/Candidate%20Job/Job%20Bloc/candidate_job_bloc.dart';
 import 'package:android/features/Chat/converstation%20bloc/conversations_bloc.dart';
 import 'package:android/features/Chat/data%20service/chat_service.dart';
@@ -15,6 +16,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../About Us/ui/about_us.dart';
+import '../../Candidate Job Stats/ui/candidate_job_stats.dart';
 import '../../Candidate Job/ui/jobs_fetch.dart';
 import '../../Candidate Profile/bloc/candidate_profile_bloc.dart';
 import '../../Candidate Profile/ui/candidate_profile.dart';
@@ -198,7 +200,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             label: 'Stories',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.joget),
+            icon: Icon(Icons.work_history),
             label: 'Job',
           ),
 
@@ -322,13 +324,16 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
               icon: Icons.work,
               title: 'Jobs',
               onTap: () {
-                //  Navigator.pop(context);
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => JobStatsScreen(), // You'll need to create this screen
-                //   ),
-                // );
+                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                    create: (context) => CandidateJobStatsBloc(),
+                    child: CandidateJobStatsScreen(),
+                  ), // You'll need to create this screen
+                  ),
+                );
               },
             ),
             _buildDrawerItem(

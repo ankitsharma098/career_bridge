@@ -54,6 +54,9 @@ class CandidateJobModel {
 
   final CompanyDetails companyDetails;
 
+  @JsonKey(defaultValue: false)
+  final bool isSaved;
+
   CandidateJobModel({
     this.id = '',
     this.title = '',
@@ -73,7 +76,51 @@ class CandidateJobModel {
     this.deadline = '',
     this.views = 0,
     this.companyDetails = const CompanyDetails(),
+    this.isSaved = false,
   });
+  CandidateJobModel copyWith({
+    String? id,
+    String? title,
+    String? overview,
+    String? employmentType,
+    String? experienceLevel,
+    List<String>? responsibilities,
+    List<String>? qualifications,
+    List<String>? benefits,
+    String? workspaceAccommodations,
+    String? interviewAccommodations,
+    String? status,
+    List<String>? skills,
+    LocationDetails? location,
+    SalaryDetails? salary,
+    DisabilityTypes? disabilityTypes,
+    String? deadline,
+    int? views,
+    CompanyDetails? companyDetails,
+    bool? isSaved,
+  }) {
+    return CandidateJobModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      overview: overview ?? this.overview,
+      employmentType: employmentType ?? this.employmentType,
+      experienceLevel: experienceLevel ?? this.experienceLevel,
+      responsibilities: responsibilities ?? this.responsibilities,
+      qualifications: qualifications ?? this.qualifications,
+      benefits: benefits ?? this.benefits,
+      workspaceAccommodations: workspaceAccommodations ?? this.workspaceAccommodations,
+      interviewAccommodations: interviewAccommodations ?? this.interviewAccommodations,
+      status: status ?? this.status,
+      skills: skills ?? this.skills,
+      location: location ?? this.location,
+      salary: salary ?? this.salary,
+      disabilityTypes: disabilityTypes ?? this.disabilityTypes,
+      deadline: deadline ?? this.deadline,
+      views: views ?? this.views,
+      companyDetails: companyDetails ?? this.companyDetails,
+      isSaved: isSaved ?? this.isSaved,
+    );
+  }
 
   factory CandidateJobModel.fromJson(Map<String, dynamic> json) => _$CandidateJobModelFromJson(json);
   Map<String, dynamic> toJson() => _$CandidateJobModelToJson(this);

@@ -135,6 +135,7 @@ class _CandidateJobDetailsState extends State<CandidateJobDetails> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildCompanySection(context),
           _buildSection(
             context,
             'Job Overview',
@@ -481,6 +482,137 @@ class _CandidateJobDetailsState extends State<CandidateJobDetails> {
             ),
           ],
         ),
+      ),
+    );
+  }
+  Widget _buildCompanySection(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.only(bottom: 24),
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.business),
+                SizedBox(width: 8),
+                Text(
+                  'Company Information',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Company Logo
+                if (currentJob.companyDetails.logo.url.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      currentJob.companyDetails.logo.url,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.business, size: 40),
+                          ),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.business, size: 40),
+                  ),
+                SizedBox(width: 16),
+                // Company Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (currentJob.companyDetails.companyName.isNotEmpty)
+                        Text(
+                          currentJob.companyDetails.companyName,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      SizedBox(height: 8),
+                      if (currentJob.companyDetails.industryType.isNotEmpty)
+                        _buildCompanyDetailItem(context, "Industry", currentJob.companyDetails.industryType),
+                      if (currentJob.companyDetails.website.isNotEmpty)
+                        _buildCompanyDetailItem(context, "Website", currentJob.companyDetails.website),
+                      if (currentJob.companyDetails.location.city.isNotEmpty ||
+                          currentJob.companyDetails.location.state.isNotEmpty ||
+                          currentJob.companyDetails.location.country.isNotEmpty)
+                        _buildCompanyDetailItem(
+                            context,
+                            "Location",
+                            [
+                              currentJob.companyDetails.location.city,
+                              currentJob.companyDetails.location.state,
+                              currentJob.companyDetails.location.country
+                            ].where((element) => element.isNotEmpty).join(", ")
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            // Optional: Add a Visit Website button if website URL is available
+            if (currentJob.companyDetails.website.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextButton.icon(
+                  onPressed: () {
+                    // You can implement URL launching here
+                    // Using url_launcher package
+                  },
+                  icon: Icon(Icons.open_in_new),
+                  label: Text('Visit Website'),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompanyDetailItem(BuildContext context, String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "$title: ",
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          Expanded(
+            child: Text(
+              content,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
       ),
     );
   }

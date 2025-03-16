@@ -172,13 +172,13 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
        //   emit(StoryStatsError(error: "Failed to update like status"));
         }
       } catch (e) {
-        // On error, revert to original state and show error
+        emit(StoryStatsError(error: e.toString()));
         emit(StoryLoaded(
             stories: currentState.stories,
             hasReachedMax: currentState.hasReachedMax,
             currentPage: currentState.currentPage
         ));
-        emit(StoryStatsError(error: e.toString()));
+
       }
     }
   }

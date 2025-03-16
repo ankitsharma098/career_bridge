@@ -17,6 +17,11 @@ class JobLoaded extends CandidateJobState {
 
 }
 
+class JobSuccess extends CandidateJobState {
+  final String message ;
+
+  JobSuccess({required this.message});
+}
 class JobError extends CandidateJobState {
   final String error;
 

@@ -12,6 +12,7 @@ class CandidateJobBloc extends Bloc<CandidateJobEvent, CandidateJobState> {
   CandidateJobBloc() : super(CandidateJobInitial()) {
     on<FetchJobs>(_onFetchJobs);
     on<LoadMoreJobs>(_onLoadMoreJobs);
+    on<ToggleSavedJobsEvent>(_onToggleSavedJobsEvent);
   }
 
   Future<void> _onFetchJobs(FetchJobs event, Emitter<CandidateJobState> emit) async {
@@ -23,6 +24,8 @@ class CandidateJobBloc extends Bloc<CandidateJobEvent, CandidateJobState> {
       if (event.isRecommended) {
         jobs = await apiService.fetchRecommendedJobs(1);
       } else {
+
+        print(event.search);
         jobs = await apiService.fetchSearchedJobs(
           page: 1,
           search: event.search, // Pass search term to API
@@ -67,6 +70,36 @@ class CandidateJobBloc extends Bloc<CandidateJobEvent, CandidateJobState> {
         }
       } catch (error) {
         emit(JobError(error: error.toString()));
+      }
+    }
+  }
+
+  Future<void> _onToggleSavedJobsEvent(ToggleSavedJobsEvent event, Emitter<CandidateJobState> emit) async {
+    if (state is JobLoaded) {
+      final currentState = state as JobLoaded;
+
+        final currentJob = currentState.jobs.firstWhere((job) => job.id == event.jobId);
+        final wasSaved= currentJob.isSaved;
+
+        final optimisticJobs = currentState.jobs.map((job) {
+          if (job.id == event.jobId) {
+            return job.copyWith(
+              isSaved: !wasSaved,
+            );
+          }
+          return job;
+        }).toList();
+
+        emit(JobLoaded(jobs: optimisticJobs, hasReachedMax: currentState.hasReachedMax, currentPage: currentState.currentPage));
+
+        try {
+        bool success = await apiService.toggleSavedJob(event.jobId);
+        print("Toggle save for ${event.jobId}: ${success ? 'Saved' : 'Save'}");
+      } catch (e) {
+        emit(JobError(error: e.toString()));
+        emit(JobLoaded(jobs: currentState.jobs, hasReachedMax: currentState.hasReachedMax, currentPage: currentState.currentPage));
+
+
       }
     }
   }

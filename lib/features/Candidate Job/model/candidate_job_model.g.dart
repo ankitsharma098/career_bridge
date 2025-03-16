@@ -54,6 +54,7 @@ CandidateJobModel _$CandidateJobModelFromJson(Map<String, dynamic> json) =>
           ? const CompanyDetails()
           : CompanyDetails.fromJson(
               json['companyDetails'] as Map<String, dynamic>),
+      isSaved: json['isSaved'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$CandidateJobModelToJson(CandidateJobModel instance) =>
@@ -78,6 +79,7 @@ Map<String, dynamic> _$CandidateJobModelToJson(CandidateJobModel instance) =>
       'deadline': instance.deadline,
       'views': instance.views,
       'companyDetails': instance.companyDetails,
+      'isSaved': instance.isSaved,
     };
 
 LocationDetails _$LocationDetailsFromJson(Map<String, dynamic> json) =>
