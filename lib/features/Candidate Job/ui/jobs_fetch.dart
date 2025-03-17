@@ -646,7 +646,7 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CandidateJobDetails(job: job),
+                            builder: (context) => CandidateJobDetails(job: job, isAlreadyApplied: false,),
                           ),
                         );
                       },

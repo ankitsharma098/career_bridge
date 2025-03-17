@@ -51,7 +51,7 @@ PersonalInfo _$PersonalInfoFromJson(Map<String, dynamic> json) => PersonalInfo(
       publicId: json['publicId'] as String? ?? '',
       phoneNumber: json['phoneNumber'] as String? ?? '',
       address: json['address'] as String? ?? '',
-      dob: json['DOB'] == null ? null : DateTime.parse(json['DOB'] as String),
+      dob:json['DOB'] == null ? null : DateTime.parse(json['DOB']),
       gender: json['gender'] as String? ?? 'Male',
     );
 

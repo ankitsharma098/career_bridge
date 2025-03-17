@@ -122,55 +122,32 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
   Future<void> _onToggleStoryLikeEvent(ToggleStoryLikeEvent event, Emitter<StoryStatsState> emit) async {
     if (state is StoryLoaded) {
       final currentState = state as StoryLoaded;
-      try {
-        // Get the current story
-        final currentStory = currentState.stories.firstWhere((story) => story.id == event.storyId);
-        final wasLiked = currentStory.isLiked;
 
-        // Create optimistic update
-        final optimisticStories = currentState.stories.map((story) {
-          if (story.id == event.storyId) {
-            return story.copyWith(
-              isLiked: !wasLiked,
-              likesCount: wasLiked ? story.likesCount - 1 : story.likesCount + 1,
-            );
-          }
-          return story;
-        }).toList();
+      // Create optimistic update
+      final updatedStories = currentState.stories.map((story) {
+        if (story.id == event.storyId) {
+          final newIsLiked = !story.isLiked;
+          return story.copyWith(
+            isLiked: newIsLiked,
+            likesCount: newIsLiked ? story.likesCount + 1 : story.likesCount - 1,
+          );
+        }
+        return story;
+      }).toList();
 
         // Emit optimistic state immediately
         emit(StoryLoaded(
-            stories: optimisticStories,
+            stories: updatedStories,
             hasReachedMax: currentState.hasReachedMax,
             currentPage: currentState.currentPage
         ));
 
-        // Make API call
+      try {
+
         final success = await apiService.likedStory(event.storyId);
 
-        // If API call fails, revert to original state
-        if (!success) {
-          // Create reversion state with original values
-          final revertedStories = currentState.stories.map((story) {
-            if (story.id == event.storyId) {
-              return story.copyWith(
-                isLiked: wasLiked,
-                likesCount: currentStory.likesCount, // Use original like count
-              );
-            }
-            return story;
-          }).toList();
+        print("Toggle Like for ${event.storyId}: ${success ? 'Liked' : 'Unliked'}");
 
-          // Emit the reverted state
-          emit(StoryLoaded(
-              stories: revertedStories,
-              hasReachedMax: currentState.hasReachedMax,
-              currentPage: currentState.currentPage
-          ));
-
-          // Emit error state without reverting the UI again
-       //   emit(StoryStatsError(error: "Failed to update like status"));
-        }
       } catch (e) {
         emit(StoryStatsError(error: e.toString()));
         emit(StoryLoaded(
@@ -187,41 +164,26 @@ class StoryStatsBloc extends Bloc<StoryStatsEvent, StoryStatsState> {
     print("Event occured");
     if (state is StoryLoaded) {
       final currentState = state as StoryLoaded;
-      try {
-
-        final optimisticStories = currentState.stories.map((story) {
-          if (story.id == event.storyId) {
-            return story.copyWith(
-              isSaved: !story.isSaved,
-            );
-          }
-          return story;
-        }).toList();
-
-        emit(StoryLoaded(
-            stories: optimisticStories,
-            hasReachedMax: currentState.hasReachedMax,
-            currentPage: currentState.currentPage
-        ));
 
 
-        final success = await apiService.savedStory(event.storyId);
-
-        if (success) {
-          emit(StorySuccess( message:"Story Saved Successfully"));
-          emit(StoryLoaded(
-              stories: optimisticStories,
-              hasReachedMax: currentState.hasReachedMax,
-              currentPage: currentState.currentPage
-          ));
-        }else {
-          emit(StorySuccess( message:"Story Unsaved Successfully"));
-          emit(StoryLoaded(
-              stories: currentState.stories,
-              hasReachedMax: currentState.hasReachedMax,
-              currentPage: currentState.currentPage
-          ));
+      final updatedStories = currentState.stories.map((story) {
+        if (story.id == event.storyId) {
+          return story.copyWith(
+            isSaved: !story.isSaved,
+          );
         }
+        return story;
+      }).toList();
+
+      emit(StoryLoaded(
+        stories: updatedStories,
+        hasReachedMax: currentState.hasReachedMax,
+        currentPage: currentState.currentPage,
+      ));
+      try {
+        final success = await apiService.savedStory(event.storyId);
+        print("Toggle saved for ${event.storyId}: ${success ? 'Saved' : 'Save'}");
+
       } catch (e) {
 
         emit(StoryStatsError(error: e.toString()));

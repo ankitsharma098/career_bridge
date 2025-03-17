@@ -29,8 +29,8 @@ class Application {
   @JsonKey(defaultValue: 'pending')
   final String status;
 
-  @JsonKey(defaultValue: '')
-  final String appliedDate;
+  @JsonKey(defaultValue: null)
+  final DateTime? appliedDate;
 
   @JsonKey(defaultValue: '')
   final String resume;
@@ -45,7 +45,7 @@ class Application {
   final CandidateInfo candidateInfo;
 
   Application({
-     this.appliedDate='',
+      this.appliedDate,
      this.id='',
     this.status = 'pending',
     this.resume = '',

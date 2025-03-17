@@ -166,6 +166,8 @@ class ChatRepository {
   Future<List<Message>> getMessages(String receiverId, String receiverType,
       {String? before, int? limit = 50}) async {
     try {
+      print('Fetching messages from: ${AppConstants.baseUrl}/$receiverId/$receiverType');
+      print('Query params: before=$before, limit=$limit');
       final token = await HiveUtils.getAccessToken();
       final response = await dio.get(
         '${AppConstants.baseUrl}/$receiverId/$receiverType', // Make sure this matches your backend route

@@ -580,7 +580,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
             },
           ),
           _buildInteractionButton(
-            icon: story.isSaved ? Icons.bookmark : Icons.bookmark_border,
+            icon: story.isSaved ?Icons.bookmark : Icons.bookmark_border,
             label: story.isSaved ? 'Saved' : 'Save',
             color: story.isSaved ? Theme.of(context).primaryColor : null,
             onTap: () {

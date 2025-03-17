@@ -493,8 +493,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
             },
           ),
           _buildInteractionButton(
-            icon: story.isSaved ? Icons.save:Icons.save_outlined,
-            label: story.isSaved ?"Save":'Saved',
+            icon: story.isSaved ?Icons.bookmark : Icons.bookmark_border,
+            label: story.isSaved ? 'Saved' : 'Save',
             onTap: () {
               context.read<StoryStatsBloc>().add(
                 ToggleSavedStoryEvent(story.id,),

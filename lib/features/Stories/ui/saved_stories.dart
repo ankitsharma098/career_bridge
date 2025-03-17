@@ -59,7 +59,7 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: Text("My Stories"),
+        title: Text("Saved Stories"),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
@@ -469,8 +469,8 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
             },
           ),
           _buildInteractionButton(
-            icon: story.isSaved ? Icons.save : Icons.save_outlined,
-            label: 'Saved',
+            icon: story.isSaved ?Icons.bookmark : Icons.bookmark_border,
+            label: story.isSaved ? 'Saved' : 'Save',
             onTap: () {
               context.read<StoryStatsBloc>().add(
                   ToggleSavedStoryEvent(story.id)  // Create and add the event

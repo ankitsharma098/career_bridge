@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../../core/theme/theme_provider.dart';
 import '../bloc/auth_bloc.dart';
 import 'login.dart';
 
 class AuthenticationScreen extends StatefulWidget {
-   final bool isDarkMode;
-  final VoidCallback toggleTheme;
+
 
   const AuthenticationScreen({
     Key? key,
-    required this.isDarkMode,
-    required this.toggleTheme,
+
   }) : super(key: key);
 
   @override
@@ -54,7 +54,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;  // Get screen width
-
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -68,17 +68,17 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
                   return FadeTransition(opacity: animation, child: child);
                 },
                 child: IconButton(
-                  key: ValueKey<bool>(widget.isDarkMode),
+                  key: ValueKey<bool>(themeProvider.isDarkMode),
                   icon: FaIcon(
-                    widget.isDarkMode
+                    themeProvider.isDarkMode
                         ? FontAwesomeIcons.solidMoon
                         : FontAwesomeIcons.solidSun,
                     size: 30,
                     color: Theme.of(context).primaryColor,
                   ),
                   onPressed:(){
-                 //   widget.isDarkMode=!widget.isDarkMode;
-                    widget.toggleTheme;
+
+                    themeProvider.toggleTheme;
                   },
                 ),
               ),
@@ -204,8 +204,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
             builder: (context) => BlocProvider(
               create: (context) => LoginBloc(), // Make sure you are using AuthBloc here not LoginBloc
               child: LoginScreen(
-                isDarkMode: widget.isDarkMode,
-                onThemeToggle: widget.toggleTheme,
                 userType: userType,
               ),
             ),

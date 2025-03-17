@@ -71,7 +71,7 @@ class PersonalInfo {
   @JsonKey(defaultValue: '')
   final String address;
 
-  @JsonKey(defaultValue: '')
+  @JsonKey(defaultValue: null)
   final DateTime? dob;
 
   @JsonKey(defaultValue: 'Male')

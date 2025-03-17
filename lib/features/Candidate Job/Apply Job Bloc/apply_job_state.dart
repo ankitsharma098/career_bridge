@@ -6,6 +6,15 @@ sealed class ApplyJobState {}
 final class ApplyJobInitial extends ApplyJobState {}
 
 class ApplicationsLoading extends ApplyJobState {}
+
+class ApplicationStatusLoaded extends ApplyJobState{
+
+  final Application applicationStatus;
+
+  ApplicationStatusLoaded({required this.applicationStatus});
+
+}
+
 class ApplicationsSuccess extends ApplyJobState {
   final String message;
   ApplicationsSuccess(this.message);

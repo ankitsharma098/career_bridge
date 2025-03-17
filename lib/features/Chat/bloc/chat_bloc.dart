@@ -55,6 +55,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(ChatLoading());
     try {
       final messages = await _repository.getMessages(receiverId, receiverType);
+
+      print("Message $messages");
       final lastSeen = await _repository.getLastSeen(receiverId, receiverType); //
       for (var message in messages) {
         if (message.status != 'read' && message.receiverId == currentUserId) {

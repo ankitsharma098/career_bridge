@@ -97,13 +97,13 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
         // No need to revert state here unless API actually fails
         // The optimistic update is correct regardless of success value
       } catch (e) {
-        // Revert only on actual API failure
+        emit(StoryErrorState("Failed to update like status: ${e.toString()}"));
         emit(StoryLoadedState(
           stories: currentState.stories,
           hasReachedMax: currentState.hasReachedMax,
           currentPage: currentState.currentPage,
         ));
-        emit(StoryErrorState("Failed to update like status: ${e.toString()}"));
+
       }
     }
   }
@@ -132,66 +132,18 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
       try {
         // Make API call
         final success = await apiService.savedStory(event.storyId);
-        print("Toggle Like for ${event.storyId}: ${success ? 'Saved' : 'Save'}");
+        print("Toggle saved for ${event.storyId}: ${success ? 'Saved' : 'Save'}");
 
       } catch (e) {
-        // Revert on error and show error message
+        emit(StoryErrorState(e.toString()));
         emit(StoryLoadedState(
           stories: currentState.stories,
           hasReachedMax: currentState.hasReachedMax,
           currentPage: currentState.currentPage,
         ));
-        emit(StoryErrorState(e.toString()));
+
       }
     }
   }
-  // Future<void> _onToggleSavedStoryEvent(ToggleSavedStoryEvent event, Emitter<StoryState> emit) async {
-  //   if (state is StoryLoadedState) {
-  //     final currentState = state as StoryLoadedState;
-  //     try {
-  //
-  //       final optimisticStories = currentState.stories.map((story) {
-  //         if (story.id == event.storyId) {
-  //           return story.copyWith(
-  //             isSaved: !story.isSaved,
-  //           );
-  //         }
-  //         return story;
-  //       }).toList();
-  //
-  //       emit(StoryLoadedState(
-  //           stories: optimisticStories,
-  //           hasReachedMax: currentState.hasReachedMax,
-  //           currentPage: currentState.currentPage
-  //       ));
-  //
-  //
-  //       final success = await apiService.savedStory(event.storyId);
-  //
-  //       if (success) {
-  //         emit(StorySuccessState("Story Saved Successfully"));
-  //         emit(StoryLoadedState(
-  //             stories: optimisticStories,
-  //             hasReachedMax: currentState.hasReachedMax,
-  //             currentPage: currentState.currentPage
-  //         ));
-  //       }else {
-  //         emit(StorySuccessState("Story Unsaved Successfully"));
-  //         emit(StoryLoadedState(
-  //             stories: currentState.stories,
-  //             hasReachedMax: currentState.hasReachedMax,
-  //             currentPage: currentState.currentPage
-  //         ));
-  //       }
-  //     } catch (e) {
-  //
-  //       emit(StoryErrorState(e.toString()));
-  //       emit(StoryLoadedState(
-  //           stories: currentState.stories,
-  //           hasReachedMax: currentState.hasReachedMax,
-  //           currentPage: currentState.currentPage
-  //       ));
-  //     }
-  //   }
-  // }
+
 }

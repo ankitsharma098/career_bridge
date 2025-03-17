@@ -418,8 +418,8 @@ class ApplicationCard extends StatelessWidget {
   }
 
   Widget _buildAppliedDate() {
-    final date = DateTime.parse(application.appliedDate);
-    final formattedDate = DateFormat('MMM dd, yyyy').format(date);
+    final date = application.appliedDate;
+    final formattedDate = DateFormat('MMM dd, yyyy').format(date!);
     final timeAgo = timeago.format(date);
 
     return Row(

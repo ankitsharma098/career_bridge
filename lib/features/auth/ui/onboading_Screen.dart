@@ -4,13 +4,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  final bool isDarkMode;
-  final VoidCallback toggleTheme;
+
 
   const OnboardingScreen({
     Key? key,
-    required this.isDarkMode,
-    required this.toggleTheme
   }) : super(key: key);
 
   @override
@@ -113,8 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (context) => AuthenticationScreen(
-                              isDarkMode: widget.isDarkMode,
-                              toggleTheme: widget.toggleTheme,
+
                             ),
                           ),
                         );

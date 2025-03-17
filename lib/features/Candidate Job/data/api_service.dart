@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/hiveUtils.dart';
+import '../../../data/models/application/application_model.dart';
 import '../model/candidate_job_model.dart';
 
 class CandidateJobServices {
@@ -186,6 +187,71 @@ class CandidateJobServices {
       throw Exception('An unexpected error occurred');
     }
   }
+
+
+  Future<Application> fetchApplicationStatus({
+    required String jobId,
+  }) async {
+    try {
+      print("fetchApplicationStatus API ");
+
+      String? accessToken = await HiveUtils.getAccessToken();
+
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception("Access token not found");
+      }
+
+
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/candidate/applications/$jobId',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        // Type-safe extraction of jobs from response
+        final responseData = response.data as Map<String, dynamic>;
+        final rawStatus = Map<String, dynamic>.from(responseData['status'] ?? {});
+
+        print("Raw response jobs: $rawStatus");
+
+        Map<String,dynamic> appStatus = {
+          "_id":rawStatus["_id"] ?? "",
+          "status":rawStatus["status"] ?? "",
+          "resume":rawStatus["resume"] ?? "",
+          "isFresher":rawStatus["isFresher"] ?? true,
+          "experience":rawStatus["experience"] ?? [],
+          "contactInfo":rawStatus["contactInfo"] ?? {},
+          "appliedDate":rawStatus["appliedDate"] ?? {},
+        };
+        print("appStatus $appStatus");
+
+        final   applicationStatus= Application.fromJson(appStatus);
+        print("applicationStatus $applicationStatus");
+
+        return applicationStatus;
+      } else {
+        print("Error response: ${response.statusCode} - ${response.statusMessage}");
+        throw Exception('Failed to Fetch Application Status : ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorMessage = e.response?.data['message'] ?? 'An error occurred';
+        print("Dio error: $errorMessage");
+        throw Exception(errorMessage);
+      } else {
+        print("Network error: ${e.message}");
+        throw Exception('Network error occurred');
+      }
+    } catch (e) {
+      print("Unexpected error: $e");
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
 
   Future<bool> toggleSavedJob (String jobId) async{
     try{

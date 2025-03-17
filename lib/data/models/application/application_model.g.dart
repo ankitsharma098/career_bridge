@@ -24,7 +24,9 @@ Map<String, dynamic> _$JobApplicationResponseToJson(
     };
 
 Application _$ApplicationFromJson(Map<String, dynamic> json) => Application(
-      appliedDate: json['appliedDate'] as String? ?? '',
+      appliedDate: json['appliedDate'] == null
+          ? null
+          : DateTime.parse(json['appliedDate'] as String),
       id: json['_id'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
       resume: json['resume'] as String? ?? '',
@@ -46,7 +48,7 @@ Map<String, dynamic> _$ApplicationToJson(Application instance) =>
     <String, dynamic>{
       '_id': instance.id,
       'status': instance.status,
-      'appliedDate': instance.appliedDate,
+      'appliedDate': instance.appliedDate?.toIso8601String(),
       'resume': instance.resume,
       'contactInfo': instance.contactInfo,
       'isFresher': instance.isFresher,

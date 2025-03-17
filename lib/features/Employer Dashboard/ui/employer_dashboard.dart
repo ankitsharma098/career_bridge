@@ -12,6 +12,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../About Us/ui/about_us.dart';
 import '../../Chat/ui/chat.dart';
@@ -29,9 +31,8 @@ import 'dashboard_stats.dart';
 
 
 class EmployerDashboardScreen extends StatefulWidget {
-  final bool isDarkMode;
-  final VoidCallback onThemeToggle;
-  const EmployerDashboardScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
+
+  const EmployerDashboardScreen({super.key});
 
 
   @override
@@ -49,13 +50,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
     return await HiveUtils.clearUserData();
    }
-  bool _isDarkMode = false;
 
-  void toggleTheme() {
-    setState(() {
-      _isDarkMode = !_isDarkMode;
-    });
-  }
 
   @override
   void initState()  {
@@ -88,7 +83,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => LoginBloc(),
-                      child: AuthenticationScreen(isDarkMode: _isDarkMode, toggleTheme: toggleTheme),
+                      child: AuthenticationScreen(),
                     ), // Navigate to login screen
                   ),
                 );
@@ -139,7 +134,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
     Size screenSize = MediaQuery.of(context).size;
     if (isLoading) {
       return  Scaffold(
@@ -160,8 +156,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             onPressed: () {},
           ),
           IconButton(
-            icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed: widget.onThemeToggle,
+            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed:()=> themeProvider.toggleTheme(),
           ),
         ],
       ),

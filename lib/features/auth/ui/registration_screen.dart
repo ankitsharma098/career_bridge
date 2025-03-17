@@ -8,9 +8,8 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../registration_bloc/registration_bloc.dart';
 
 class RegistrationScreen extends StatefulWidget {
-  final bool isDarkMode;
-  final VoidCallback onThemeToggle;
-  const RegistrationScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
+
+  const RegistrationScreen({super.key});
 
   @override
   _RegistrationScreenState createState() => _RegistrationScreenState();
@@ -85,9 +84,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             _submitRegistration(context);
           } else if (state is RegistrationSuccess) {
            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
-          create: (context) => LoginBloc(),
-          child: LoginScreen(isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle,userType: "employer"),
-        ),));
+              create: (context) => LoginBloc(),
+              child: LoginScreen(userType: "employer"),
+            ),));
           }
         },
         builder: (context, state) {

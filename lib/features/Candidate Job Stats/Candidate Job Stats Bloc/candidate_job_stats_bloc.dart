@@ -37,7 +37,7 @@ class CandidateJobStatsBloc extends Bloc<CandidateJobStatsEvent, CandidateJobSta
   Future<void> _onFetchJobEvent(FetchJobEvent event, Emitter<CandidateJobStatsState> emit) async {
 
     try {
-      emit(JobStatsLoading());
+      emit(JobsLoading());
       List<CandidateJobModel> jobs;
       const int pageSize = 10;
 

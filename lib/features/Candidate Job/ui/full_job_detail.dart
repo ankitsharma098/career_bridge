@@ -1,10 +1,16 @@
 import 'package:android/features/Candidate%20Job/model/candidate_job_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../Candidate Job Stats/ui/application_status.dart';
+import '../Apply Job Bloc/apply_job_bloc.dart';
+import 'apply_job.dart';
 
 class CandidateJobDetails extends StatefulWidget {
   final CandidateJobModel job;
+  final bool isAlreadyApplied;
 
-  const CandidateJobDetails({super.key, required this.job});
+  const CandidateJobDetails({super.key, required this.job, required this.isAlreadyApplied});
 
   @override
   State<CandidateJobDetails> createState() => _CandidateJobDetailsState();
@@ -43,7 +49,7 @@ class _CandidateJobDetailsState extends State<CandidateJobDetails> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(context, screenSize),
+      bottomNavigationBar: _buildBottomBar(context, screenSize,widget.job),
     );
   }
 
@@ -451,7 +457,7 @@ class _CandidateJobDetailsState extends State<CandidateJobDetails> {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, Size screenSize) {
+  Widget _buildBottomBar(BuildContext context, Size screenSize,CandidateJobModel job) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: EdgeInsets.only(bottom: 24),
@@ -463,10 +469,26 @@ class _CandidateJobDetailsState extends State<CandidateJobDetails> {
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () {
-
+                 widget.isAlreadyApplied ? Navigator.push(
+                   context,
+                   MaterialPageRoute(
+                     builder: (context) => BlocProvider(
+                       create: (context) => ApplyJobBloc(),
+                       child: ApplicationStatus(job:job),
+                     ),
+                   ),
+                 ): Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                        create: (context) => ApplyJobBloc(),
+                        child: ApplyJobScreen(jobId: job.id),
+                      ),
+                    ),
+                  );
                 },
                 icon: Icon(Icons.people, color: Colors.white),
-                label: Text('Apply now'),
+                label:  widget.isAlreadyApplied ?Text('Application Status') :Text('Apply now'),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 12),

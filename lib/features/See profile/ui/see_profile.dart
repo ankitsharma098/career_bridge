@@ -403,11 +403,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         children: [
           _buildInfoRow(Icons.email, 'Email', user.personalInfo.email, screenSize, context),
           _buildInfoRow(Icons.phone, 'Phone', user.personalInfo.phoneNumber, screenSize, context),
-          if (user.personalInfo.dob != null && user.personalInfo.dob.isNotEmpty)
+          if (user.personalInfo.dob != null)
             _buildInfoRow(
               Icons.cake,
               'DOB',
-              DateFormat('MMM dd, yyyy').format(DateTime.parse(user.personalInfo.dob)),
+              DateFormat('MMM dd, yyyy').format(user.personalInfo.dob),
               screenSize,
               context,
             ),

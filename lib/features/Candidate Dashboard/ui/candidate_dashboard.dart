@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/utils/hiveUtils.dart';
 import '../../About Us/ui/about_us.dart';
 import '../../Candidate Job Stats/ui/candidate_job_stats.dart';
@@ -29,14 +31,9 @@ import '../../Stories/ui/story_stats.dart';
 import '../bloc/candidate_dashboard_bloc.dart';
 import 'candidate_dashboard_stats.dart';
 
-
-
-
-
 class CandidateDashboardScreen extends StatefulWidget {
-  final bool isDarkMode;
-  final VoidCallback onThemeToggle;
-  const CandidateDashboardScreen({super.key, required this.isDarkMode, required this.onThemeToggle});
+
+  const CandidateDashboardScreen({super.key});
 
 
   @override
@@ -54,13 +51,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
 
     return await HiveUtils.clearUserData();
   }
-  bool _isDarkMode = false;
 
-  void toggleTheme() {
-    setState(() {
-      _isDarkMode = !_isDarkMode;
-    });
-  }
 
   @override
   void initState()  {
@@ -93,7 +84,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => LoginBloc(),
-                      child: AuthenticationScreen(isDarkMode: _isDarkMode, toggleTheme: toggleTheme),
+                      child: AuthenticationScreen(),
                     ), // Navigate to login screen
                   ),
                 );
@@ -138,7 +129,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     Size screenSize = MediaQuery.of(context).size;
     if (isLoading) {
@@ -160,8 +151,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             onPressed: () {},
           ),
           IconButton(
-            icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed: widget.onThemeToggle,
+            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed:()=> themeProvider.toggleTheme(),
           ),
         ],
       ),

@@ -18,6 +18,14 @@ class SubmitApplication extends ApplyJobEvent {
   });
 }
 
+class FetchApplicationStatus extends ApplyJobEvent {
+
+  final String jobId;
+
+  FetchApplicationStatus({required this.jobId});
+
+
+}
 class UploadDocumentEvent extends ApplyJobEvent {
   final String filePath;
   UploadDocumentEvent({required this.filePath});

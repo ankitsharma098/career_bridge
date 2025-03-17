@@ -8,18 +8,18 @@ import 'package:android/features/auth/ui/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants/colors.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../Candidate Dashboard/ui/candidate_dashboard.dart';
 import '../../Employer Dashboard/bloc/employer_dashboard_bloc.dart';
 import '../../Employer Dashboard/ui/employer_dashboard.dart';
 
 
 class LoginScreen extends StatefulWidget {
-  final bool isDarkMode;
-  final VoidCallback onThemeToggle;
   final String userType;
-  const LoginScreen({super.key, required this.isDarkMode, required this.onThemeToggle, required this.userType});
+  const LoginScreen({super.key, required this.userType});
 
 
   @override
@@ -32,8 +32,16 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
+  bool _isDarkMode = false;
+
+  void toggleTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
+  }
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     Size screenSize = MediaQuery.of(context).size;
     return BlocListener<LoginBloc, LoginState>(
       listener: (context, state) {
@@ -45,17 +53,21 @@ class _LoginScreenState extends State<LoginScreen> {
     if(state is LoginSuccess){
 
       if(widget.userType=="candidate"){
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => BlocProvider(
           create: (context) => EmployerDashboardBloc(),
-          child: CandidateDashboardScreen (isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
-        ),));
+          child: CandidateDashboardScreen (),
+        ),),
+              (Route<dynamic> route) => false,
+        );
 
       }else if(widget.userType=="employer"){
 
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BlocProvider(
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => BlocProvider(
           create: (context) => EmployerDashboardBloc(),
-          child: EmployerDashboardScreen (isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
-        ),));
+          child: EmployerDashboardScreen (),
+        ),),
+          (Route<dynamic> route) => false,
+        );
       }
             }
           },
@@ -267,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
                                 create: (context) => RegistrationBloc(),
-                                child: RegistrationScreen(isDarkMode: widget.isDarkMode, onThemeToggle:widget.onThemeToggle),
+                                child: RegistrationScreen(),
                               ),));
                               },
                             child: Text(
