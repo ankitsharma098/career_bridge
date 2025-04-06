@@ -1,4 +1,6 @@
+import 'package:android/features/Candidate%20Profile/ui/candidate_profile.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/utils/customErrorUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
+import '../../Candidate Profile/bloc/candidate_profile_bloc.dart';
 import '../bloc/candidate_dashboard_bloc.dart';
 import 'candidate_dashboard_shimmer.dart';
 
@@ -15,10 +18,12 @@ class CandidateDashboardContent extends StatefulWidget {
   const CandidateDashboardContent({super.key});
 
   @override
-  State<CandidateDashboardContent> createState() => _CandidateDashboardContentState();
+  State<CandidateDashboardContent> createState() =>
+      _CandidateDashboardContentState();
 }
 
-class _CandidateDashboardContentState extends State<CandidateDashboardContent> with SingleTickerProviderStateMixin {
+class _CandidateDashboardContentState extends State<CandidateDashboardContent>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
   @override
@@ -68,12 +73,14 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
             color: backgroundColor,
             child: RefreshIndicator(
               onRefresh: () async {
-                BlocProvider.of<CandidateDashboardBloc>(context).add(FetchDashboardData());
+                BlocProvider.of<CandidateDashboardBloc>(context)
+                    .add(FetchDashboardData());
               },
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -103,16 +110,17 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
         children: [
           Text(
             'Track your application progress and career growth',
-            style:Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey,
+                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPersonalProfileSection(Map<String, dynamic> dashboardStats, Size screenSize) {
+  Widget _buildPersonalProfileSection(
+      Map<String, dynamic> dashboardStats, Size screenSize) {
     final personalProfile = dashboardStats['personalProfile'] ?? {};
     final profileComplete = personalProfile['profileComplete'] ?? {};
     final missingFields = profileComplete['missingFields'] ?? [];
@@ -120,11 +128,16 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
 
     return FadeTransition(
       opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _animationController, curve: Interval(0.0, 0.3, curve: Curves.easeOut)),
+        CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(0.0, 0.3, curve: Curves.easeOut)),
       ),
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(parent: _animationController, curve: Interval(0.0, 0.3, curve: Curves.easeOut)),
+        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+            .animate(
+          CurvedAnimation(
+              parent: _animationController,
+              curve: Interval(0.0, 0.3, curve: Curves.easeOut)),
         ),
         child: Card(
           elevation: 0,
@@ -157,9 +170,9 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                     Text(
                       'Profile Completion',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                       fontSize: screenSize.width * 0.04,
-                      ),
+                            fontWeight: FontWeight.w600,
+                            fontSize: screenSize.width * 0.04,
+                          ),
                     ),
                   ],
                 ),
@@ -204,7 +217,8 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
-  Widget _buildProfileInfoItem(String label, String value, IconData icon, Size screenSize) {
+  Widget _buildProfileInfoItem(
+      String label, String value, IconData icon, Size screenSize) {
     return Row(
       children: [
         Icon(
@@ -219,16 +233,16 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: screenSize.width * 0.03,
-                color: Colors.grey,
-              ),
+                    fontSize: screenSize.width * 0.03,
+                    color: Colors.grey,
+                  ),
             ),
             Text(
               value,
-              style:  Theme.of(context).textTheme.bodyMedium?.copyWith(
-                //fontSize: screenSize.width * 0.04,
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    //fontSize: screenSize.width * 0.04,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),
@@ -238,7 +252,7 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
 
   Widget _buildMissingFields(List<dynamic> missingFields, Size screenSize) {
     return Container(
-      width: screenSize.width*0.5,
+      width: screenSize.width * 0.5,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.orange.withOpacity(0.1),
@@ -269,16 +283,22 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
-  Widget _buildCareerStatsSection(Map<String, dynamic> dashboardStats, Size screenSize) {
+  Widget _buildCareerStatsSection(
+      Map<String, dynamic> dashboardStats, Size screenSize) {
     final careerStats = dashboardStats['careerStats'] ?? {};
 
     return FadeTransition(
       opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _animationController, curve: Interval(0.2, 0.5, curve: Curves.easeOut)),
+        CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(0.2, 0.5, curve: Curves.easeOut)),
       ),
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(parent: _animationController, curve: Interval(0.2, 0.5, curve: Curves.easeOut)),
+        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+            .animate(
+          CurvedAnimation(
+              parent: _animationController,
+              curve: Interval(0.2, 0.5, curve: Curves.easeOut)),
         ),
         child: Card(
           elevation: 0,
@@ -310,9 +330,9 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                     Text(
                       'Career Insights',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: screenSize.width * 0.04,
-                      ),
+                            fontWeight: FontWeight.w600,
+                            fontSize: screenSize.width * 0.04,
+                          ),
                     ),
                   ],
                 ),
@@ -328,7 +348,8 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                       screenSize: screenSize,
                     ),
                     _buildInsightTile(
-                      value: '${(careerStats['totalExperienceYears'] ?? 0).toStringAsFixed(1)}',
+                      value:
+                          '${(careerStats['totalExperienceYears'] ?? 0).toStringAsFixed(1)}',
                       label: 'Years Experience',
                       icon: Icons.work_history,
                       color: Colors.purple,
@@ -351,19 +372,27 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
-  Widget _buildJobStatsSection(Map<String, dynamic> dashboardStats, Size screenSize) {
+  Widget _buildJobStatsSection(
+      Map<String, dynamic> dashboardStats, Size screenSize) {
     final jobStats = dashboardStats['jobStats'] ?? {};
     final applicationInsights = jobStats['applicationInsights'] ?? {};
-    final successTrend = List<Map<String, dynamic>>.from(jobStats['successTrend'] ?? []);
-    final topPerformingJobTypes = List<Map<String, dynamic>>.from(jobStats['topPerformingJobTypes'] ?? []);
+    final successTrend =
+        List<Map<String, dynamic>>.from(jobStats['successTrend'] ?? []);
+    final topPerformingJobTypes = List<Map<String, dynamic>>.from(
+        jobStats['topPerformingJobTypes'] ?? []);
 
     return FadeTransition(
       opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _animationController, curve: Interval(0.4, 0.7, curve: Curves.easeOut)),
+        CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(0.4, 0.7, curve: Curves.easeOut)),
       ),
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(parent: _animationController, curve: Interval(0.4, 0.7, curve: Curves.easeOut)),
+        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+            .animate(
+          CurvedAnimation(
+              parent: _animationController,
+              curve: Interval(0.4, 0.7, curve: Curves.easeOut)),
         ),
         child: Card(
           elevation: 0,
@@ -395,9 +424,9 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                     Text(
                       'Application Analytics',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: screenSize.width * 0.04,
-                      ),
+                            fontWeight: FontWeight.w600,
+                            fontSize: screenSize.width * 0.04,
+                          ),
                     ),
                   ],
                 ),
@@ -432,7 +461,8 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                   ],
                 ),
                 SizedBox(height: screenSize.height * 0.025),
-                _buildSuccessRateIndicator(jobStats['successRate'] ?? 0, screenSize),
+                _buildSuccessRateIndicator(
+                    jobStats['successRate'] ?? 0, screenSize),
                 SizedBox(height: screenSize.height * 0.025),
                 _buildSuccessTrendChart(successTrend, screenSize),
                 SizedBox(height: screenSize.height * 0.025),
@@ -447,17 +477,33 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
-  Widget _buildJobPreferencesSection(Map<String, dynamic> dashboardStats, Size screenSize) {
+  Widget _buildJobPreferencesSection(
+      Map<String, dynamic> dashboardStats, Size screenSize) {
     final jobPreferences = dashboardStats['jobPreferences'] ?? {};
-    final preferredIndustries = List<String>.from(jobPreferences['preferredIndustries'] ?? []);
+    final preferredIndustries =
+        List<String>.from(jobPreferences['industries'] ?? []);
+    final preferredRoles = List<String>.from(jobPreferences['roles'] ?? []);
+    final preferredLocations =
+        List<String>.from(jobPreferences['location'] ?? []);
+    final preferredEmploymentTypes =
+        List<String>.from(jobPreferences['employmentType'] ?? []);
+    final workMode = jobPreferences['workMode'] ?? 'Not specified';
+    final experienceLevel =
+        jobPreferences['experienceLevel'] ?? 'Not specified';
+    final preferredSalary = jobPreferences['preferredSalary'] ?? 0;
 
     return FadeTransition(
       opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _animationController, curve: Interval(0.6, 0.9, curve: Curves.easeOut)),
+        CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(0.6, 0.9, curve: Curves.easeOut)),
       ),
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(parent: _animationController, curve: Interval(0.6, 0.9, curve: Curves.easeOut)),
+        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+            .animate(
+          CurvedAnimation(
+              parent: _animationController,
+              curve: Interval(0.6, 0.9, curve: Curves.easeOut)),
         ),
         child: Card(
           elevation: 0,
@@ -489,17 +535,47 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                     Text(
                       'Your Preferences',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: screenSize.width * 0.04,
-                      ),
+                            fontWeight: FontWeight.w600,
+                            fontSize: screenSize.width * 0.04,
+                          ),
                     ),
                   ],
                 ),
                 const Divider(height: 24),
+
+                // Industries section
                 _buildIndustriesSection(preferredIndustries, screenSize),
                 SizedBox(height: screenSize.height * 0.02),
+
+                // Roles section
+                _buildRolesSection(preferredRoles, screenSize),
+                SizedBox(height: screenSize.height * 0.02),
+
+                // General preferences section
+                _buildGeneralPreferencesSection(
+                    workMode, experienceLevel, preferredSalary, screenSize),
+                SizedBox(height: screenSize.height * 0.02),
+
+                // Locations section
+                _buildLocationsSection(preferredLocations, screenSize),
+                SizedBox(height: screenSize.height * 0.02),
+
+                // Employment types section
+                _buildEmploymentTypesSection(
+                    preferredEmploymentTypes, screenSize),
+                SizedBox(height: screenSize.height * 0.02),
+
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BlocProvider(
+                            create: (context) => CandidateProfileBloc(),
+                            child: CandidateProfile(),
+                          ),
+                        ));
+                  },
                   icon: const Icon(Icons.tune),
                   label: const Text('Update Preferences'),
                   style: OutlinedButton.styleFrom(
@@ -516,6 +592,185 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
+  Widget _buildRolesSection(List<String> roles, Size screenSize) {
+    if (roles.isEmpty) {
+      return _buildEmptyStateCard(
+          'No preferred roles set', Icons.work, screenSize);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Preferred Roles',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+        SizedBox(height: screenSize.height * 0.015),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: roles
+              .map((role) => _buildPreferenceChip(role, Colors.teal))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationsSection(List<String> locations, Size screenSize) {
+    if (locations.isEmpty) {
+      return _buildEmptyStateCard(
+          'No preferred locations set', Icons.location_on, screenSize);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Preferred Locations',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+        SizedBox(height: screenSize.height * 0.015),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: locations
+              .map((location) =>
+                  _buildPreferenceChip(location, Colors.amber.withOpacity(0.8)))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmploymentTypesSection(List<String> types, Size screenSize) {
+    if (types.isEmpty) {
+      return _buildEmptyStateCard('No preferred employment types set',
+          Icons.business_center, screenSize);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Employment Types',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+        SizedBox(height: screenSize.height * 0.015),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: types
+              .map((type) => _buildPreferenceChip(type, Colors.indigo))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGeneralPreferencesSection(
+      String workMode, String experienceLevel, int salary, Size screenSize) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'General Preferences',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+        SizedBox(height: screenSize.height * 0.015),
+        Container(
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]!.withOpacity(0.3)
+                : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              _buildPreferenceInfoRow(
+                'Work Mode',
+                workMode,
+                Icons.business,
+                screenSize,
+              ),
+              SizedBox(height: 8),
+              _buildPreferenceInfoRow(
+                'Experience Level',
+                experienceLevel,
+                Icons.trending_up,
+                screenSize,
+              ),
+              SizedBox(height: 8),
+              _buildPreferenceInfoRow(
+                'Preferred Salary',
+                '₹${salary.toString()}',
+                Icons.currency_rupee,
+                screenSize,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPreferenceInfoRow(
+      String label, String value, IconData icon, Size screenSize) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: Colors.grey,
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey,
+                    ),
+              ),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPreferenceChip(String label, Color color) {
+    return Chip(
+      label: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white,
+              overflow: TextOverflow.ellipsis,
+              fontWeight: FontWeight.w500,
+            ),
+      ),
+      backgroundColor: color,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+    );
+  }
+
   Widget _buildInsightTile({
     required String value,
     required String label,
@@ -525,8 +780,7 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
   }) {
     return Container(
       width: screenSize.width * 0.26,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal:
-      12),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
@@ -537,43 +791,44 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
           SizedBox(height: screenSize.height * 0.01),
           Text(
             value,
-            style:  Theme.of(context).textTheme.bodyLarge?.copyWith(
-             // fontSize: screenSize.width * 0.05,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  // fontSize: screenSize.width * 0.05,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
           Text(
             label,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-             // fontSize: screenSize.width * 0.032,
-              fontWeight: FontWeight.w500,
-              color: color.withOpacity(0.8),
-            ),
+                  // fontSize: screenSize.width * 0.032,
+                  fontWeight: FontWeight.w500,
+                  color: color.withOpacity(0.8),
+                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildApplicationStat(String label, String value, Color color, Size screenSize) {
+  Widget _buildApplicationStat(
+      String label, String value, Color color, Size screenSize) {
     return Column(
       children: [
         Text(
           value,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            fontSize: screenSize.width * 0.05,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontSize: screenSize.width * 0.05,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey,
-          ),
+                color: Colors.grey,
+              ),
         ),
       ],
     );
@@ -595,9 +850,9 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
         Text(
           'Success Rate',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-           // fontSize: screenSize.width * 0.04,
-            fontWeight: FontWeight.w500,
-          ),
+                // fontSize: screenSize.width * 0.04,
+                fontWeight: FontWeight.w500,
+              ),
         ),
         SizedBox(height: screenSize.height * 0.01),
         Row(
@@ -616,11 +871,11 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
             SizedBox(width: screenSize.width * 0.02),
             Text(
               '$successRate%',
-              style:Theme.of(context).textTheme.bodyLarge?.copyWith(
-                //fontSize: screenSize.width * 0.04,
-                fontWeight: FontWeight.bold,
-                color: indicatorColor,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    //fontSize: screenSize.width * 0.04,
+                    fontWeight: FontWeight.bold,
+                    color: indicatorColor,
+                  ),
             ),
           ],
         ),
@@ -628,9 +883,11 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
-  Widget _buildSuccessTrendChart(List<Map<String, dynamic>> successTrend, Size screenSize) {
+  Widget _buildSuccessTrendChart(
+      List<Map<String, dynamic>> successTrend, Size screenSize) {
     if (successTrend.isEmpty) {
-      return _buildEmptyStateCard('No application trend data available', Icons.trending_up, screenSize);
+      return _buildEmptyStateCard(
+          'No application trend data available', Icons.trending_up, screenSize);
     }
 
     return Column(
@@ -639,9 +896,9 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
         Text(
           'Success Trend',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            //fontSize: screenSize.width * 0.04,
-            fontWeight: FontWeight.w500,
-          ),
+                //fontSize: screenSize.width * 0.04,
+                fontWeight: FontWeight.w500,
+              ),
         ),
         SizedBox(height: screenSize.height * 0.015),
         Container(
@@ -706,8 +963,10 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                     reservedSize: 28,
                   ),
                 ),
-                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               borderData: FlBorderData(show: false),
               minY: 0,
@@ -717,7 +976,8 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                   spots: successTrend
                       .asMap()
                       .entries
-                      .map((e) => FlSpot(e.key.toDouble(), e.value['successRate'].toDouble()))
+                      .map((e) => FlSpot(
+                          e.key.toDouble(), e.value['successRate'].toDouble()))
                       .toList(),
                   isCurved: true,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -752,9 +1012,11 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
-  Widget _buildTopJobTypes(List<Map<String, dynamic>> topJobTypes, Size screenSize) {
+  Widget _buildTopJobTypes(
+      List<Map<String, dynamic>> topJobTypes, Size screenSize) {
     if (topJobTypes.isEmpty) {
-      return _buildEmptyStateCard('No top performing job types available', Icons.work, screenSize);
+      return _buildEmptyStateCard(
+          'No top performing job types available', Icons.work, screenSize);
     }
 
     return Column(
@@ -762,14 +1024,14 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
       children: [
         Text(
           'Top Performing Job Types',
-          style:Theme.of(context).textTheme.bodyLarge?.copyWith(
-            //fontSize: screenSize.width * 0.04,
-            fontWeight: FontWeight.w500,
-          ),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                //fontSize: screenSize.width * 0.04,
+                fontWeight: FontWeight.w500,
+              ),
         ),
         SizedBox(height: screenSize.height * 0.015),
         ...topJobTypes.map(
-              (type) => Container(
+          (type) => Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
@@ -794,16 +1056,15 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                 Text(
                   type['_id']?.toString() ?? 'Unknown Job Type',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: screenSize.width * 0.04,
-                    fontWeight: FontWeight.w400,
-                  ),
+                        fontSize: screenSize.width * 0.04,
+                        fontWeight: FontWeight.w400,
+                      ),
                 ),
                 SizedBox(width: screenSize.width * 0.03),
                 Text(
                   '${type['shortlisted']} of ${type['total']}',
                   style: GoogleFonts.poppins(
                     fontSize: screenSize.width * 0.04,
-
                     fontWeight: FontWeight.w500,
                     color: Theme.of(context).brightness == Brightness.dark
                         ? AppColors.darkPrimary
@@ -818,7 +1079,8 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
     );
   }
 
-  Widget _buildJobsActivityInfo(Map<String, dynamic> jobStats, Size screenSize) {
+  Widget _buildJobsActivityInfo(
+      Map<String, dynamic> jobStats, Size screenSize) {
     final enrolledJobs = jobStats['enrolledJobsCount'] ?? 0;
     final savedJobs = jobStats['savedJobsCount'] ?? 0;
 
@@ -845,17 +1107,17 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                     'Saved Jobs',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      //fontSize: screenSize.width * 0.03,
-                      color: Colors.grey,
-                    ),
+                          //fontSize: screenSize.width * 0.03,
+                          color: Colors.grey,
+                        ),
                   ),
                   Text(
                     '$savedJobs',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                     // fontSize: screenSize.width * 0.04,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
+                          // fontSize: screenSize.width * 0.04,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
                   ),
                 ],
               ),
@@ -884,17 +1146,17 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
                     'Enrolled',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      //fontSize: screenSize.width * 0.03,
-                      color: Colors.grey,
-                    ),
+                          //fontSize: screenSize.width * 0.03,
+                          color: Colors.grey,
+                        ),
                   ),
                   Text(
                     '$enrolledJobs',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      // fontSize: screenSize.width * 0.04,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
+                          // fontSize: screenSize.width * 0.04,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
                   ),
                 ],
               ),
@@ -906,8 +1168,13 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
   }
 
   Widget _buildIndustriesSection(List<String> industries, Size screenSize) {
+    if (kDebugMode) {
+      print("industries $industries");
+    }
+
     if (industries.isEmpty) {
-      return _buildEmptyStateCard('No preferred industries set', Icons.category, screenSize);
+      return _buildEmptyStateCard(
+          'No preferred industries set', Icons.category, screenSize);
     }
 
     return Column(
@@ -916,15 +1183,17 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
         Text(
           'Preferred Industries',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          //  fontSize: screenSize.width * 0.04,
-            fontWeight: FontWeight.w500,
-          ),
+                //  fontSize: screenSize.width * 0.04,
+                fontWeight: FontWeight.w500,
+              ),
         ),
         SizedBox(height: screenSize.height * 0.015),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: industries.map((industry) => _buildIndustryChip(industry)).toList(),
+          children: industries
+              .map((industry) => _buildIndustryChip(industry))
+              .toList(),
         ),
       ],
     );
@@ -935,18 +1204,7 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
         ? AppColors.darkPrimary
         : AppColors.lightPrimary;
 
-    return Chip(
-      label: Text(
-        industry,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.white,
-          overflow: TextOverflow.ellipsis,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      backgroundColor: chipColor,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-    );
+    return _buildPreferenceChip(industry, chipColor);
   }
 
   Widget _buildEmptyStateCard(String message, IconData icon, Size screenSize) {
@@ -975,9 +1233,9 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent> w
             message,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              //fontSize: screenSize.width * 0.035,
-              color: Colors.grey,
-            ),
+                  //fontSize: screenSize.width * 0.035,
+                  color: Colors.grey,
+                ),
           ),
         ],
       ),
@@ -991,11 +1249,11 @@ class AnimatedProgressIndicator extends StatelessWidget {
   final double lineWidth;
 
   const AnimatedProgressIndicator({
-    Key? key,
+    super.key,
     required this.percentComplete,
     required this.size,
     required this.lineWidth,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1003,7 +1261,8 @@ class AnimatedProgressIndicator extends StatelessWidget {
         ? AppColors.darkPrimary
         : AppColors.lightPrimary;
 
-    final Color completeColor = percentComplete == 1.0 ? Colors.green : progressColor;
+    final Color completeColor =
+        percentComplete == 1.0 ? Colors.green : progressColor;
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: percentComplete),

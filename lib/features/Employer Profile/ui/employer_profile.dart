@@ -14,15 +14,13 @@ import '../../../data/models/employer/employer_model.dart';
 import '../bloc/profile_bloc.dart';
 
 class EmployerProfileScreen extends StatefulWidget {
-
-  const EmployerProfileScreen({super.key });
+  const EmployerProfileScreen({super.key});
 
   @override
   State<EmployerProfileScreen> createState() => _EmployerProfileScreenState();
 }
 
 class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
-
   String formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) {
       return 'Not provided';
@@ -35,7 +33,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     }
   }
 
-  Future<DateTime?> _pickDate(BuildContext context, {DateTime? initialDate}) async {
+  Future<DateTime?> _pickDate(BuildContext context,
+      {DateTime? initialDate}) async {
     return await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -63,8 +62,11 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
-            child: LoadingAnimationWidget.hexagonDots(color: Theme.of(context).brightness ==Brightness.dark ?AppColors.lightPrimary :AppColors.lightPrimary, size: 30)
-          );
+              child: LoadingAnimationWidget.hexagonDots(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.lightPrimary
+                      : AppColors.lightPrimary,
+                  size: 30));
         },
       );
       try {
@@ -73,47 +75,52 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           'profilePic': imageFile, // Replace with actual URL after upload
         };
 
-        BlocProvider.of<ProfileBloc>(context).add(
-            UpdatePersonalInfoDialog(personalInfo)
-        );
+        BlocProvider.of<ProfileBloc>(context)
+            .add(UpdatePersonalInfoDialog(personalInfo));
         Navigator.pop(context);
       } catch (e) {
-        SnackBarUtils.showRedSnackBar("Failed to Update Employer Profile picture", context);
+        SnackBarUtils.showRedSnackBar(
+            "Failed to Update Employer Profile picture", context);
       }
     }
   }
+
   @override
   void initState() {
     BlocProvider.of<ProfileBloc>(context).add(FetchProfileData());
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
     return BlocConsumer<ProfileBloc, ProfileState>(
-        listener: (context, state) {
-
-          if(state is ProfileUpdateSuccess){
-
-            SnackBarUtils.showGreenSnackBar(state.message, context);
-
-          }
-          if (state is ProfileError){
-            SnackBarUtils.showRedSnackBar(state.error.toString(), context);
-          }
-        },
+      listener: (context, state) {
+        if (state is ProfileUpdateSuccess) {
+          SnackBarUtils.showGreenSnackBar(state.message, context);
+        }
+        if (state is ProfileError) {
+          SnackBarUtils.showRedSnackBar(state.error.toString(), context);
+        }
+      },
       builder: (context, state) {
         if (state is ProfileDataLoading) {
-          return Center(child: LoadingAnimationWidget.hexagonDots(color: Theme.of(context).brightness ==Brightness.dark ?AppColors.lightPrimary :AppColors.lightPrimary, size: 30),);
-
+          return Center(
+            child: LoadingAnimationWidget.hexagonDots(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.lightPrimary
+                    : AppColors.lightPrimary,
+                size: 30),
+          );
         } else if (state is ProfileDataLoaded) {
-
-          return _buildLoadedState(context, state,screenSize);
-
+          return _buildLoadedState(context, state, screenSize);
         } else if (state is ProfileError) {
-          return CustomErrorScreen(message: state.error,onRetry: (){
-            BlocProvider.of<ProfileBloc>(context).add(FetchProfileData());
-          },);
+          return CustomErrorScreen(
+            message: state.error,
+            onRetry: () {
+              BlocProvider.of<ProfileBloc>(context).add(FetchProfileData());
+            },
+          );
         }
         return Center(
           child: Column(
@@ -128,33 +135,34 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
               Text(
                 'Something went wrong',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               SizedBox(height: screenSize.height * 0.01),
               Text(
                 'Please try again later',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[500],
-                ),
+                      color: Colors.grey[500],
+                    ),
               ),
             ],
           ),
         );
       },
-);
+    );
   }
 
-  Widget _buildLoadedState(BuildContext context, ProfileDataLoaded state,Size screenSize) {
+  Widget _buildLoadedState(
+      BuildContext context, ProfileDataLoaded state, Size screenSize) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(state.employer,state.companyDetails,screenSize),
+          _buildSliverAppBar(state.employer, state.companyDetails, screenSize),
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: _buildInfoCards(context,state,screenSize),
+              child: _buildInfoCards(context, state, screenSize),
             ),
           ),
         ],
@@ -162,8 +170,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  Widget _buildSliverAppBar(Employer employer, CompanyDetails companyDetails,Size screenSize) {
-
+  Widget _buildSliverAppBar(
+      Employer employer, CompanyDetails companyDetails, Size screenSize) {
     return SliverAppBar(
       expandedHeight: screenSize.height * 0.25,
       floating: false,
@@ -196,7 +204,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
               ),
             ),
 
-
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
@@ -223,7 +230,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
             ),
             // Profile content with enhanced styling
             Positioned(
-              bottom: 60,
+              top: 60,
+              bottom: 10,
               left: 0,
               right: 0,
               child: Column(
@@ -252,9 +260,13 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                             child: Hero(
                               tag: 'profile_image',
                               child: CircleAvatar(
-                                backgroundImage: employer.personalInfo.profilePic != null
-                                    ? NetworkImage(employer.personalInfo.profilePic!)
-                                    : AssetImage('assets/default_profile.png') as ImageProvider,
+                                backgroundImage: employer
+                                            .personalInfo.profilePic !=
+                                        null
+                                    ? NetworkImage(
+                                        employer.personalInfo.profilePic!)
+                                    : AssetImage('assets/default_profile.png')
+                                        as ImageProvider,
                               ),
                             ),
                           ),
@@ -269,7 +281,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.blue.shade700,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border:
+                                    Border.all(color: Colors.white, width: 2),
                               ),
                               child: Icon(
                                 Icons.camera_alt,
@@ -282,24 +295,22 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: screenSize.height*0.02),
-                  Text(
-                    employer.personalInfo.fullName,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: screenSize.width*0.06,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black38,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    )
-                  ),
-                  SizedBox(height: screenSize.height*0.01),
+                  SizedBox(height: screenSize.height * 0.02),
+                  Text(employer.personalInfo.fullName,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: screenSize.width * 0.06,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black38,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      )),
+                  SizedBox(height: screenSize.height * 0.01),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
@@ -308,12 +319,13 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                     ),
                     child: Text(
                       employer.companyDetails.designation,
-                      style:Theme.of(context).textTheme.displayMedium?.copyWith(
-                        fontSize: screenSize.width*0.045,
-                        //color: AppColors.background,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.displayMedium?.copyWith(
+                                fontSize: screenSize.width * 0.045,
+                                //color: AppColors.background,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
                     ),
                   ),
                 ],
@@ -325,49 +337,58 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-
-  Widget _buildInfoCards(BuildContext context, ProfileDataLoaded state,Size screenSize) {
+  Widget _buildInfoCards(
+      BuildContext context, ProfileDataLoaded state, Size screenSize) {
     return Column(
       children: [
         _buildInfoCard(
           'Personal Information',
           Icons.person,
-          _buildPersonalInfoContent(state.employer,screenSize),
+          _buildPersonalInfoContent(state.employer, screenSize),
           screenSize,
-          onEdit: () => _editPersonalInfo(context, state.employer,screenSize),
+          onEdit: () => _editPersonalInfo(context, state.employer, screenSize),
         ),
-        SizedBox(height: screenSize.height*0.02),
+        SizedBox(height: screenSize.height * 0.02),
         _buildInfoCard(
           'About',
           Icons.description,
-         _buildAboutContent(state.employer.about.isNotEmpty ?  state.employer.about : "No About", screenSize),
+          _buildAboutContent(
+              state.employer.about.isNotEmpty
+                  ? state.employer.about
+                  : "No About",
+              screenSize),
           screenSize,
           onEdit: () => _editAbout(context, state.employer.about, screenSize),
         ),
-        SizedBox(height: screenSize.height*0.02),
+        SizedBox(height: screenSize.height * 0.02),
         _buildInfoCard(
           'Company Details',
           Icons.business,
-          _buildCompanyDetailsContent(state.companyDetails,screenSize),
+          _buildCompanyDetailsContent(state.companyDetails, screenSize),
           screenSize,
-          onEdit: () => _editCompanyDetails(context, state.companyDetails,screenSize),
+          onEdit: () =>
+              _editCompanyDetails(context, state.companyDetails, screenSize),
         ),
-        SizedBox(height: screenSize.height*0.02),
+        SizedBox(height: screenSize.height * 0.02),
         _buildInfoCard(
           'Social Links',
           Icons.share,
-          _buildSocialLinksContent(state.companyDetails.socialAccount,screenSize),
+          _buildSocialLinksContent(
+              state.companyDetails.socialAccount, screenSize),
           screenSize,
-          onEdit: () => _editSocialLinks(context, state.companyDetails.socialAccount,screenSize),
+          onEdit: () => _editSocialLinks(
+              context, state.companyDetails.socialAccount, screenSize),
         ),
       ],
     );
   }
 
-  Widget _buildInfoCard(String title, IconData icon, Widget content, Size screenSize, {VoidCallback? onEdit}) {
+  Widget _buildInfoCard(
+      String title, IconData icon, Widget content, Size screenSize,
+      {VoidCallback? onEdit}) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8),
-      elevation:  0,
+      elevation: 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -398,18 +419,19 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       color: Colors.white,
                       child: Padding(
                         padding: const EdgeInsets.all(5.0),
-                        child: Icon(icon,size: 24),
+                        child: Icon(icon, size: 24),
                       ),
                     ),
                     SizedBox(width: 12),
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                        fontSize:  screenSize.width*0.04,
-                      )
-                    ),
+                    Text(title,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                              fontSize: screenSize.width * 0.04,
+                            )),
                   ],
                 ),
                 if (onEdit != null)
@@ -438,52 +460,28 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-
-
-
-
-  Widget _buildPersonalInfoContent(Employer employer,Size screenSize) {
+  Widget _buildPersonalInfoContent(Employer employer, Size screenSize) {
     return Column(
       children: [
+        _buildInfoListTile(Icons.work, 'Designation',
+            employer.companyDetails.designation, screenSize),
         _buildInfoListTile(
-          Icons.work,
-          'Designation',
-          employer.companyDetails.designation,
-          screenSize
-        ),
+            Icons.email, 'Email', employer.personalInfo.email, screenSize),
+        _buildInfoListTile(Icons.phone, 'Phone',
+            employer.personalInfo.phoneNumber, screenSize),
+        _buildInfoListTile(Icons.location_on, 'Address',
+            employer.personalInfo.address, screenSize),
         _buildInfoListTile(
-          Icons.email,
-          'Email',
-          employer.personalInfo.email,
-            screenSize
-        ),
-        _buildInfoListTile(
-          Icons.phone,
-          'Phone',
-          employer.personalInfo.phoneNumber,
-            screenSize
-        ),
-        _buildInfoListTile(
-          Icons.location_on,
-          'Address',
-          employer.personalInfo.address,
-            screenSize
-        ),
-        _buildInfoListTile(
-          Icons.cake,
-          'Date of Birth',
+            Icons.cake,
+            'Date of Birth',
             formatDate(employer.personalInfo.dob.toString().split(" ")[0]),
-            screenSize
-        ),
-        _buildInfoListTile(
-          Icons.person_outline,
-          'Gender',
-          employer.personalInfo.gender,
-            screenSize
-        ),
+            screenSize),
+        _buildInfoListTile(Icons.person_outline, 'Gender',
+            employer.personalInfo.gender, screenSize),
       ],
     );
   }
+
   Widget _buildAboutContent(String about, Size screenSize) {
     return Card(
       elevation: 0,
@@ -497,72 +495,65 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
         child: Text(
           about,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontSize: screenSize.width * 0.04,
-            height: 1.5,
-          ),
+                fontSize: screenSize.width * 0.04,
+                height: 1.5,
+              ),
         ),
       ),
     );
   }
-  Widget _buildCompanyDetailsContent(CompanyDetails companyDetails,Size screenSize) {
+
+  Widget _buildCompanyDetailsContent(
+      CompanyDetails companyDetails, Size screenSize) {
     return Column(
       children: [
+        _buildInfoListTile(Icons.business_center, 'Company Name',
+            companyDetails.companyName, screenSize),
         _buildInfoListTile(
-            Icons.business_center,
-            'Company Name',
-            companyDetails.companyName,
-            screenSize
-        ),
-        _buildInfoListTile(
-            Icons.web,
-            'Website',
-            companyDetails.website,
-            screenSize
-        ),
-        _buildInfoListTile(
-            Icons.category,
-            'Industry Type',
-            companyDetails.industryType,
-            screenSize
-        ),
+            Icons.web, 'Website', companyDetails.website, screenSize),
+        _buildInfoListTile(Icons.category, 'Industry Type',
+            companyDetails.industryType, screenSize),
       ],
     );
   }
 
-  Widget _buildSocialLinksContent(SocialAccount socialAccount,Size screenSize) {
+  Widget _buildSocialLinksContent(
+      SocialAccount socialAccount, Size screenSize) {
     return Column(
       children: [
         _buildInfoListTile(
             Icons.link,
             'LinkedIn',
-            socialAccount.linkedin.isEmpty ? 'Not provided' : socialAccount.linkedin,
-            screenSize
-        ),
+            socialAccount.linkedin.isEmpty
+                ? 'Not provided'
+                : socialAccount.linkedin,
+            screenSize),
         _buildInfoListTile(
             Icons.camera_alt,
             'Instagram',
-            socialAccount.instagram.isEmpty ? 'Not provided' : socialAccount.instagram,
-            screenSize
-        ),
+            socialAccount.instagram.isEmpty
+                ? 'Not provided'
+                : socialAccount.instagram,
+            screenSize),
         _buildInfoListTile(
             Icons.flutter_dash,
             'Twitter',
-            socialAccount.twitter.isEmpty ? 'Not provided' : socialAccount.twitter,
-            screenSize
-        ),
+            socialAccount.twitter.isEmpty
+                ? 'Not provided'
+                : socialAccount.twitter,
+            screenSize),
       ],
     );
   }
 
-
-
-
-  Widget _buildInfoListTile(IconData icon, String label, String value, Size screenSize) {
+  Widget _buildInfoListTile(
+      IconData icon, String label, String value, Size screenSize) {
     return Card(
       elevation: 0,
       margin: EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),side: BorderSide(color: Colors.grey.shade300)),
-
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.grey.shade300)),
       child: ListTile(
         leading: Container(
           padding: EdgeInsets.all(8),
@@ -579,121 +570,124 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           ),
           child: Icon(icon, color: Colors.blue.shade700, size: 20),
         ),
-        title: Text(
-          value,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: screenSize.width*0.04
-          )
-        ),
+        title: Text(value,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: screenSize.width * 0.04)),
         subtitle: Text(
           label,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            letterSpacing: 0.2,
-            fontSize: screenSize.width*0.03,
-            fontWeight: FontWeight.w300
-
-          ),
+              letterSpacing: 0.2,
+              fontSize: screenSize.width * 0.03,
+              fontWeight: FontWeight.w300),
         ),
       ),
     );
   }
 
-
-
-
-
-
-  void _editPersonalInfo(BuildContext context, Employer employer,Size screenSize) {
-    TextEditingController fullNameController = TextEditingController(text: employer.personalInfo.fullName);
-    TextEditingController emailController = TextEditingController(text: employer.personalInfo.email);
-    TextEditingController phoneController = TextEditingController(text: employer.personalInfo.phoneNumber);
-    TextEditingController addressController = TextEditingController(text: employer.personalInfo.address);
-    TextEditingController designationController = TextEditingController(text: employer.companyDetails.designation);
-    DateTime? dobController = employer.personalInfo.dob ;
-    TextEditingController genderController = TextEditingController(text: employer.personalInfo.gender);
+  void _editPersonalInfo(
+      BuildContext context, Employer employer, Size screenSize) {
+    TextEditingController fullNameController =
+        TextEditingController(text: employer.personalInfo.fullName);
+    TextEditingController emailController =
+        TextEditingController(text: employer.personalInfo.email);
+    TextEditingController phoneController =
+        TextEditingController(text: employer.personalInfo.phoneNumber);
+    TextEditingController addressController =
+        TextEditingController(text: employer.personalInfo.address);
+    TextEditingController designationController =
+        TextEditingController(text: employer.companyDetails.designation);
+    DateTime? dobController = employer.personalInfo.dob;
+    TextEditingController genderController =
+        TextEditingController(text: employer.personalInfo.gender);
 
     final BuildContext parentContext = context;
     showDialog(
-      context: context,
-      builder: (BuildContext dialogContext)=>
-         Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                insetPadding: EdgeInsets.all(2),
-                child: SingleChildScrollView(
-                  child: Container(
-                    width: screenSize.width*0.88,
-                    padding: EdgeInsets.all(8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Edit Personal Info',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        SizedBox(height: screenSize.height*0.03),
-                        _buildTextField(fullNameController, 'Full Name', Icons.person),
-                        _buildTextField(designationController, 'Designation', Icons.work),
-                        _buildTextField(emailController, 'Email', Icons.email),
-                        _buildTextField(phoneController, 'Phone Number', Icons.phone),
-                        _buildTextField(addressController, 'Address', Icons.location_on),
-                        _buildDateField('DOB', dobController, (date) => dobController = date),
-                        _buildTextField(genderController, 'Gender', Icons.person_outline),
-                        SizedBox(height: screenSize.height*0.03),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(dialogContext),
-                              child: Text(
-                                'Cancel',
-                                style: Theme.of(context).textTheme.bodySmall,
+        context: context,
+        builder: (BuildContext dialogContext) => Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              insetPadding: EdgeInsets.all(2),
+              child: SingleChildScrollView(
+                child: Container(
+                  width: screenSize.width * 0.88,
+                  padding: EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Edit Personal Info',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      SizedBox(height: screenSize.height * 0.03),
+                      _buildTextField(
+                          fullNameController, 'Full Name', Icons.person),
+                      _buildTextField(
+                          designationController, 'Designation', Icons.work),
+                      _buildTextField(emailController, 'Email', Icons.email),
+                      _buildTextField(
+                          phoneController, 'Phone Number', Icons.phone),
+                      _buildTextField(
+                          addressController, 'Address', Icons.location_on),
+                      _buildDateField(
+                          'DOB', dobController, (date) => dobController = date),
+                      _buildTextField(
+                          genderController, 'Gender', Icons.person_outline),
+                      SizedBox(height: screenSize.height * 0.03),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: Text(
+                              'Cancel',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              Map<String, dynamic> personalInfo = {
+                                'fullName': fullNameController.text.trim(),
+                                'designation':
+                                    designationController.text.trim(),
+                                'email': emailController.text.trim(),
+                                'phoneNumber': phoneController.text.trim(),
+                                'address': addressController.text.trim(),
+                                'DOB': dobController?.toString(),
+                                'gender': genderController.text.trim(),
+                              };
+                              BlocProvider.of<ProfileBloc>(parentContext)
+                                  .add(UpdatePersonalInfoDialog(personalInfo));
+                              Navigator.pop(dialogContext);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            SizedBox(width: 12),
-                            ElevatedButton(
-                              onPressed: () {
-                                String dob = '';
-
-                                Map<String,dynamic> personalInfo = {
-                                  'fullName': fullNameController.text.trim(),
-                                  'designation': designationController.text.trim(),
-                                  'email': emailController.text.trim(),
-                                  'phoneNumber': phoneController.text.trim(),
-                                  'address': addressController.text.trim(),
-                                  'DOB': dobController?.toString(),
-                                  'gender': genderController.text.trim(),
-                                };
-                                BlocProvider.of<ProfileBloc>(parentContext).add(
-                                    UpdatePersonalInfoDialog(personalInfo)
-                                );
-                                Navigator.pop(dialogContext);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text('Save Changes',  style: Theme.of(context).textTheme.bodySmall,),
+                            child: Text(
+                              'Save Changes',
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              )
-
-    );
+              ),
+            ));
   }
 
   void _editAbout(BuildContext context, String currentAbout, Size screenSize) {
-    TextEditingController aboutController = TextEditingController(text: currentAbout);
+    TextEditingController aboutController =
+        TextEditingController(text: currentAbout);
     final BuildContext parentContext = context;
 
     showDialog(
@@ -724,7 +718,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+                    borderSide:
+                        BorderSide(color: Colors.blue.shade700, width: 2),
                   ),
                 ),
               ),
@@ -743,12 +738,13 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                   ElevatedButton(
                     onPressed: () {
                       BlocProvider.of<ProfileBloc>(parentContext).add(
-                          UpdateAboutDialog(aboutController.text.trim().toString())
-                      );
+                          UpdateAboutDialog(
+                              aboutController.text.trim().toString()));
                       Navigator.pop(dialogContext);
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -767,21 +763,25 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  void _editCompanyDetails(BuildContext context, CompanyDetails companyDetails,Size screenSize) {
-    TextEditingController companyNameController = TextEditingController(text: companyDetails.companyName);
-    TextEditingController websiteController = TextEditingController(text: companyDetails.website);
-    TextEditingController industryTypeController = TextEditingController(text: companyDetails.industryType);
+  void _editCompanyDetails(
+      BuildContext context, CompanyDetails companyDetails, Size screenSize) {
+    TextEditingController companyNameController =
+        TextEditingController(text: companyDetails.companyName);
+    TextEditingController websiteController =
+        TextEditingController(text: companyDetails.website);
+    TextEditingController industryTypeController =
+        TextEditingController(text: companyDetails.industryType);
 
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
           shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+            borderRadius: BorderRadius.circular(20),
+          ),
           insetPadding: EdgeInsets.all(2),
           child: Container(
-            width: screenSize.width*0.88,
+            width: screenSize.width * 0.88,
             padding: EdgeInsets.all(8),
             child: SingleChildScrollView(
               child: Column(
@@ -791,11 +791,13 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                     'Edit Company Details',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  SizedBox(height: screenSize.height*0.03),
-                  _buildTextField(companyNameController, 'Company Name', Icons.business),
+                  SizedBox(height: screenSize.height * 0.03),
+                  _buildTextField(
+                      companyNameController, 'Company Name', Icons.business),
                   _buildTextField(websiteController, 'Website', Icons.web),
-                  _buildTextField(industryTypeController, 'Industry Type', Icons.category),
-                  SizedBox(height: screenSize.height*0.03),
+                  _buildTextField(
+                      industryTypeController, 'Industry Type', Icons.category),
+                  SizedBox(height: screenSize.height * 0.03),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -813,13 +815,15 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                         // backgroundColor:AppColors.primary,
-                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          // backgroundColor:AppColors.primary,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text('Save Changes',style: Theme.of(context).textTheme.bodySmall),
+                        child: Text('Save Changes',
+                            style: Theme.of(context).textTheme.bodySmall),
                       ),
                     ],
                   ),
@@ -832,10 +836,14 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  void _editSocialLinks(BuildContext context, SocialAccount socialAccount,Size screenSize) {
-    TextEditingController linkedinController = TextEditingController(text: socialAccount.linkedin);
-    TextEditingController instagramController = TextEditingController(text: socialAccount.instagram);
-    TextEditingController twitterController = TextEditingController(text: socialAccount.twitter);
+  void _editSocialLinks(
+      BuildContext context, SocialAccount socialAccount, Size screenSize) {
+    TextEditingController linkedinController =
+        TextEditingController(text: socialAccount.linkedin);
+    TextEditingController instagramController =
+        TextEditingController(text: socialAccount.instagram);
+    TextEditingController twitterController =
+        TextEditingController(text: socialAccount.twitter);
 
     showDialog(
       context: context,
@@ -846,7 +854,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
           ),
           insetPadding: EdgeInsets.all(2),
           child: Container(
-            width: screenSize.width*0.88,
+            width: screenSize.width * 0.88,
             padding: EdgeInsets.all(8),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -855,11 +863,13 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                   'Edit Social Links',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                SizedBox(height: screenSize.height*0.03),
+                SizedBox(height: screenSize.height * 0.03),
                 _buildTextField(linkedinController, 'LinkedIn', Icons.link),
-                _buildTextField(instagramController, 'Instagram', Icons.camera_alt),
-                _buildTextField(twitterController, 'Twitter', Icons.flutter_dash),
-                SizedBox(height: screenSize.height*0.03),
+                _buildTextField(
+                    instagramController, 'Instagram', Icons.camera_alt),
+                _buildTextField(
+                    twitterController, 'Twitter', Icons.flutter_dash),
+                SizedBox(height: screenSize.height * 0.03),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -878,12 +888,16 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue.shade700,
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text('Save Changes',style: Theme.of(context).textTheme.bodySmall,),
+                      child: Text(
+                        'Save Changes',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
                   ],
                 ),
@@ -896,11 +910,11 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
   }
 
   Widget _buildTextField(
-      TextEditingController controller,
-      String label,
-      IconData icon, {
-        bool isMultiLine = false,
-      }) {
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool isMultiLine = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
@@ -921,7 +935,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
     );
   }
 
-  Widget _buildDateField(String label, DateTime? date, Function(DateTime?) onDateSelected) {
+  Widget _buildDateField(
+      String label, DateTime? date, Function(DateTime?) onDateSelected) {
     final controller = TextEditingController(
       text: date != null ? DateFormat('dd/MM/yyyy').format(date) : '',
     );
@@ -946,7 +961,6 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
       },
     );
   }
-
 }
 
 class GridPainter extends CustomPainter {

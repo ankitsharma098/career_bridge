@@ -33,7 +33,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     BlocProvider.of<SeeProfileBloc>(context).add(FetchUserProfile(userId: widget.userId, userType: widget.userType));
     super.initState();
   }
-
+  String formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return 'Not provided';
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('yyyy').format(date);
+    } catch (e) {
+      return 'Invalid date';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -592,7 +602,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Text(
-                      '${edu.startingYear.toString().split('-')[0]} - ${edu.passingYear}',
+                      '${formatDate(edu.startingYear.toString())} - ${formatDate(edu.passingYear.toString())}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.w500,

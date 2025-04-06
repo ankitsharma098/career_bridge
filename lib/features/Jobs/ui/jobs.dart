@@ -1415,7 +1415,7 @@ class _PostedJobsScreenState extends State<PostedJobsScreen> {
                         onPressed: () {
                          Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
                           create: (context) => ApplicationsBloc(),
-                          child: ApplicationsScreen(jobId: job.id,),
+                          child: ApplicationsScreen(jobId: job.id, employerId: job.employerId,),
                         ),));
                         },
                         icon: Icon(Icons.people,color: AppColors.lightDivider,),

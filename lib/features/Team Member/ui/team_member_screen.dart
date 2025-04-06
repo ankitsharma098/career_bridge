@@ -412,13 +412,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     labelText: 'Email Address',
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) return 'Email is required';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                      return 'Enter a valid email address';
-                    }
-                    return null;
-                  },
+                  validator: (value) => value!.isEmpty ? 'Email is required' : null,
                 ),
                 SizedBox(height: 16),
                 TextFormField(

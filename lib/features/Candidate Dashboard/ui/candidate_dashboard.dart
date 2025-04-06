@@ -354,7 +354,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => StoryStatsBloc(),
-                      child: StoryStatsTab(employerId: candidateData!.id,),
+                      child: StoryStatsTab(currentUserId: candidateData!.id,),
                     ), // You'll need to create this screen
                   ),
                 );

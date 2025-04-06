@@ -1,6 +1,7 @@
 import 'package:android/core/utils/snackBarUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/image_viewer.dart';
 import '../../../data/models/story/story_model.dart';
@@ -27,45 +28,82 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
   final TextEditingController _commentController = TextEditingController();
   String? _editingCommentId;
 
-  void _cancelEditing() {
-    setState(() {
-      _editingCommentId = null;
-      _commentController.clear();
-    });
-  }
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    print("Reloading");
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar:  AppBar(
+      appBar: AppBar(
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("Story"),
+        title: Text(
+          "Story Details",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
         actions: [
           if (widget.story.hostDetails.id == widget.employerId)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _navigateToEdit(),
+            Container(
+              margin: EdgeInsets.only(right: 16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  FontAwesomeIcons.edit,
+                ),
+                onPressed: () => _navigateToEdit(),
+              ),
             ),
         ],
       ),
       body: BlocConsumer<StoryReactionBloc, StoryReactionState>(
         listener: (context, state) {
           if (state is ReactionError) {
-          SnackBarUtils.showRedSnackBar(state.message, context);
-          if (_editingCommentId != null) {
-            _cancelEditing();
-          }
+            SnackBarUtils.showRedSnackBar(state.message, context);
+            if (_editingCommentId != null) {
+              _cancelEditing();
+            }
           }
         },
         builder: (context, state) {
           if (state is ReactionLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      "Loading reactions...",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           if (state is ReactionLoaded) {
@@ -75,10 +113,10 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        _buildStoryCard(),
+                        _buildEnhancedStoryCard(),
                         _buildInteractionBar(state),
                         _buildLikesSection(state.likes),
-                        _buildCommentsSection(state.comments,screenSize),
+                        _buildCommentsSection(state.comments, screenSize),
                       ],
                     ),
                   ),
@@ -88,81 +126,31 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
             );
           }
 
-          return const Center(child: Text('Something went wrong'));
-        },
-      ),
-    );
-  }
-
-
-  Widget _buildStoryCard() {
-    final date = DateTime.parse(widget.story.createdAt);
-    return Card(
-      margin: const EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            contentPadding: const EdgeInsets.all(12),
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(widget.story.hostDetails.profilePic),
-            ),
-            title: Text(
-              widget.story.hostDetails.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              DateFormat('MMM dd, yyyy').format(date),
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
-          if (widget.story.mediaUrls.isNotEmpty)
-            _buildMediaSection(),
-          Padding(
-            padding: const EdgeInsets.all(12),
+          return Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  widget.story.title,
-                  style: Theme.of(context).textTheme.titleLarge,
+                Icon(
+                  Icons.error_outline,
+                  size: 60,
+                  color: Colors.grey[400],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 16),
                 Text(
-                  widget.story.content,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  'Failed to load reactions',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    context.read<StoryReactionBloc>().add(FetchReactionsEvent(widget.story.id));
+                  },
+                  child: Text('Retry'),
                 ),
               ],
-            ),
-          ),
-          _buildTags(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMediaSection() {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.3,
-      child: PageView.builder(
-        itemCount: widget.story.mediaUrls.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () => _showFullScreenImage(index),
-            child: Image.network(
-              widget.story.mediaUrls[index].url,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Center(
-                  child: CircularProgressIndicator(
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                        : null,
-                  ),
-                );
-              },
             ),
           );
         },
@@ -170,74 +158,302 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
     );
   }
 
-  Widget _buildTags() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: widget.story.tags.map((tag) =>
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Chip(
-                label: Text('#$tag'),
-                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+  void _cancelEditing() {
+    setState(() {
+      _editingCommentId = null;
+      _commentController.clear();
+    });
+  }
+
+  Widget _buildEnhancedStoryCard() {
+    final date = DateTime.parse(widget.story.createdAt);
+    return Container(
+      margin: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+        color: Theme.of(context).cardColor,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 0.5,
+                ),
               ),
-            )
-        ).toList(),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor,
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).primaryColor.withOpacity(0.2),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundImage: NetworkImage(widget.story.hostDetails.profilePic),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.story.hostDetails.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        DateFormat('MMM dd, yyyy • h:mm a').format(date),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (widget.story.mediaUrls.isNotEmpty)
+            _buildEnhancedMediaSection(),
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.story.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  widget.story.content,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey[800],
+                    height: 1.5,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildEnhancedTags(),
+        ],
       ),
     );
   }
 
-  // Update these specific widget methods in your _StoryReactionsScreenState class
+  Widget _buildEnhancedMediaSection() {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.3,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          PageView.builder(
+            itemCount: widget.story.mediaUrls.length,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () => _showFullScreenImage(index),
+                child: Image.network(
+                  widget.story.mediaUrls[index].url,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).primaryColor,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Icon(Icons.broken_image, size: 50, color: Colors.grey[400]),
+                  ),
+                ),
+              );
+            },
+          ),
+          if (widget.story.mediaUrls.length > 1)
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  widget.story.mediaUrls.length,
+                      (index) => Container(
+                    width: 8,
+                    height: 8,
+                    margin: EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedTags() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: widget.story.tags.map((tag) => Container(
+            margin: EdgeInsets.only(right: 8),
+            child: Chip(
+              label: Text('#$tag'),
+              labelStyle: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                  width: 0.5,
+                ),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 4),
+            ),
+          )).toList(),
+        ),
+      ),
+    );
+  }
 
   Widget _buildInteractionBar(ReactionLoaded state) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
-        ),
+        ],
       ),
       child: Row(
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.favorite,
-                size: 20,
-                color: Theme.of(context).primaryColor,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${state.likes.length}',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ],
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.favorite,
+                  size: 18,
+                  color: Theme.of(context).primaryColor,
+                ),
+                SizedBox(width: 4),
+                Text(
+                  '${state.likes.length}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(width: 24),
-          Row(
-            children: [
-              Icon(
-                Icons.chat_bubble_outline,
-                size: 20,
-                color: Theme.of(context).primaryColor,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${state.comments.length}',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ],
+          SizedBox(width: 16),
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.chat_bubble_outline,
+                  size: 18,
+                  color: Theme.of(context).primaryColor,
+                ),
+                SizedBox(width: 4),
+                Text(
+                  '${state.comments.length}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const Spacer(),
-          IconButton(
+          Spacer(),
+          ElevatedButton.icon(
             icon: Icon(
               widget.story.isLiked ? Icons.favorite : Icons.favorite_border,
-              color: widget.story.isLiked ? Theme.of(context).primaryColor : null,
+              color: Colors.white,
+              size: 18,
+            ),
+            label: Text(
+              widget.story.isLiked ? 'Liked' : 'Like',
+              style: TextStyle(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: widget.story.isLiked ? Theme.of(context).primaryColor : Colors.grey[600],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
             ),
             onPressed: () {
               context.read<StoryBloc>().add(ToggleStoryLikeEvent(widget.story.id));
@@ -249,59 +465,82 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
   }
 
   Widget _buildLikesSection(List<Map<String, dynamic>> likes) {
-    if (likes.isEmpty) return const SizedBox.shrink();
+    if (likes.isEmpty) return SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
-        ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.favorite,
-                size: 16,
-                color: Theme.of(context).primaryColor,
+              Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.favorite,
+                  size: 16,
+                  color: Theme.of(context).primaryColor,
+                ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
-                'Liked by',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                'People who liked this story',
+                style: TextStyle(
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 80,
+          SizedBox(height: 16),
+          Container(
+            height: 90,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: likes.length,
               itemBuilder: (context, index) {
                 final like = likes[index];
                 return Container(
-                  width: 65,
-                  margin: const EdgeInsets.only(right: 12),
+                  width: 70,
+                  margin: EdgeInsets.only(right: 12),
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundImage: NetworkImage(like['user']['profilePic']),
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(context).primaryColor,
+                            width: 2,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: CircleAvatar(
+                          radius: 24,
+                          backgroundImage: NetworkImage(like['user']['profilePic']),
+                        ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 8),
                       Text(
                         like['user']['name'],
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
@@ -317,57 +556,89 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
     );
   }
 
-  Widget _buildCommentsSection(List<Map<String, dynamic>> comments,Size screenSize) {
-    if (comments.isEmpty) return const SizedBox.shrink();
+  Widget _buildCommentsSection(List<Map<String, dynamic>> comments, Size screenSize) {
+    if (comments.isEmpty) return SizedBox.shrink();
 
     return Container(
-      color: Theme.of(context).cardColor,
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
                   Icons.chat_bubble_outline,
                   size: 16,
                   color: Theme.of(context).primaryColor,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Comments',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Comments',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
+              ),
+              Spacer(),
+              Text(
+                '${comments.length} comments',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
+          SizedBox(height: 16),
           ListView.separated(
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+            physics: NeverScrollableScrollPhysics(),
             itemCount: comments.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              indent: 72,
-            ),
+            separatorBuilder: (context, index) => Divider(height: 24),
             itemBuilder: (context, index) {
               final comment = comments[index];
               final timestamp = DateTime.parse(comment['timestamp']);
               final isEditing = _editingCommentId == comment['_id'];
+              final isCurrentUser = comment["user"]["_id"] == widget.employerId;
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              return Container(
+                padding: EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: NetworkImage(comment['user']['profilePic']),
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isCurrentUser ? Theme.of(context).primaryColor : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundImage: NetworkImage(comment['user']['profilePic']),
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,90 +647,151 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                             children: [
                               Text(
                                 comment['user']['name'] ?? "Name",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: screenSize.width*0.32,
+                              SizedBox(width: 8),
+                              Container(
+                                width: screenSize.width * 0.32,
                                 child: Text(
-                                  DateFormat.yMMMd().add_jm().format(timestamp),
+                                  DateFormat('MMM d • h:mm a').format(timestamp),
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  style: TextStyle(
                                     color: Colors.grey[600],
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 6),
                           if (isEditing)
-                            Row(
+                            Column(
                               children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _commentController,
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      border: OutlineInputBorder(),
+                                TextField(
+                                  controller: _commentController,
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: Theme.of(context).primaryColor,
+                                      ),
                                     ),
+                                    filled: true,
+                                    fillColor: Theme.of(context).cardColor,
                                   ),
+                                  maxLines: 3,
+                                  minLines: 1,
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.check, color: Colors.green),
-                                  onPressed: () {
-                                    _submitComment();
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.close, color: Colors.red),
-                                  onPressed: _cancelEditing,
+                                SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton.icon(
+                                      icon: Icon(Icons.cancel, color: Colors.red),
+                                      label: Text(
+                                        'Cancel',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                      onPressed: _cancelEditing,
+                                    ),
+                                    SizedBox(width: 8),
+                                    ElevatedButton.icon(
+                                      icon: Icon(Icons.check),
+                                      label: Text('Save'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(context).primaryColor,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      onPressed: _submitComment,
+                                    ),
+                                  ],
                                 ),
                               ],
                             )
                           else
-                            Text(
-                              comment['text'] ?? "text",
-                              style: Theme.of(context).textTheme.bodyMedium,
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isCurrentUser
+                                    ? Theme.of(context).primaryColor.withOpacity(0.1)
+                                    : Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[800]
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                comment['text'] ?? "text",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                ),
+                              ),
                             ),
                         ],
                       ),
                     ),
-                    if (!isEditing && comment["user"]["_id"] == widget.employerId)
-                     Row(
-                       children: [
-                         SizedBox(
-                           width: screenSize.width*0.1,
-                           child: IconButton(
-                             icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
-                             onPressed: () {
-
+                    if (!isEditing && isCurrentUser)
+                      Column(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.edit,
+                              size: 18,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            onPressed: () {
                               setState(() {
-                                    _commentController.text = comment['text'];
-                                    _editingCommentId = comment['_id'];
-                                  });
-
-                             },
-                           ),
-                         ),
-                         SizedBox(
-                           width: screenSize.width*0.1,
-                           child: IconButton(
-                             icon: Icon(Icons.delete, color: Colors.red),
-                             onPressed: () {
-                               context.read<StoryReactionBloc>().add(
-                                 CommentDelete(
-                                   storyId: widget.story.id,
-                                   commentId: comment["_id"],
-                                 ),
-                               );
-                             },
-                           ),
-                         ),
-
-                       ],
-                     )
+                                _commentController.text = comment['text'];
+                                _editingCommentId = comment['_id'];
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete,
+                              size: 18,
+                              color: Colors.red,
+                            ),
+                            onPressed: () {
+                              final BuildContext parentContext=context;
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext dialogContext) => AlertDialog(
+                                  title: Text('Delete Comment'),
+                                  content: Text('Are you sure you want to delete this comment?'),
+                                  actions: [
+                                    TextButton(
+                                      child: Text('Cancel'),
+                                      onPressed: () => Navigator.pop(dialogContext),
+                                    ),
+                                    TextButton(
+                                      child: Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.pop(dialogContext);
+                                        BlocProvider.of<StoryReactionBloc>(parentContext).add(
+                                          CommentDelete(
+                                            storyId: widget.story.id,
+                                            commentId: comment["_id"],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               );
@@ -470,66 +802,87 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
     );
   }
 
-// Remove or hide the bottom input field when editing
   Widget _buildCommentInput() {
     if (_editingCommentId != null) return SizedBox.shrink();
 
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(24),
-      borderSide: BorderSide(
-        color: Theme.of(context).dividerColor,
-      ),
-    );
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, -3),
           ),
-        ),
+        ],
       ),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _commentController,
-              decoration: InputDecoration(
-                hintText: 'Add comment...',
-                hintStyle: TextStyle(color: Colors.grey[600]),
-                border: border,
-                enabledBorder: border,
-                focusedBorder: border.copyWith(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor,
-                    width: 2,
-                  ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.grey[200],
+                border: Border.all(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                filled: true,
-                fillColor: Theme.of(context).scaffoldBackgroundColor,
               ),
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _submitComment(),
+              child: Row(
+                children: [
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      decoration: InputDecoration(
+                        hintText: 'Add a comment...',
+                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _submitComment(),
+                    ),
+                  ),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: _submitComment,
+                      child: Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).primaryColor,
+                              Theme.of(context).primaryColor.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.send_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(
-              Icons.send_rounded,
-              color: Theme.of(context).primaryColor,
-            ),
-            onPressed: _submitComment,
           ),
         ],
       ),
     );
   }
+
   void _submitComment() {
     if (_commentController.text.isEmpty) return;
 
@@ -556,9 +909,6 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
       _commentController.clear();
     }
   }
-
-
-
 
   void _navigateToEdit() {
     Navigator.push(

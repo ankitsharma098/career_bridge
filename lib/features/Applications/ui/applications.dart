@@ -9,11 +9,14 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/utils/customErrorUtils.dart';
 import '../../../data/models/application/application_model.dart';
+import '../../See profile/bloc/see_profile_bloc.dart';
+import '../../See profile/ui/see_profile.dart';
 import '../bloc/applications_bloc.dart';
 
 class ApplicationsScreen extends StatefulWidget {
   final String jobId;
-  const ApplicationsScreen({super.key, required this.jobId});
+  final String employerId;
+  const ApplicationsScreen({super.key, required this.jobId, required this.employerId});
 
   @override
   State<ApplicationsScreen> createState() => _ApplicationsScreenState();
@@ -252,6 +255,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                       application: application,
                       screenSize: screenSize,
                       jobId: widget.jobId,
+                        employerId: widget.employerId
                     );
                   },
                 );
@@ -295,12 +299,13 @@ class ApplicationCard extends StatelessWidget {
   final Application application;
   final String jobId;
   final Size screenSize;
+  final  String employerId;
 
   const ApplicationCard({
     super.key,
     required this.application,
     required this.screenSize,
-    required this.jobId,
+    required this.jobId, required this.employerId,
   });
 
   Future<void> _openResume(BuildContext context, String url) async {
@@ -389,25 +394,43 @@ class ApplicationCard extends StatelessWidget {
             ),
             SizedBox(width: screenSize.width * 0.03),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    application.candidateInfo.fullName,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+              child: GestureDetector(
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                        create: (context) => SeeProfileBloc(),
+                        child: UserProfileScreen(
+                          userId: application.candidateInfo.id,
+                          userType: "candidate",
+                          currentUserId: employerId,
+                          currentUserType: 'employer', // Adjust based on your app logic
+                        ),
+                      ),
                     ),
-                  ),
-                  Text(
-                    application.candidateInfo.email,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontSize: screenSize.width * 0.035,
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      application.candidateInfo.fullName,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      application.candidateInfo.email,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                        fontSize: screenSize.width * 0.035,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             _buildStatusChip(context),

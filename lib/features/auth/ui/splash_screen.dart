@@ -8,11 +8,8 @@ import '../bloc/auth_bloc.dart';
 import 'login.dart';
 
 class AuthenticationScreen extends StatefulWidget {
-
-
   const AuthenticationScreen({
     Key? key,
-
   }) : super(key: key);
 
   @override
@@ -20,7 +17,8 @@ class AuthenticationScreen extends StatefulWidget {
 }
 
 class _AuthenticationScreenState extends State<AuthenticationScreen>
-    with TickerProviderStateMixin {  //  TickerProviderStateMixin for animations
+    with TickerProviderStateMixin {
+  //  TickerProviderStateMixin for animations
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -38,7 +36,8 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
-    _slideAnimation = Tween<Offset>(begin: Offset(0, 0.2), end: Offset.zero).animate(
+    _slideAnimation =
+        Tween<Offset>(begin: Offset(0, 0.2), end: Offset.zero).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
@@ -53,7 +52,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;  // Get screen width
+    final screenWidth = MediaQuery.of(context).size.width; // Get screen width
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       body: SafeArea(
@@ -76,9 +75,8 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
                     size: 30,
                     color: Theme.of(context).primaryColor,
                   ),
-                  onPressed:(){
-
-                    themeProvider.toggleTheme;
+                  onPressed: () {
+                    themeProvider.toggleTheme();
                   },
                 ),
               ),
@@ -127,20 +125,24 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
                         // App Title
                         Text(
                           'Inclusive Jobs',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                            letterSpacing: 1.2,  // Slight letter spacing
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                                letterSpacing: 1.2, // Slight letter spacing
+                              ),
                         ),
                         const SizedBox(height: 10),
 
                         // Subtitle
                         Text(
                           'Empowering Professionals, Transforming Workplaces',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.grey[600],  // Muted color
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Colors.grey[600], // Muted color
+                                  ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 40),
@@ -148,15 +150,18 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
                         // User Type Selection Title
                         Text(
                           'Choose Your Role',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).primaryColor,  // A darker primary color
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context)
+                                        .primaryColor, // A darker primary color
+                                  ),
                         ),
                         const SizedBox(height: 20),
 
                         // User Type Buttons (Refactored for better UI)
-                        Wrap( // Use Wrap for responsiveness
+                        Wrap(
+                          // Use Wrap for responsiveness
                           alignment: WrapAlignment.center,
                           spacing: 16,
                           runSpacing: 16,
@@ -178,7 +183,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
 
                         // Theme Toggle
                         const SizedBox(height: 30),
-
                       ],
                     ),
                   ),
@@ -202,7 +206,8 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => BlocProvider(
-              create: (context) => LoginBloc(), // Make sure you are using AuthBloc here not LoginBloc
+              create: (context) =>
+                  LoginBloc(), // Make sure you are using AuthBloc here not LoginBloc
               child: LoginScreen(
                 userType: userType,
               ),
@@ -212,8 +217,10 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
       },
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        backgroundColor: Theme.of(context).colorScheme.secondary,  // Use secondary color
-        foregroundColor: Theme.of(context).colorScheme.onSecondary, // Text color
+        backgroundColor:
+            Theme.of(context).colorScheme.secondary, // Use secondary color
+        foregroundColor:
+            Theme.of(context).colorScheme.onSecondary, // Text color
         textStyle: const TextStyle(fontSize: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

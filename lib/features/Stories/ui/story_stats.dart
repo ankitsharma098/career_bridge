@@ -9,17 +9,20 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/utils/image_viewer.dart';
 import '../../Jobs/ui/shimmer/Job_stats_shimmer.dart';
+import '../../See profile/bloc/see_profile_bloc.dart';
+import '../../See profile/ui/see_profile.dart';
 import '../create_story_bloc/create_story_bloc.dart';
+import '../reaction_bloc/story_reaction_bloc.dart';
 import 'edit_story.dart';
 import 'my_stories.dart';
+import 'reaction_screen.dart';
 import 'shimmers/mystory_shimmer.dart';
 
-
 class StoryStatsTab extends StatefulWidget {
-
-  final String employerId;
+  final String currentUserId;
   const StoryStatsTab({
-    super.key, required this.employerId,
+    super.key,
+    required this.currentUserId,
   });
 
   @override
@@ -27,46 +30,50 @@ class StoryStatsTab extends StatefulWidget {
 }
 
 class _StoryStatsTabState extends State<StoryStatsTab> {
+  final Map<String, bool> _expandedStories = {};
 
   @override
   void initState() {
-
     BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryStats());
     super.initState();
   }
+
   String formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) {
       return 'Not provided';
     }
     try {
       final date = DateTime.parse(dateString);
-      return DateFormat('dd/MM/yyyy').format(date);
+      return DateFormat('MMM dd, yyyy • h:mm a').format(date);
     } catch (e) {
       return 'Invalid date';
     }
   }
+
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          title: Text("My Stories"),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new),
-            onPressed: () => Navigator.pop(context),
-          ),),
+      appBar: AppBar(
+        elevation: 0,
+        title: const Text("My Stories"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: BlocBuilder<StoryStatsBloc, StoryStatsState>(
-
         builder: (context, state) {
           if (state is StoryStatsLoading) {
-            return  StoryStatsShimmer();
+            return StoryStatsShimmer();
           }
-          if(state is StoryStatsError){
-            return CustomErrorScreen(message: state.error.toString(),onRetry: (){
+          if (state is StoryStatsError) {
+            return CustomErrorScreen(
+              message: state.error.toString(),
+              onRetry: () {
                 BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryStats());
-
-            },);
+              },
+            );
           }
 
           if (state is StoryStatsLoaded) {
@@ -84,10 +91,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             final totalViews = state.stats['totalViews'] ?? 0;
             final totalLikes = state.stats['totalLikes'] ?? 0;
 
-
-
             return RefreshIndicator(
-              onRefresh: ()async{
+              onRefresh: () async {
                 BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryStats());
               },
               child: SingleChildScrollView(
@@ -108,7 +113,7 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                       },
                     ),
                     SizedBox(height: screenSize.height * 0.03),
-                    if (mostViewedStory != null  || mostLikedStory != null || latestStory != null)
+                    if (mostViewedStory != null || mostLikedStory != null || latestStory != null)
                       _buildTopStories(
                         context,
                         screenSize,
@@ -151,34 +156,34 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
               ],
             ),
           );
-        }
+        },
       ),
-
     );
   }
+
   Widget _buildNoStoriesMessage(BuildContext context, Size screenSize) {
     return Card(
       margin: EdgeInsets.all(screenSize.width * 0.03),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.auto_stories_outlined,
               size: 48,
               color: Colors.grey,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'No Stories Yet',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Create your first story to see stats here',
               textAlign: TextAlign.center,
@@ -191,6 +196,7 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
       ),
     );
   }
+
   Widget _buildHeader(BuildContext context, Size screenSize) {
     return Card(
       margin: EdgeInsets.zero,
@@ -206,7 +212,7 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            Icon(Icons.auto_stories),
+            const Icon(Icons.auto_stories),
           ],
         ),
       ),
@@ -227,11 +233,16 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
       childAspectRatio: 1.5,
       children: [
         InkWell(
-          onTap: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
-              create: (context) => StoryStatsBloc(),
-              child: MyStoriesScreen(employerId: widget.employerId,),
-            ),));
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => StoryStatsBloc(),
+                  child: MyStoriesScreen(currentUserId: widget.currentUserId),
+                ),
+              ),
+            );
           },
           child: _statsCard(
             'Total Stories',
@@ -242,11 +253,16 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
           ),
         ),
         InkWell(
-          onTap: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => BlocProvider(
-              create: (context) => StoryStatsBloc(),
-              child: SavedStoriesScreen(employerId: widget.employerId,),
-            ),));
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => StoryStatsBloc(),
+                  child: SavedStoriesScreen(currentUserId: widget.currentUserId),
+                ),
+              ),
+            );
           },
           child: _statsCard(
             'Saved Stories',
@@ -291,77 +307,591 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
           ),
         ),
         SizedBox(height: screenSize.height * 0.02),
-          mostViewed != null ? _buildStoryCard('Most Viewed Story', mostViewed, Icons.visibility, Colors.blue):SizedBox(height: screenSize.height * 0),
-        SizedBox(height: screenSize.height * 0.02),
-        mostLiked != null ? _buildStoryCard('Most Liked Story', mostLiked, Icons.favorite, Colors.red):SizedBox(height: screenSize.height * 0),
-        SizedBox(height: screenSize.height * 0.02),
-        latest != null ?_buildStoryCard('Latest Story', latest, Icons.access_time, Colors.green):SizedBox(height: screenSize.height * 0.02),
+        if (mostViewed != null)
+          _buildStoryCard('Most Viewed Story', mostViewed, Icons.visibility, Colors.blue),
+        SizedBox(height: mostViewed != null ? screenSize.height * 0.02 : 0),
+        if (mostLiked != null)
+          _buildStoryCard('Most Liked Story', mostLiked, Icons.favorite, Colors.red),
+        SizedBox(height: mostLiked != null ? screenSize.height * 0.02 : 0),
+        if (latest != null)
+          _buildStoryCard('Latest Story', latest, Icons.access_time, Colors.green),
+        SizedBox(height: latest != null ? screenSize.height * 0.02 : 0),
       ],
     );
   }
 
   Widget _buildStoryCard(String title, StoryModel story, IconData icon, Color color) {
     final screenSize = MediaQuery.of(context).size;
-    final date = formatDate(story.createdAt);
-    return Card(
-      margin: EdgeInsets.all(screenSize.width * 0.03),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // User Info
-          ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(story.hostDetails.profilePic),
-            ),
-            title: Text(story.hostDetails.name),
-            subtitle: Text(
-              date,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            trailing: _buildEditButton(story, context),
+    final isExpanded = _expandedStories[story.id] ?? false;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
-          if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
-          Padding(
-            padding: EdgeInsets.all(16),
+        ],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).cardColor,
+            Theme.of(context).cardColor.withOpacity(0.95),
+          ],
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStoryHeader(story, screenSize, title, icon, color),
+            if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
+            _buildStoryContent(story, isExpanded, screenSize),
+            _buildTags(story, screenSize),
+            const Divider(height: 1, thickness: 0.5),
+            _buildReactionsCountBar(story),
+            const Divider(height: 1, thickness: 0.5),
+            _buildBottomBar(story),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStoryHeader(StoryModel story, Size screenSize, String title, IconData icon, Color color) {
+    final date = formatDate(story.createdAt);
+    final isOwner = story.hostDetails.id == widget.currentUserId;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.5),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) => SeeProfileBloc(),
+                    child: UserProfileScreen(
+                      userId: story.hostDetails.id,
+                      userType: story.userType,
+                      currentUserId: widget.currentUserId,
+                      currentUserType: 'employer', // Adjust based on your app logic
+                    ),
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).primaryColor,
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: screenSize.width * 0.055,
+                backgroundImage: NetworkImage(story.hostDetails.profilePic),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  story.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: screenSize.width * 0.045,
-                  ),
+                Row(
+                  children: [
+                    Icon(icon, size: 16, color: color),
+                    const SizedBox(width: 4),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: screenSize.width * 0.04,
+                        color: color,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 8),
                 Text(
-                  story.content,
-                  // maxLines: 6,
-                  // overflow: TextOverflow.ellipsis,
+                  date,
                   style: TextStyle(
-                    fontSize: screenSize.width * 0.035,
-                    color: Colors.grey[700],
-                    height: 1.5,
+                    color: Colors.grey[600],
+                    fontSize: screenSize.width * 0.03,
                   ),
                 ),
               ],
             ),
           ),
-          // Content Preview
-          _buildTags(story, screenSize),
-          Divider(height: 1),
-          _buildInteractionBar(story, screenSize),
+          if (isOwner)
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.edit_outlined,
+                  color: Theme.of(context).primaryColor,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                        create: (context) => StoryCreationBloc(),
+                        child: EditStoryScreen(
+                          onStoryEdited: (StoryModel story) {},
+                          story: story,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStoryContent(StoryModel story, bool isExpanded, Size screenSize) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            story.title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: screenSize.width * 0.048,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                story.content,
+                maxLines: isExpanded ? null : 3,
+                overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: screenSize.width * 0.037,
+                  color: Colors.grey[700],
+                  height: 1.5,
+                  letterSpacing: 0.1,
+                ),
+              ),
+              if (story.content.length > 150)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _expandedStories[story.id] = !isExpanded;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'View less' : 'View more',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: screenSize.width * 0.035,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              size: screenSize.width * 0.04,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
+    return Container(
+      child: Stack(
+        children: [
+          ClipRRect(
+            child: story.mediaUrls.length > 1
+                ? PageView.builder(
+              itemCount: story.mediaUrls.length,
+              itemBuilder: (context, index) => _buildMediaItem(
+                story.mediaUrls[index].url,
+                story.mediaUrls.map((m) => m.url).toList(),
+                index,
+                screenSize,
+              ),
+            )
+                : _buildMediaItem(
+              story.mediaUrls.first.url,
+              story.mediaUrls.map((m) => m.url).toList(),
+              0,
+              screenSize,
+            ),
+          ),
+          if (story.mediaUrls.length > 1)
+            Positioned(
+              bottom: 10,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  story.mediaUrls.length,
+                      (index) => Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaItem(String url, List<String> allUrls, int index, Size screenSize) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenImageViewer(
+            imageUrls: allUrls,
+            initialIndex: index,
+          ),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+        ),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).primaryColor,
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: Colors.grey[300],
+            child: Icon(Icons.broken_image, size: 50, color: Colors.grey[500]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTags(StoryModel story, Size screenSize) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: story.tags.map((tag) => Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Chip(
+              label: Text('#$tag'),
+              labelStyle: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w500,
+                fontSize: screenSize.width * 0.033,
+              ),
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                  width: 0.5,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+            ),
+          )).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReactionsCountBar(StoryModel story) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                child: StoryReactionsScreen(
+                  story: story,
+                  employerId: widget.currentUserId,
+                ),
+              ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      story.isLiked ? Icons.favorite : Icons.thumb_up,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${story.likesCount}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    ' likes',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.remove_red_eye_outlined,
+                      size: 16,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${story.views}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 16,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${story.commentsCount}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    ' comments',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(StoryModel story) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.black12
+            : Colors.grey[50],
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildInteractionButton(
+            icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
+            label: story.isLiked ? 'Liked' : 'Like',
+            color: story.isLiked ? Theme.of(context).primaryColor : null,
+            onTap: () {
+              context.read<StoryStatsBloc>().add(ToggleStoryLikeEvent(story.id));
+            },
+          ),
+          Container(
+            height: 24,
+            width: 1,
+            color: Theme.of(context).dividerColor,
+          ),
+          _buildInteractionButton(
+            icon: Icons.comment_outlined,
+            label: 'Comment',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                    child: StoryReactionsScreen(
+                      story: story,
+                      employerId: widget.currentUserId,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          Container(
+            height: 24,
+            width: 1,
+            color: Theme.of(context).dividerColor,
+          ),
+          _buildInteractionButton(
+            icon: story.isSaved ? Icons.bookmark : Icons.bookmark_border,
+            label: story.isSaved ? 'Saved' : 'Save',
+            color: story.isSaved ? Theme.of(context).primaryColor : null,
+            onTap: () {
+              context.read<StoryStatsBloc>().add(ToggleSavedStoryEvent(story.id));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInteractionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: color ?? Theme.of(context).iconTheme.color,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _statsCard(String title, String count, IconData icon, Color color, Size screenSize) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
@@ -390,165 +920,6 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             ),
           ),
         ],
-      ),
-    );
-  }
-  Widget _buildEditButton(StoryModel story, BuildContext context) {
-    return IconButton(
-      icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BlocProvider(
-              create: (context) => StoryCreationBloc(),
-              child: EditStoryScreen(
-                onStoryEdited: (StoryModel story) {
-                  // final state = context.read<StoryBloc>().state;
-                  // if (state is StoryLoadedState) {
-                  //   setState(() {
-                  //     state.stories.insert(0, story);
-                  //   });
-                  // }
-                }, story: story,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-  
-  Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
-    return Container(
-      height: screenSize.height * 0.25,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: story.mediaUrls.length > 1
-            ? PageView.builder(
-          itemCount: story.mediaUrls.length,
-          itemBuilder: (context, index) => _buildMediaItem(
-            story.mediaUrls[index].url,
-            story.mediaUrls.map((m) => m.url).toList(),
-            index,
-            screenSize,
-          ),
-        )
-            : _buildMediaItem(
-          story.mediaUrls.first.url,
-          story.mediaUrls.map((m) => m.url).toList(),
-          0,
-          screenSize,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMediaItem(String url, List<String> allUrls, int index, Size screenSize) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FullScreenImageViewer(
-            imageUrls: allUrls,
-            initialIndex: index,
-          ),
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-        ),
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTags(StoryModel story, Size screenSize) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: story.tags.map((tag) => Padding(
-          padding: EdgeInsets.only(right: 8),
-          child: Chip(
-            label: Text('#$tag'),
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-            labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-          ),
-        )).toList(),
-      ),
-    );
-  }
-
-  Widget _buildInteractionBar(StoryModel story, Size screenSize) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildInteractionButton(
-            icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
-            count: story.likesCount,
-            color: story.isLiked ? Colors.red : null,
-            onTap: () {},
-          ),
-          _buildInteractionButton(
-            icon: Icons.comment_outlined,
-            count: story.commentsCount,
-            onTap: () {},
-          ),
-          _buildInteractionButton(
-            icon: Icons.remove_red_eye_outlined,
-            count: story.views,
-          ),
-          _buildInteractionButton(
-            icon: Icons.share_outlined,
-            count: story.sharesCount,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInteractionButton({
-    required IconData icon,
-    required int count,
-    Color? color,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: color ?? Colors.grey[600]),
-            SizedBox(width: 4),
-            Text(
-              '$count',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

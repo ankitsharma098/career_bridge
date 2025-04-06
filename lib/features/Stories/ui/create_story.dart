@@ -12,8 +12,9 @@ import '../../../data/models/story/story_model.dart';
 import '../create_story_bloc/create_story_bloc.dart';
 
 class CreateStoryScreen extends StatefulWidget {
-  final Function(StoryModel) onStoryCreated;
-  const CreateStoryScreen({super.key ,required this.onStoryCreated});
+  const CreateStoryScreen({
+    super.key,
+  });
 
   @override
   State<CreateStoryScreen> createState() => _CreateStoryScreenState();
@@ -39,17 +40,21 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     return BlocConsumer<StoryCreationBloc, StoryCreationState>(
       listener: (context, state) {
         if (state is StoryCreationSuccess) {
-          widget.onStoryCreated(state.story);
-          SnackBarUtils.showGreenSnackBar("Story Created Successfully", context);
-          Navigator.pop(context);
-        }
-        else if (state is StoryCreationError) {
+          //widget.onStoryCreated(state.story);
+          SnackBarUtils.showGreenSnackBar(
+              "Story Created Successfully", context);
+          Navigator.pop(context, state.story);
+        } else if (state is StoryCreationError) {
           SnackBarUtils.showRedSnackBar("Failed to create a Story", context);
         }
       },
       builder: (context, state) {
-        if(state is StoryCreationLoading){
-          return  Scaffold(body: Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),));
+        if (state is StoryCreationLoading) {
+          return Scaffold(
+              body: Center(
+            child: LoadingAnimationWidget.hexagonDots(
+                color: AppColors.lightPrimary, size: 20),
+          ));
         }
         return GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -61,14 +66,15 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            body: _buildForm(context, state,screenSize),
+            body: _buildForm(context, state, screenSize),
           ),
         );
       },
     );
   }
 
-  Widget _buildForm(BuildContext context, StoryCreationState state, Size screenSize) {
+  Widget _buildForm(
+      BuildContext context, StoryCreationState state, Size screenSize) {
     final theme = Theme.of(context);
 
     return Container(
@@ -90,7 +96,8 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionHeader(context, screenSize, 'Story Title', Icons.title),
+              _buildSectionHeader(
+                  context, screenSize, 'Story Title', Icons.title),
               const SizedBox(height: 10),
               _buildEnhancedTextField(
                 controller: _titleController,
@@ -99,7 +106,8 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               ),
 
               const SizedBox(height: 20),
-              _buildSectionHeader(context, screenSize, 'Story Content', Icons.description),
+              _buildSectionHeader(
+                  context, screenSize, 'Story Content', Icons.description),
               const SizedBox(height: 10),
               _buildEnhancedTextField(
                 controller: _contentController,
@@ -116,12 +124,14 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               const SizedBox(height: 20),
 
               // Category Dropdown
-              _buildSectionHeader(context, screenSize, 'Story Category', Icons.category),
+              _buildSectionHeader(
+                  context, screenSize, 'Story Category', Icons.category),
               const SizedBox(height: 10),
               _buildEnhancedDropdown(
                 value: _selectedCategory,
                 items: _categories,
-                onChanged: (value) => setState(() => _selectedCategory = value!),
+                onChanged: (value) =>
+                    setState(() => _selectedCategory = value!),
               ),
 
               const SizedBox(height: 20),
@@ -140,7 +150,8 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, Size screenSize, String title, IconData icon) {
+  Widget _buildSectionHeader(
+      BuildContext context, Size screenSize, String title, IconData icon) {
     final theme = Theme.of(context);
 
     return Row(
@@ -162,7 +173,8 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     );
   }
 
-  Widget _buildMediaUploadSection(BuildContext context, StoryCreationState state, Size screenSize) {
+  Widget _buildMediaUploadSection(
+      BuildContext context, StoryCreationState state, Size screenSize) {
     final theme = Theme.of(context);
 
     return Column(
@@ -216,53 +228,54 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       ],
     );
   }
+
   Widget _buildSelectedImagesGrid(ThemeData theme) {
     return _selectedImages.isEmpty
         ? const SizedBox.shrink()
         : GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-          ),
-          itemCount: _selectedImages.length,
-          itemBuilder: (context, index) {
-            return Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: FileImage(File(_selectedImages[index].path)),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () => _removeImage(index),
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.error.withOpacity(0.7),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        color: theme.colorScheme.onError,
-                        size: 20,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: _selectedImages.length,
+            itemBuilder: (context, index) {
+              return Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: FileImage(File(_selectedImages[index].path)),
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-        );
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => _removeImage(index),
+                      child: Container(
+                        margin: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error.withOpacity(0.7),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          color: theme.colorScheme.onError,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
   }
 
   Future<void> _pickMultipleImages() async {
@@ -271,9 +284,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
 
     setState(() {
       // Limit to 6 images or adjust as needed
-      _selectedImages.addAll(
-          images.take(6 - _selectedImages.length)
-      );
+      _selectedImages.addAll(images.take(6 - _selectedImages.length));
     });
   }
 
@@ -282,7 +293,6 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       _selectedImages.removeAt(index);
     });
   }
-
 
   Widget _buildTagSection(Size screenSize) {
     return Column(
@@ -294,14 +304,12 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           '',
           'Add Tags',
           selectedTags,
-              (value) => setState(() => selectedTags.add(value.toString())),
+          (value) => setState(() => selectedTags.add(value.toString())),
           screenSize,
         ),
       ],
     );
   }
-
-
 
   Widget _buildSubmitButton(Size screenSize, StoryCreationState state) {
     return Padding(
@@ -310,26 +318,26 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         onPressed: state is StoryCreationLoading
             ? null
             : () {
+                if (_formKey.currentState!.validate()) {
+                  Map<String, dynamic> story = {
+                    'title': _titleController.text,
+                    "content": _contentController.text,
+                    'category': _selectedCategory,
+                    "tags": jsonEncode(selectedTags),
+                    'images':
+                        _selectedImages.map((images) => images.path).toList(),
+                  };
+                  print("Story $story");
 
-          if (_formKey.currentState!.validate()) {
-
-            Map<String,dynamic> story ={
-              'title':_titleController.text,
-              "content":_contentController.text,
-              'category':_selectedCategory,
-              "tags":jsonEncode(selectedTags),
-              'images':_selectedImages.map((images)=>images.path).toList(),
-            };
-            print("Story $story");
-
-            BlocProvider.of<StoryCreationBloc>(context).add(
-              SubmitStoryEvent(
-                  story: story, isEditing: false, storyId:'',
-
-              ),
-            );
-          }
-        },
+                  BlocProvider.of<StoryCreationBloc>(context).add(
+                    SubmitStoryEvent(
+                      story: story,
+                      isEditing: false,
+                      storyId: '',
+                    ),
+                  );
+                }
+              },
         style: ElevatedButton.styleFrom(
           minimumSize: Size(double.infinity, screenSize.height * 0.06),
           shape: RoundedRectangleBorder(
@@ -347,8 +355,8 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     );
   }
 
-
-  Widget _buildSectionTitle(BuildContext context, Size screenSize, String title, IconData icon) {
+  Widget _buildSectionTitle(
+      BuildContext context, Size screenSize, String title, IconData icon) {
     return Row(
       children: [
         Icon(icon, size: screenSize.width * 0.06),
@@ -356,9 +364,9 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: screenSize.width * 0.045,
-          ),
+                fontWeight: FontWeight.bold,
+                fontSize: screenSize.width * 0.045,
+              ),
         ),
       ],
     );
@@ -388,7 +396,9 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         style: theme.textTheme.bodyMedium,
         decoration: InputDecoration(
           hintText: hint,
-          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: theme.primaryColor) : null,
+          prefixIcon: prefixIcon != null
+              ? Icon(prefixIcon, color: theme.primaryColor)
+              : null,
           filled: true,
           fillColor: theme.cardColor,
           border: OutlineInputBorder(
@@ -460,24 +470,28 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   }
 
   Widget _buildChipInputSection(
-      String label,
-      String hint,
-      List<String> selectedItems,
-      Function(String) onAdd,
-      Size screenSize,
-      ) {
+    String label,
+    String hint,
+    List<String> selectedItems,
+    Function(String) onAdd,
+    Size screenSize,
+  ) {
     final TextEditingController controller = TextEditingController();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        label.isNotEmpty ?Text(
-          label,
-          style: TextStyle(
-            fontSize: screenSize.width * 0.04,
-            fontWeight: FontWeight.bold,
-          ),
-        ):SizedBox(height: 0,),
+        label.isNotEmpty
+            ? Text(
+                label,
+                style: TextStyle(
+                  fontSize: screenSize.width * 0.04,
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            : SizedBox(
+                height: 0,
+              ),
         SizedBox(height: screenSize.height * 0.01),
         Row(
           children: [
@@ -527,9 +541,4 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       ],
     );
   }
-
-
-
 }
-
-

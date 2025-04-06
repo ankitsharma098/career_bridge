@@ -101,7 +101,7 @@ class HiveUtils {
       return {};
     }
   }
-
+  
   static Future<void> updateEmployerData(Map<String, dynamic> updatedUser) async {
     try{
 

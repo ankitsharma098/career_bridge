@@ -176,7 +176,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           BlocProvider(
             create: (context) => StoryBloc(),
             child: StoriesScreen(currentUserId: employerData!.id, currentUserType: 'employer',),
-          )
+          ),
+          Center(child: Text("Working"),)
         ],
       ),
 
@@ -352,7 +353,7 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => StoryStatsBloc(),
-                      child: StoryStatsTab(employerId: employerData!.id,),
+                      child: StoryStatsTab(currentUserId: employerData!.id,),
                     ), // You'll need to create this screen
                   ),
                 );

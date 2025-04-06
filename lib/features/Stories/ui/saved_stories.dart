@@ -9,15 +9,16 @@ import '../../../core/constants/colors.dart';
 import '../../../core/utils/image_viewer.dart';
 import '../../../core/utils/snackBarUtils.dart';
 import '../../../data/models/story/story_model.dart';
+import '../../See profile/bloc/see_profile_bloc.dart';
+import '../../See profile/ui/see_profile.dart';
 import '../create_story_bloc/create_story_bloc.dart';
 import '../reaction_bloc/story_reaction_bloc.dart';
 import '../stats_bloc/story_stats_bloc.dart';
 import 'edit_story.dart';
 
 class SavedStoriesScreen extends StatefulWidget {
-  final String employerId;
-  const SavedStoriesScreen({super.key, required this.employerId});
-
+  final String currentUserId;
+  const SavedStoriesScreen({super.key, required this.currentUserId});
 
   @override
   State<SavedStoriesScreen> createState() => _SavedStoriesScreenState();
@@ -25,6 +26,7 @@ class SavedStoriesScreen extends StatefulWidget {
 
 class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
   final ScrollController scrollController = ScrollController();
+  final Map<String, bool> _expandedStories = {};
 
   @override
   void initState() {
@@ -59,11 +61,12 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: Text("Saved Stories"),
+        title: const Text("Saved Stories"),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
-        ),),
+        ),
+      ),
       body: Padding(
         padding: EdgeInsets.symmetric(
           vertical: screenSize.width * 0.04,
@@ -104,9 +107,8 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
                   ),
                   SizedBox(height: screenSize.height * 0.02),
                   Text(
-                    'No Stories found',
-                    style: Theme
-                        .of(context)
+                    'No Saved Stories found',
+                    style: Theme.of(context)
                         .textTheme
                         .titleLarge
                         ?.copyWith(
@@ -116,9 +118,8 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
                   ),
                   SizedBox(height: screenSize.height * 0.01),
                   Text(
-                    'Click the + button above to post your first Story',
-                    style: Theme
-                        .of(context)
+                    'Save some stories to see them here',
+                    style: Theme.of(context)
                         .textTheme
                         .bodyMedium
                         ?.copyWith(
@@ -141,19 +142,17 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
                   if (!state.hasReachedMax && state.stories.isNotEmpty) {
                     return Center(
                       child: Padding(
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         child: LoadingAnimationWidget.progressiveDots(
-                            color: Theme
-                                .of(context)
-                                .brightness == Brightness.dark
-                                ? AppColors.darkPrimary
-                                : AppColors.lightPrimary,
-                            size: 20
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          size: 20,
                         ),
                       ),
                     );
                   } else {
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   }
                 }
                 final story = state.stories[index];
@@ -175,8 +174,7 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
               SizedBox(height: screenSize.height * 0.02),
               Text(
                 'Something went wrong',
-                style: Theme
-                    .of(context)
+                style: Theme.of(context)
                     .textTheme
                     .titleLarge
                     ?.copyWith(
@@ -187,8 +185,7 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
               SizedBox(height: screenSize.height * 0.01),
               Text(
                 'Please try again later',
-                style: Theme
-                    .of(context)
+                style: Theme.of(context)
                     .textTheme
                     .bodyMedium
                     ?.copyWith(
@@ -204,116 +201,275 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
 
   Widget _buildStoryCard(StoryModel story, Size screenSize, BuildContext context) {
     final date = DateTime.parse(story.createdAt);
-    bool isOwner= story.hostDetails.id == widget.employerId ? true : false;
+    final isOwner = story.hostDetails.id == widget.currentUserId;
+    final isExpanded = _expandedStories[story.id] ?? false;
 
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: CircleAvatar(
-              radius: screenSize.width * 0.05,
-              backgroundImage: NetworkImage(story.hostDetails.profilePic),
-            ),
-            title: Text(
-              story.hostDetails.name,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              DateFormat('MMM dd, yyyy').format(date),
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            trailing: isOwner ? _buildEditButton(story, context) : null,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
-          if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
-          Padding(
-            padding: EdgeInsets.all(16),
+        ],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).cardColor,
+            Theme.of(context).cardColor.withOpacity(0.95),
+          ],
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStoryHeader(story, isOwner, screenSize),
+            if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
+            _buildStoryContent(story, isExpanded, screenSize),
+            _buildTags(story, screenSize),
+            const Divider(height: 1, thickness: 0.5),
+            _buildReactionsCountBar(story),
+            const Divider(height: 1, thickness: 0.5),
+            _buildBottomBar(story),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStoryHeader(StoryModel story, bool isOwner, Size screenSize) {
+    final date = DateTime.parse(story.createdAt);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.5),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) => SeeProfileBloc(),
+                    child: UserProfileScreen(
+                      userId: story.hostDetails.id,
+                      userType: story.userType,
+                      currentUserId: widget.currentUserId,
+                      currentUserType: 'employer', // Adjust based on your app logic
+                    ),
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).primaryColor,
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: screenSize.width * 0.055,
+                backgroundImage: NetworkImage(story.hostDetails.profilePic),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  story.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  story.hostDetails.name,
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: screenSize.width * 0.045,
+                    fontSize: screenSize.width * 0.04,
                   ),
                 ),
-                SizedBox(height: 8),
                 Text(
-                  story.content,
-                  // maxLines: 6,
-                  // overflow: TextOverflow.ellipsis,
+                  DateFormat('MMM dd, yyyy • h:mm a').format(date),
                   style: TextStyle(
-                    fontSize: screenSize.width * 0.035,
-                    color: Colors.grey[700],
-                    height: 1.5,
+                    color: Colors.grey[600],
+                    fontSize: screenSize.width * 0.03,
                   ),
                 ),
               ],
             ),
           ),
-          _buildTags(story, screenSize),
-          Divider(height: 1),
-          _buildReactionsCountBar(story),
-          const Divider(height: 1),
-          _buildBottomBar(story),
+          if (isOwner)
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.edit_outlined,
+                  color: Theme.of(context).primaryColor,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                        create: (context) => StoryCreationBloc(),
+                        child: EditStoryScreen(
+                          onStoryEdited: (StoryModel story) {},
+                          story: story,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildEditButton(StoryModel story, BuildContext context) {
-
-    return IconButton(
-      icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BlocProvider(
-              create: (context) => StoryCreationBloc(),
-              child: EditStoryScreen(
-                onStoryEdited: (StoryModel story) {
-                  // final state = context.read<StoryBloc>().state;
-                  // if (state is StoryLoadedState) {
-                  //   setState(() {
-                  //     state.stories.insert(0, story);
-                  //   });
-                  // }
-                }, story: story,
-              ),
+  Widget _buildStoryContent(StoryModel story, bool isExpanded, Size screenSize) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            story.title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: screenSize.width * 0.048,
+              letterSpacing: 0.3,
             ),
           ),
-        );
-      },
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                story.content,
+                maxLines: isExpanded ? null : 3,
+                overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: screenSize.width * 0.037,
+                  color: Colors.grey[700],
+                  height: 1.5,
+                  letterSpacing: 0.1,
+                ),
+              ),
+              if (story.content.length > 150)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _expandedStories[story.id] = !isExpanded;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'View less' : 'View more',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: screenSize.width * 0.035,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              size: screenSize.width * 0.04,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
     return Container(
-      height: screenSize.height * 0.25,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: story.mediaUrls.length > 1
-            ? PageView.builder(
-          itemCount: story.mediaUrls.length,
-          itemBuilder: (context, index) => _buildMediaItem(
-            story.mediaUrls[index].url,
-            story.mediaUrls.map((m) => m.url).toList(),
-            index,
-            screenSize,
+      child: Stack(
+        children: [
+          ClipRRect(
+            child: story.mediaUrls.length > 1
+                ? PageView.builder(
+              itemCount: story.mediaUrls.length,
+              itemBuilder: (context, index) => _buildMediaItem(
+                story.mediaUrls[index].url,
+                story.mediaUrls.map((m) => m.url).toList(),
+                index,
+                screenSize,
+              ),
+            )
+                : _buildMediaItem(
+              story.mediaUrls.first.url,
+              story.mediaUrls.map((m) => m.url).toList(),
+              0,
+              screenSize,
+            ),
           ),
-        )
-            : _buildMediaItem(
-          story.mediaUrls.first.url,
-          story.mediaUrls.map((m) => m.url).toList(),
-          0,
-          screenSize,
-        ),
+          if (story.mediaUrls.length > 1)
+            Positioned(
+              bottom: 10,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  story.mediaUrls.length,
+                      (index) => Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -331,7 +487,7 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: Colors.grey[300],
         ),
         child: Image.network(
           url,
@@ -340,91 +496,166 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
             if (loadingProgress == null) return child;
             return Center(
               child: CircularProgressIndicator(
+                color: Theme.of(context).primaryColor,
                 value: loadingProgress.expectedTotalBytes != null
                     ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
                     : null,
               ),
             );
           },
-          errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: Colors.grey[300],
+            child: Icon(Icons.broken_image, size: 50, color: Colors.grey[500]),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTags(StoryModel story, Size screenSize) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: story.tags.map((tag) => Padding(
-          padding: EdgeInsets.only(right: 8),
-          child: Chip(
-            label: Text('#$tag'),
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-            labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-          ),
-        )).toList(),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: story.tags.map((tag) => Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Chip(
+              label: Text('#$tag'),
+              labelStyle: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w500,
+                fontSize: screenSize.width * 0.033,
+              ),
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                  width: 0.5,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+            ),
+          )).toList(),
+        ),
       ),
     );
   }
+
   Widget _buildReactionsCountBar(StoryModel story) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BlocProvider(
-              create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
-              child: StoryReactionsScreen(
-                story: story,
-                employerId: widget.employerId,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                child: StoryReactionsScreen(
+                  story: story,
+                  employerId: widget.currentUserId,
+                ),
               ),
             ),
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    story.isLiked ? Icons.favorite : Icons.thumb_up,
-                    size: 12,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text('${story.likesCount} likes'),
-              ],
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Icon(Icons.remove_red_eye_outlined, size: 20,),
-                  SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      story.isLiked ? Icons.favorite : Icons.thumb_up,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Text(
-                    '${story.views}',
+                    '${story.likesCount}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    ' likes',
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                      fontSize: 14,
                     ),
                   ),
                 ],
               ),
-            ),
-            Text('${story.commentsCount} comments'),
-          ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.remove_red_eye_outlined,
+                      size: 16,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${story.views}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 16,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${story.commentsCount}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    ' comments',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -434,21 +665,29 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.black12
+            : Colors.grey[50],
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-
           _buildInteractionButton(
             icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
-            label: 'Like',
+            label: story.isLiked ? 'Liked' : 'Like',
             color: story.isLiked ? Theme.of(context).primaryColor : null,
-            onTap: () => context.read<StoryStatsBloc>().add(
-                ToggleStoryLikeEvent(story.id)  // Create and add the event
-            ),
+            onTap: () {
+              context.read<StoryStatsBloc>().add(ToggleStoryLikeEvent(story.id));
+            },
+          ),
+          Container(
+            height: 24,
+            width: 1,
+            color: Theme.of(context).dividerColor,
           ),
           _buildInteractionButton(
             icon: Icons.comment_outlined,
@@ -461,101 +700,63 @@ class _SavedStoriesScreenState extends State<SavedStoriesScreen> {
                     create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
                     child: StoryReactionsScreen(
                       story: story,
-                      employerId: widget.employerId,
+                      employerId: widget.currentUserId,
                     ),
                   ),
                 ),
               );
             },
           ),
+          Container(
+            height: 24,
+            width: 1,
+            color: Theme.of(context).dividerColor,
+          ),
           _buildInteractionButton(
-            icon: story.isSaved ?Icons.bookmark : Icons.bookmark_border,
+            icon: story.isSaved ? Icons.bookmark : Icons.bookmark_border,
             label: story.isSaved ? 'Saved' : 'Save',
+            color: story.isSaved ? Theme.of(context).primaryColor : null,
             onTap: () {
-              context.read<StoryStatsBloc>().add(
-                  ToggleSavedStoryEvent(story.id)  // Create and add the event
-              );
+              context.read<StoryStatsBloc>().add(ToggleSavedStoryEvent(story.id));
             },
           ),
         ],
       ),
     );
   }
+
   Widget _buildInteractionButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
     Color? color,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 4),
-            Text(label),
-          ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: color ?? Theme.of(context).iconTheme.color,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-  // Widget _buildInteractionBar(StoryModel story, Size screenSize) {
-  //   return Padding(
-  //     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-  //     child: Row(
-  //       mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //       children: [
-  //         _buildInteractionButton(
-  //           icon: story.isLiked ? Icons.favorite : Icons.favorite_border,
-  //           count: story.likesCount,
-  //           color: story.isLiked ? Colors.red : null,
-  //           onTap: () {},
-  //         ),
-  //         _buildInteractionButton(
-  //           icon: Icons.comment_outlined,
-  //           count: story.commentsCount,
-  //           onTap: () {},
-  //         ),
-  //         _buildInteractionButton(
-  //           icon: Icons.remove_red_eye_outlined,
-  //           count: story.views,
-  //         ),
-  //         _buildInteractionButton(
-  //           icon: Icons.share_outlined,
-  //           count: story.sharesCount,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  //
-  // Widget _buildInteractionButton({
-  //   required IconData icon,
-  //   required int count,
-  //   Color? color,
-  //   VoidCallback? onTap,
-  // }) {
-  //   return InkWell(
-  //     onTap: onTap,
-  //     borderRadius: BorderRadius.circular(20),
-  //     child: Container(
-  //       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-  //       child: Row(
-  //         children: [
-  //           Icon(icon, size: 20, color: color ?? Colors.grey[600]),
-  //           SizedBox(width: 4),
-  //           Text(
-  //             '$count',
-  //             style: TextStyle(
-  //               color: Colors.grey[600],
-  //               fontWeight: FontWeight.w500,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 }
