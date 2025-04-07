@@ -230,7 +230,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
             ),
             // Profile content with enhanced styling
             Positioned(
-              top: 60,
+              top: 40,
               bottom: 10,
               left: 0,
               right: 0,

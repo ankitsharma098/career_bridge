@@ -307,14 +307,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BlocProvider(
-                                    create: (context) => RegistrationBloc(),
-                                    child: RegistrationScreen(),
-                                  ),
-                                ));
+                            widget.userType == "employer"
+                                ? Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BlocProvider(
+                                        create: (context) => RegistrationBloc(),
+                                        child: RegistrationScreen(),
+                                      ),
+                                    ))
+                                : null;
                           },
                           child: Text(
                             'Sign Up',

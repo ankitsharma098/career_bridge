@@ -8,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 
 import '../../../core/constants/colors.dart';
@@ -125,11 +126,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
         } else if (state is ProfileDataLoaded) {
           return _buildLoadedState(context, state, screenSize);
         }
-        // } else if (state is ProfileError) {
-        //   return CustomErrorScreen(message: state.error,onRetry: (){
-        //     BlocProvider.of<CandidateProfileBloc>(context).add(FetchProfileData());
-        //   },);
-        // }
+
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -662,7 +659,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
         children: [
           _buildSectionHeader(
               'Education', () => _showAddEducationDialog(context, candidate)),
-          SizedBox(height: screenSize.height * 0.01),
+          SizedBox(height: screenSize.height * 0.015),
           if (candidate.education.isEmpty)
             Text(
               'No education history added yet.',
@@ -674,6 +671,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
           else
             ListView.separated(
               shrinkWrap: true,
+              padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: candidate.education.length,
               separatorBuilder: (context, index) =>
@@ -681,8 +679,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
               itemBuilder: (context, index) {
                 final edu = candidate.education[index];
                 return ListTile(
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
+                  contentPadding: EdgeInsets.symmetric(
+                      horizontal: screenSize.width * 0.02, vertical: 0),
                   title: Text(edu.course),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -729,67 +727,100 @@ class _CandidateProfileState extends State<CandidateProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-              'Work Experience', () => _showAddWorkExperienceDialog(context)),
-          SizedBox(height: screenSize.height * 0.01),
+            'Work Experience',
+            () => _showAddWorkExperienceDialog(context),
+          ),
+          SizedBox(height: screenSize.height * 0.015),
           if (candidate.workExperience.isEmpty)
-            Text(
-              'No work experience added yet.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.lightSecondaryText,
-                  ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.01),
+              child: Text(
+                'No work experience added yet.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.lightSecondaryText,
+                    ),
+              ),
             )
           else
             ListView.separated(
               shrinkWrap: true,
+              padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: candidate.workExperience.length,
-              separatorBuilder: (context, index) =>
-                  Divider(color: AppColors.lightDivider),
+              separatorBuilder: (context, index) => Divider(
+                color: AppColors.lightDivider,
+                height: screenSize.height * 0.02,
+              ),
               itemBuilder: (context, index) {
                 final exp = candidate.workExperience[index];
-                return ListTile(
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: screenSize.width * 0.02),
-                  title: Text(
-                    exp.position,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.lightText,
-                        ),
-                  ),
-                  subtitle: Column(
+                return Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: screenSize.height * 0.005),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(exp.company,
-                          style: Theme.of(context).textTheme.bodyMedium),
-                      Text(
-                        '${formatDate(exp.startDate.toString())} - ${exp.endDate == null ? 'Present' : formatDate(exp.endDate.toString())}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      if (exp.descriptions.isNotEmpty)
-                        Text(
-                          exp.descriptions,
-                          style: Theme.of(context).textTheme.bodySmall,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              exp.position ?? 'Unknown Position',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.lightText,
+                                  ),
+                            ),
+                            SizedBox(height: screenSize.height * 0.005),
+                            Text(
+                              exp.company ?? 'Unknown Company',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            Text(
+                              '${formatDate(exp.startDate?.toString())} - ${exp.endDate == null ? 'Present' : formatDate(exp.endDate.toString())}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.lightSecondaryText,
+                                  ),
+                            ),
+                            if (exp.descriptions?.isNotEmpty ?? false)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    top: screenSize.height * 0.005),
+                                child: Text(
+                                  exp.descriptions!,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(FontAwesomeIcons.edit,
-                            color: AppColors.lightPrimary),
-                        onPressed: () =>
-                            _showEditWorkExperienceDialog(context, exp),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(
-                            context,
-                            'work-experience',
-                            exp.id,
-                            '${exp.position} at ${exp.company}'),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(FontAwesomeIcons.edit,
+                                color: AppColors.lightPrimary),
+                            onPressed: () =>
+                                _showEditWorkExperienceDialog(context, exp),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(
+                              context,
+                              'work-experience',
+                              exp.id ?? '',
+                              '${exp.position} at ${exp.company}',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -808,59 +839,104 @@ class _CandidateProfileState extends State<CandidateProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-              'Internships', () => _showAddInternshipDialog(context)),
+            'Internships',
+            () => _showAddInternshipDialog(context),
+          ),
           SizedBox(height: screenSize.height * 0.015),
           if (candidate.internships.isEmpty)
-            Text(
-              'No internships added yet.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.lightSecondaryText,
-                  ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.01),
+              child: Text(
+                'No internships added yet.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.lightSecondaryText,
+                    ),
+              ),
             )
           else
             ListView.separated(
               shrinkWrap: true,
+              padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: candidate.internships.length,
-              separatorBuilder: (context, index) =>
-                  Divider(color: AppColors.lightDivider),
+              separatorBuilder: (context, index) => Divider(
+                color: AppColors.lightDivider,
+                height: screenSize.height * 0.02,
+              ),
               itemBuilder: (context, index) {
                 final internship = candidate.internships[index];
-                return ListTile(
-                  title: Text(internship.projectName),
-                  subtitle: Column(
+                return Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: screenSize.height * 0.005),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(internship.company),
-                      Text(
-                          '${formatDate(internship.startDate.toString())} - ${internship.endDate == null ? 'Present' : formatDate(internship.endDate.toString())}'),
-                      if (internship.role.isNotEmpty)
-                        Text('Role: ${internship.role}'),
-                      if (internship.descriptions.isNotEmpty)
-                        Text(internship.descriptions),
-                      if (internship.skills.isNotEmpty)
-                        Text('Skills: ${internship.skills.join(', ')}'),
-                      if (internship.projectUrl.isNotEmpty)
-                        Text('URL: ${internship.projectUrl}'),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(FontAwesomeIcons.edit,
-                            color: AppColors.lightPrimary),
-                        onPressed: () =>
-                            _showEditInternshipDialog(context, internship),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              internship.projectName ?? 'Unknown Project',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            SizedBox(height: screenSize.height * 0.005),
+                            Text(
+                              internship.company ?? 'Unknown Company',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            Text(
+                              '${formatDate(internship.startDate?.toString())} - ${internship.endDate == null ? 'Present' : formatDate(internship.endDate.toString())}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.lightSecondaryText,
+                                  ),
+                            ),
+                            if (internship.role?.isNotEmpty ?? false)
+                              Text('Role: ${internship.role}'),
+                            if (internship.descriptions?.isNotEmpty ?? false)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    top: screenSize.height * 0.005),
+                                child: Text(
+                                  internship.descriptions!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            if (internship.skills?.isNotEmpty ?? false)
+                              Text('Skills: ${internship.skills!.join(', ')}'),
+                            if (internship.projectUrl?.isNotEmpty ?? false)
+                              Text('URL: ${internship.projectUrl}'),
+                          ],
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(
-                            context,
-                            'internship',
-                            internship.id,
-                            '${internship.projectName} at ${internship.company}'),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(FontAwesomeIcons.edit,
+                                color: AppColors.lightPrimary),
+                            onPressed: () =>
+                                _showEditInternshipDialog(context, internship),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(
+                              context,
+                              'internship',
+                              internship.id ?? '',
+                              '${internship.projectName} at ${internship.company}',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -878,53 +954,99 @@ class _CandidateProfileState extends State<CandidateProfile> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('Projects', () => _showAddProjectDialog(context)),
-          SizedBox(height: screenSize.height * 0.01),
+          _buildSectionHeader(
+            'Projects',
+            () => _showAddProjectDialog(context),
+          ),
+          SizedBox(height: screenSize.height * 0.015),
           if (candidate.projects.isEmpty)
-            Text(
-              'No projects added yet.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.lightSecondaryText,
-                  ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.01),
+              child: Text(
+                'No projects added yet.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.lightSecondaryText,
+                    ),
+              ),
             )
           else
             ListView.separated(
               shrinkWrap: true,
+              padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: candidate.projects.length,
-              separatorBuilder: (context, index) =>
-                  Divider(color: AppColors.lightDivider),
+              separatorBuilder: (context, index) => Divider(
+                color: AppColors.lightDivider,
+                height: screenSize.height * 0.02,
+              ),
               itemBuilder: (context, index) {
                 final project = candidate.projects[index];
-                return ListTile(
-                  title: Text(project.projectName),
-                  subtitle: Column(
+                return Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: screenSize.height * 0.005),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                          '${formatDate(project.startDate.toString())} - ${project.endDate == null ? 'Present' : formatDate(project.endDate.toString())}'),
-                      if (project.descriptions.isNotEmpty)
-                        Text(project.descriptions),
-                      if (project.skills.isNotEmpty)
-                        Text('Skills: ${project.skills.join(', ')}'),
-                      if (project.projectUrl.isNotEmpty)
-                        Text('URL: ${project.projectUrl}'),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(FontAwesomeIcons.edit,
-                            color: AppColors.lightPrimary),
-                        onPressed: () =>
-                            _showEditProjectDialog(context, project),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              project.projectName ?? 'Unknown Project',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            SizedBox(height: screenSize.height * 0.005),
+                            Text(
+                              '${formatDate(project.startDate?.toString())} - ${project.endDate == null ? 'Present' : formatDate(project.endDate.toString())}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.lightSecondaryText,
+                                  ),
+                            ),
+                            if (project.descriptions?.isNotEmpty ?? false)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    top: screenSize.height * 0.005),
+                                child: Text(
+                                  project.descriptions!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            if (project.skills?.isNotEmpty ?? false)
+                              Text('Skills: ${project.skills!.join(', ')}'),
+                            if (project.projectUrl?.isNotEmpty ?? false)
+                              Text('URL: ${project.projectUrl}'),
+                          ],
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, 'project',
-                            project.id, project.projectName),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(FontAwesomeIcons.edit,
+                                color: AppColors.lightPrimary),
+                            onPressed: () =>
+                                _showEditProjectDialog(context, project),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(
+                              context,
+                              'project',
+                              project.id ?? '',
+                              project.projectName ?? '',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -943,51 +1065,94 @@ class _CandidateProfileState extends State<CandidateProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(
-              'Certifications', () => _showAddCertificationDialog(context)),
-          SizedBox(height: screenSize.height * 0.01),
+            'Certifications',
+            () => _showAddCertificationDialog(context),
+          ),
+          SizedBox(height: screenSize.height * 0.015),
           if (candidate.certifications.isEmpty)
-            Text(
-              'No certifications added yet.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.lightSecondaryText,
-                  ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.01),
+              child: Text(
+                'No certifications added yet.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.lightSecondaryText,
+                    ),
+              ),
             )
           else
             ListView.separated(
               shrinkWrap: true,
+              padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: candidate.certifications.length,
-              separatorBuilder: (context, index) =>
-                  Divider(color: AppColors.lightDivider),
+              separatorBuilder: (context, index) => Divider(
+                color: AppColors.lightDivider,
+                height: screenSize.height * 0.02,
+              ),
               itemBuilder: (context, index) {
                 final cert = candidate.certifications[index];
-                return ListTile(
-                  title: Text(cert.name),
-                  subtitle: Column(
+                return Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: screenSize.height * 0.005),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(cert.issuingOrganization),
-                      if (cert.issueDate != null)
-                        Text(formatDate(cert.issueDate.toString())),
-                      if (cert.credentialID.isNotEmpty)
-                        Text('ID: ${cert.credentialID}'),
-                      if (cert.url.isNotEmpty) Text('URL: ${cert.url}'),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(FontAwesomeIcons.edit,
-                            color: AppColors.lightPrimary),
-                        onPressed: () =>
-                            _showEditCertificationDialog(context, cert),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cert.name ?? 'Unknown Certification',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            SizedBox(height: screenSize.height * 0.005),
+                            Text(
+                              cert.issuingOrganization ??
+                                  'Unknown Organization',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            if (cert.issueDate != null)
+                              Text(
+                                formatDate(cert.issueDate.toString()),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.lightSecondaryText,
+                                    ),
+                              ),
+                            if (cert.credentialID?.isNotEmpty ?? false)
+                              Text('ID: ${cert.credentialID}'),
+                            if (cert.url?.isNotEmpty ?? false)
+                              Text('URL: ${cert.url}'),
+                          ],
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(
-                            context, 'certification', cert.id, cert.name),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(FontAwesomeIcons.edit,
+                                color: AppColors.lightPrimary),
+                            onPressed: () =>
+                                _showEditCertificationDialog(context, cert),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(
+                              context,
+                              'certification',
+                              cert.id ?? '',
+                              cert.name ?? '',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1040,6 +1205,36 @@ class _CandidateProfileState extends State<CandidateProfile> {
               ),
             ),
           ),
+          // Add View Resume button if a resume exists
+          if (candidate.resume.url.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: InkWell(
+                onTap: () async {
+                  final url = candidate.resume.url;
+                  if (await canLaunch(url)) {
+                    await launch(url);
+                  } else {
+                    SnackBarUtils.showRedSnackBar(
+                        'Could not open resume', context);
+                  }
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.visibility, color: AppColors.lightPrimary),
+                    SizedBox(width: 8),
+                    Text(
+                      'View Resume',
+                      style: TextStyle(
+                        color: AppColors.lightPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -1153,7 +1348,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                   filled: true,
-                  fillColor: AppColors.lightSurface,
+                  //  fillColor: AppColors.lightSurface,
                 ),
                 items: ['Male', 'Female', 'Other']
                     .map((gender) =>
@@ -1593,7 +1788,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12)),
                       filled: true,
-                      fillColor: AppColors.lightSurface,
+                      //    fillColor: AppColors.lightSurface,
                       suffixIcon: IconButton(
                         icon: Icon(Icons.add, color: AppColors.lightPrimary),
                         onPressed: () {
@@ -2531,7 +2726,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
             borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
           ),
           filled: true,
-          fillColor: AppColors.lightSurface,
+          // fillColor: AppColors.lightSurface,
         ),
       ),
     );
