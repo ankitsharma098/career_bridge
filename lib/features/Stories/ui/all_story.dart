@@ -1,5 +1,6 @@
 import 'package:android/features/Stories/ui/reaction_screen.dart';
 import 'package:android/features/Stories/ui/shimmers/all_story_shimmer.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -13,7 +14,7 @@ import '../../See profile/bloc/see_profile_bloc.dart';
 import '../../See profile/ui/see_profile.dart';
 import '../bloc/story_bloc.dart';
 import '../create_story_bloc/create_story_bloc.dart';
-import '../data/story_api_service.dart';
+
 import '../reaction_bloc/story_reaction_bloc.dart';
 import 'create_story.dart';
 import 'edit_story.dart';
@@ -111,7 +112,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
         }
 
         if (state is StoryLoadedState) {
-          print("has readed ${state.hasReachedMax}");
+          if (kDebugMode) {
+            print("has readed ${state.hasReachedMax}");
+          }
           if (state.stories.isEmpty) {
             return Center(
               child: Column(
@@ -287,7 +290,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
             ).then((newStory) {
               // Check if a story was returned
               if (newStory != null && newStory is StoryModel) {
-                print("update list ");
+                if (kDebugMode) {
+                  print("update list ");
+                }
                 final state = context.read<StoryBloc>().state;
                 if (state is StoryLoadedState) {
                   setState(() {
@@ -328,7 +333,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
   Widget _buildStoryCard(
       StoryModel story, Size screenSize, BuildContext context) {
-    final date = DateTime.parse(story.createdAt);
+    // final date = DateTime.parse(story.createdAt);
     final isOwner = story.hostDetails.id == widget.currentUserId;
     final isExpanded = _expandedStories[story.id] ?? false;
 
@@ -562,60 +567,48 @@ class _StoriesScreenState extends State<StoriesScreen> {
   }
 
   Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
-    return Container(
-      //   height: screenSize.height * 0.28,
-      // decoration: BoxDecoration(
-      //   boxShadow: [
-      //     BoxShadow(
-      //       color: Colors.black.withOpacity(0.2),
-      //       blurRadius: 8,
-      //       offset: Offset(0, 4),
-      //     ),
-      //   ],
-      // ),
-      child: Stack(
-        children: [
-          ClipRRect(
-            child: story.mediaUrls.length > 1
-                ? PageView.builder(
-                    itemCount: story.mediaUrls.length,
-                    itemBuilder: (context, index) => _buildMediaItem(
-                      story.mediaUrls[index].url,
-                      story.mediaUrls.map((m) => m.url).toList(),
-                      index,
-                      screenSize,
-                    ),
-                  )
-                : _buildMediaItem(
-                    story.mediaUrls.first.url,
+    return Stack(
+      children: [
+        ClipRRect(
+          child: story.mediaUrls.length > 1
+              ? PageView.builder(
+                  itemCount: story.mediaUrls.length,
+                  itemBuilder: (context, index) => _buildMediaItem(
+                    story.mediaUrls[index].url,
                     story.mediaUrls.map((m) => m.url).toList(),
-                    0,
+                    index,
                     screenSize,
                   ),
-          ),
-          if (story.mediaUrls.length > 1)
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  story.mediaUrls.length,
-                  (index) => Container(
-                    width: 8,
-                    height: 8,
-                    margin: EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
+                )
+              : _buildMediaItem(
+                  story.mediaUrls.first.url,
+                  story.mediaUrls.map((m) => m.url).toList(),
+                  0,
+                  screenSize,
+                ),
+        ),
+        if (story.mediaUrls.length > 1)
+          Positioned(
+            bottom: 10,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                story.mediaUrls.length,
+                (index) => Container(
+                  width: 8,
+                  height: 8,
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 

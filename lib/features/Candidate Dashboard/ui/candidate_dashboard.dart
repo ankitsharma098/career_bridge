@@ -32,29 +32,25 @@ import '../bloc/candidate_dashboard_bloc.dart';
 import 'candidate_dashboard_stats.dart';
 
 class CandidateDashboardScreen extends StatefulWidget {
-
   const CandidateDashboardScreen({super.key});
 
-
   @override
-  State<CandidateDashboardScreen> createState() => _CandidateDashboardScreenState();
+  State<CandidateDashboardScreen> createState() =>
+      _CandidateDashboardScreenState();
 }
 
 class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
-
   Candidate? candidateData;
   bool isLoading = true;
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
-  Future<void>  logout() async {
-
+  Future<void> logout() async {
     return await HiveUtils.clearUserData();
   }
 
-
   @override
-  void initState()  {
+  void initState() {
     // TODO: implement initState
     super.initState();
     _initializeData();
@@ -76,9 +72,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             ),
             ElevatedButton(
               child: Text('Logout'),
-              onPressed: ()  {
-
-
+              onPressed: () {
                 logout();
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
@@ -98,7 +92,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
 
   Future<void> _initializeData() async {
     try {
-      Map<String,dynamic> candidateMap = await HiveUtils.getCandidateData();
+      Map<String, dynamic> candidateMap = await HiveUtils.getCandidateData();
 
       setState(() {
         candidateData = candidateMap.isNotEmpty
@@ -114,7 +108,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
     }
   }
 
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -126,33 +119,34 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     Size screenSize = MediaQuery.of(context).size;
     if (isLoading) {
-      return  Scaffold(
-        body:Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20)),
+      return Scaffold(
+        body: Center(
+            child: LoadingAnimationWidget.hexagonDots(
+                color: AppColors.lightPrimary, size: 20)),
       );
     }
-    return  Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Text(_selectedIndex == 0
             ? 'Dashboard'
             : _selectedIndex == 1
-            ? 'Stories'
-            : 'Jobs'
-        ),
+                ? 'Stories'
+                : 'Jobs'),
         actions: [
+          // IconButton(
+          //   icon: Icon(Icons.notifications),
+          //   onPressed: () {},
+          // ),
           IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed:()=> themeProvider.toggleTheme(),
+            icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => themeProvider.toggleTheme(),
           ),
         ],
       ),
@@ -170,7 +164,10 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           ),
           BlocProvider(
             create: (context) => StoryBloc(),
-            child: StoriesScreen(currentUserId: candidateData!.id, currentUserType: 'candidate',),
+            child: StoriesScreen(
+              currentUserId: candidateData!.id,
+              currentUserType: 'candidate',
+            ),
           ),
           BlocProvider(
             create: (context) => CandidateJobBloc(),
@@ -178,8 +175,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
           ),
         ],
       ),
-
-
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -194,21 +189,20 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
             icon: Icon(Icons.work_history),
             label: 'Job',
           ),
-
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
-
-
       drawer: Container(
-        color: Theme.of(context).brightness == Brightness.dark ?Colors.grey[850] : Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[850]
+            : Colors.white,
         width: screenSize.width * 0.6,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             SizedBox(
-              height: screenSize.height*0.28,
+              height: screenSize.height * 0.28,
               child: DrawerHeader(
                 // decoration: BoxDecoration(
                 //   color: AppColors.primary,
@@ -218,56 +212,71 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: screenSize.width * 0.15, // Consistent radius for both cases
-                      backgroundColor: candidateData?.personalInfo.profilePic != null
-                          ? Colors.transparent
-                          : Theme.of(context).primaryColor.withOpacity(0.1),
+                      radius: screenSize.width *
+                          0.15, // Consistent radius for both cases
+                      backgroundColor:
+                          candidateData?.personalInfo.profilePic != null
+                              ? Colors.transparent
+                              : Theme.of(context).primaryColor.withOpacity(0.1),
                       child: candidateData?.personalInfo.profilePic != null
-                          ? ClipOval( // Using ClipOval instead of ClipRRect for perfect circle
-                        child: CachedNetworkImage(
-                          imageUrl: candidateData!.personalInfo.profilePic.toString(),
-                          width: screenSize.width * 0.3,  // Double the radius
-                          height: screenSize.width * 0.3, // Double the radius
-                          fit: BoxFit.cover, // Changed to cover for better circle filling
-                          placeholder: (context, url) => Container(
-                            width: screenSize.width * 0.3,
-                            height: screenSize.width * 0.3,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: isDarkMode ? AppColors.darkSecondaryText : AppColors.lightSecondaryText,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            width: screenSize.width * 0.3,
-                            height: screenSize.width * 0.3,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
-                            ),
-                            child: Center(
-                              child: Text(
-                                candidateData!.personalInfo.fullName[0],
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  color: isDarkMode ? AppColors.darkText : AppColors.lightText,
+                          ? ClipOval(
+                              // Using ClipOval instead of ClipRRect for perfect circle
+                              child: CachedNetworkImage(
+                                imageUrl: candidateData!.personalInfo.profilePic
+                                    .toString(),
+                                width:
+                                    screenSize.width * 0.3, // Double the radius
+                                height:
+                                    screenSize.width * 0.3, // Double the radius
+                                fit: BoxFit
+                                    .cover, // Changed to cover for better circle filling
+                                placeholder: (context, url) => Container(
+                                  width: screenSize.width * 0.3,
+                                  height: screenSize.width * 0.3,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDarkMode
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurface,
+                                  ),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: isDarkMode
+                                        ? AppColors.darkSecondaryText
+                                        : AppColors.lightSecondaryText,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  width: screenSize.width * 0.3,
+                                  height: screenSize.width * 0.3,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDarkMode
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurface,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      candidateData!.personalInfo.fullName[0],
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        color: isDarkMode
+                                            ? AppColors.darkText
+                                            : AppColors.lightText,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                      )
+                            )
                           : Text(
-                        candidateData!.personalInfo.fullName[0],
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                              candidateData!.personalInfo.fullName[0],
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                     // CircleAvatar(
                     //   radius: screenSize.width*0.15,
@@ -283,22 +292,16 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                     //   )
                     //       : null,
                     // ),
-                    Text(
-                        candidateData!.personalInfo.fullName ,
+                    Text(candidateData!.personalInfo.fullName,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: screenSize.width*0.045,
-                            fontWeight: FontWeight.w600
-                        )
-                    ),
-                    Text(
-                        candidateData!.personalInfo.email,
+                            fontSize: screenSize.width * 0.045,
+                            fontWeight: FontWeight.w600)),
+                    Text(candidateData!.personalInfo.email,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: screenSize.width*0.03,
-                            fontWeight: FontWeight.w300
-                        )
-                    ),
+                            fontSize: screenSize.width * 0.03,
+                            fontWeight: FontWeight.w300)),
                   ],
                 ),
               ),
@@ -315,14 +318,14 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
               icon: Icons.work,
               title: 'Jobs',
               onTap: () {
-                 Navigator.pop(context);
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
-                    create: (context) => CandidateJobStatsBloc(),
-                    child: CandidateJobStatsScreen(),
-                  ), // You'll need to create this screen
+                      create: (context) => CandidateJobStatsBloc(),
+                      child: CandidateJobStatsScreen(),
+                    ), // You'll need to create this screen
                   ),
                 );
               },
@@ -343,7 +346,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                 );
               },
             ),
-
             _buildDrawerItem(
               icon: Icons.web_stories,
               title: 'My Stories',
@@ -354,7 +356,9 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => StoryStatsBloc(),
-                      child: StoryStatsTab(currentUserId: candidateData!.id,),
+                      child: StoryStatsTab(
+                        currentUserId: candidateData!.id,
+                      ),
                     ), // You'll need to create this screen
                   ),
                 );
@@ -364,13 +368,16 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
               icon: Icons.message,
               title: 'Messages',
               onTap: () {
-
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
-                      create: (context) => ConversationsBloc(ChatRepository(), candidateData?.id , "candidate"),
-                      child: ConversationsScreen(userId: candidateData!.id, userType: 'candidate',),
+                      create: (context) => ConversationsBloc(
+                          ChatRepository(), candidateData?.id, "candidate"),
+                      child: ConversationsScreen(
+                        userId: candidateData!.id,
+                        userType: 'candidate',
+                      ),
                     ), // You'll need to create this screen
                   ),
                 );
@@ -384,7 +391,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AboutUsScreen(), // You'll need to create this screen
+                    builder: (context) =>
+                        AboutUsScreen(), // You'll need to create this screen
                   ),
                 );
               },
@@ -405,18 +413,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
     );
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
   Widget _buildDrawerItem({
     required IconData icon,
     required String title,
@@ -431,12 +427,11 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen> {
       title: Text(
         title,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          //color: color ?? Colors.black87,
-          fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
-        ),
+              //color: color ?? Colors.black87,
+              fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
+            ),
       ),
       onTap: onTap,
     );
   }
-
 }

@@ -9,7 +9,6 @@ import '../Job Bloc/candidate_job_bloc.dart';
 import 'apply_job.dart';
 import 'full_job_detail.dart';
 
-
 class CandidateTabJobs extends StatelessWidget {
   const CandidateTabJobs({super.key});
 
@@ -20,45 +19,46 @@ class CandidateTabJobs extends StatelessWidget {
       length: 2,
       child: Column(
         children: [
-
           TabBar(
             labelColor: Theme.of(context).primaryColor,
             unselectedLabelColor: Colors.grey,
             indicatorColor: Theme.of(context).primaryColor,
-            labelStyle:  TextStyle(fontWeight: FontWeight.bold),
-
-            tabs:  [
+            labelStyle: TextStyle(fontWeight: FontWeight.bold),
+            tabs: [
               Tab(
                 child: SizedBox(
-                  width: screenSize.width*0.35,
-
+                  width: screenSize.width * 0.35,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.analytics_outlined),
                       SizedBox(width: 8),
-                      Text('Search Jobs',overflow: TextOverflow.ellipsis,),
+                      Text(
+                        'Search Jobs',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
               ),
               Tab(
                 child: SizedBox(
-
-                  width: screenSize.width*0.46,
+                  width: screenSize.width * 0.46,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.work_outline),
                       SizedBox(width: 8),
-                      Text('Recommended Jobs',overflow: TextOverflow.ellipsis,),
+                      Text(
+                        'Recommended Jobs',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
               ),
             ],
           ),
-
           Expanded(
             child: TabBarView(
               physics: const BouncingScrollPhysics(),
@@ -111,7 +111,8 @@ class _SearchOrAllJobsState extends State<SearchOrAllJobs> {
   void _onScroll() {
     final state = context.read<CandidateJobBloc>().state;
     if (_isBottom && state is JobLoaded && !state.hasReachedMax) {
-      BlocProvider.of<CandidateJobBloc>(context).add(LoadMoreJobs(isRecommended: widget.isRecommended));
+      BlocProvider.of<CandidateJobBloc>(context)
+          .add(LoadMoreJobs(isRecommended: widget.isRecommended));
     }
   }
 
@@ -147,12 +148,12 @@ class _SearchOrAllJobsState extends State<SearchOrAllJobs> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        contentPadding: EdgeInsets.symmetric(vertical: screenSize.height * 0.01),
+        contentPadding:
+            EdgeInsets.symmetric(vertical: screenSize.height * 0.01),
       ),
       onSubmitted: (value) {
-
         BlocProvider.of<CandidateJobBloc>(context)
-            .add(FetchJobs(isRecommended: widget.isRecommended,search: value));
+            .add(FetchJobs(isRecommended: widget.isRecommended, search: value));
       },
     );
   }
@@ -166,17 +167,20 @@ class _SearchOrAllJobsState extends State<SearchOrAllJobs> {
       },
       builder: (context, state) {
         if (state is JobLoading) {
-          return  Center(child:LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20));
+          return Center(
+              child: LoadingAnimationWidget.hexagonDots(
+                  color: AppColors.lightPrimary, size: 20));
         }
 
         if (state is JobLoaded) {
           if (state.jobs.isEmpty) {
-            return _buildEmptyState(context,screenSize, 'No jobs found');
+            return _buildEmptyState(context, screenSize, 'No jobs found');
           }
 
           return RefreshIndicator(
             onRefresh: () async {
-              BlocProvider.of<CandidateJobBloc>(context).add(FetchJobs(isRecommended: widget.isRecommended));
+              BlocProvider.of<CandidateJobBloc>(context)
+                  .add(FetchJobs(isRecommended: widget.isRecommended));
             },
             child: ListView.builder(
               controller: scrollController,
@@ -192,7 +196,7 @@ class _SearchOrAllJobsState extends State<SearchOrAllJobs> {
           );
         }
 
-        return _buildErrorState(context,screenSize);
+        return _buildErrorState(context, screenSize);
       },
     );
   }
@@ -251,8 +255,8 @@ class _RecommendationJobsState extends State<RecommendationJobs> {
           Text(
             'Recommended Jobs',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           SizedBox(height: screenSize.height * 0.02),
           Expanded(child: _buildJobsList(context, screenSize)),
@@ -267,18 +271,21 @@ class _RecommendationJobsState extends State<RecommendationJobs> {
         if (state is JobError) {
           SnackBarUtils.showRedSnackBar(state.error, context);
         }
-        if(state is JobSuccess){
+        if (state is JobSuccess) {
           SnackBarUtils.showGreenSnackBar(state.message, context);
         }
       },
       builder: (context, state) {
         if (state is JobLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+              child: LoadingAnimationWidget.hexagonDots(
+                  color: AppColors.lightPrimary, size: 20));
         }
 
         if (state is JobLoaded) {
           if (state.jobs.isEmpty) {
-            return _buildEmptyState(context,screenSize, 'No recommended jobs yet');
+            return _buildEmptyState(
+                context, screenSize, 'No recommended jobs yet');
           }
 
           return RefreshIndicator(
@@ -300,14 +307,14 @@ class _RecommendationJobsState extends State<RecommendationJobs> {
           );
         }
 
-        return _buildErrorState(context,screenSize);
+        return _buildErrorState(context, screenSize);
       },
     );
   }
 }
 
-
-Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext context) {
+Widget _buildJobCard(
+    CandidateJobModel job, Size screenSize, BuildContext context) {
   return Card(
     elevation: 2,
     margin: const EdgeInsets.only(bottom: 12),
@@ -354,11 +361,12 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                         borderRadius: BorderRadius.circular(10),
                         child: job.companyDetails.logo.url.isNotEmpty
                             ? Image.network(
-                          job.companyDetails.logo.url,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Center(child: Icon(Icons.business, size: 30)),
-                        )
+                                job.companyDetails.logo.url,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Center(
+                                        child: Icon(Icons.business, size: 30)),
+                              )
                             : Center(child: Icon(Icons.business, size: 30)),
                       ),
                     ),
@@ -370,9 +378,12 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                         children: [
                           Text(
                             job.title,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                             overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(height: 6),
@@ -382,10 +393,13 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                                 : job.overview,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                              fontSize: screenSize.width * 0.035,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Colors.grey[600],
+                                  fontSize: screenSize.width * 0.035,
+                                ),
                           ),
                           SizedBox(height: 6),
                           // Status chip
@@ -416,14 +430,16 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                 child: IconButton(
                   icon: Icon(
                     job.isSaved ? Icons.bookmark : Icons.bookmark_border,
-                    color: job.isSaved ? Theme.of(context).primaryColor : Colors.grey,
+                    color: job.isSaved
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey,
                   ),
                   onPressed: () {
-
                     context.read<CandidateJobBloc>().add(
-                      ToggleSavedJobsEvent( jobId: job.id,),
-                    );
-
+                          ToggleSavedJobsEvent(
+                            jobId: job.id,
+                          ),
+                        );
                   },
                 ),
               ),
@@ -509,9 +525,10 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                         SizedBox(height: 4),
                         Text(
                           '${job.salary.currency} ${job.salary.min}-${job.salary.max}',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),
@@ -543,10 +560,11 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                         SizedBox(height: 4),
                         Text(
                           _formatDate(job.deadline),
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.red[300],
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red[300],
+                                  ),
                         ),
                       ],
                     ),
@@ -560,42 +578,47 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
               Text(
                 'Key Responsibilities:',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               SizedBox(height: screenSize.height * 0.01),
               Column(
                 children: job.responsibilities
                     .take(2)
                     .map((resp) => Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check,
-                          size: 14,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          resp,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: screenSize.width * 0.035,
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.check,
+                                  size: 14,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  resp,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontSize: screenSize.width * 0.035,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ))
+                        ))
                     .toList(),
               ),
 
@@ -605,8 +628,8 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
               Text(
                 'Required Skills:',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               SizedBox(height: 8),
               Wrap(
@@ -615,23 +638,27 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                 children: job.skills
                     .take(3)
                     .map((skill) => Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Theme.of(context).primaryColor.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Text(
-                    skill,
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w500,
-                      fontSize: screenSize.width * 0.035,
-                    ),
-                  ),
-                ))
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color:
+                                Theme.of(context).primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .primaryColor
+                                  .withOpacity(0.2),
+                            ),
+                          ),
+                          child: Text(
+                            skill,
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w500,
+                              fontSize: screenSize.width * 0.035,
+                            ),
+                          ),
+                        ))
                     .toList(),
               ),
 
@@ -646,18 +673,27 @@ Widget _buildJobCard(CandidateJobModel job, Size screenSize, BuildContext contex
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CandidateJobDetails(job: job, isAlreadyApplied: false,),
+                            builder: (context) => CandidateJobDetails(
+                              job: job,
+                              isAlreadyApplied: false,
+                            ),
                           ),
                         );
                       },
                       icon: Icon(Icons.description_outlined),
-                      label: Text('View Details',style: Theme.of(context).textTheme.bodyMedium?.copyWith(color :
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white:Colors.black),),
+                      label: Text(
+                        'View Details',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkPrimary.withOpacity(0.1)
-                            : AppColors.lightDisabled,
+                        backgroundColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkPrimary.withOpacity(0.1)
+                                : AppColors.lightDisabled,
                         padding: EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
@@ -755,15 +791,12 @@ Widget _buildStatusChip(BuildContext context, String status, Size screenSize) {
   );
 }
 
-
 String _formatDate(String dateString) {
   final date = DateTime.parse(dateString);
   return '${date.day}/${date.month}/${date.year}';
 }
 
-
-
-Widget _buildEmptyState(BuildContext context,Size screenSize, String message) {
+Widget _buildEmptyState(BuildContext context, Size screenSize, String message) {
   return Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -777,16 +810,16 @@ Widget _buildEmptyState(BuildContext context,Size screenSize, String message) {
         Text(
           message,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.bold,
-          ),
+                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     ),
   );
 }
 
-Widget _buildErrorState(BuildContext context,Size screenSize) {
+Widget _buildErrorState(BuildContext context, Size screenSize) {
   return Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -800,16 +833,16 @@ Widget _buildErrorState(BuildContext context,Size screenSize) {
         Text(
           'Something went wrong',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.bold,
-          ),
+                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+              ),
         ),
         SizedBox(height: screenSize.height * 0.01),
         Text(
           'Please try again later',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[500],
-          ),
+                color: Colors.grey[500],
+              ),
         ),
       ],
     ),

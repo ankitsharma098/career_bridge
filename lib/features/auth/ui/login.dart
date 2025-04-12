@@ -2,8 +2,8 @@ import 'package:android/core/theme/app_theme.dart';
 import 'package:android/core/utils/snackBarUtils.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
 import 'package:android/features/auth/data/auth_api_service.dart';
-import 'package:android/features/auth/registration_bloc/registration_bloc.dart';
-import 'package:android/features/auth/ui/registration_screen.dart';
+import 'package:android/features/auth/employer_registration_bloc/employer_registration_bloc.dart';
+import 'package:android/features/auth/ui/employer_registration_screen.dart';
 import 'package:android/features/auth/ui/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,6 +15,8 @@ import '../../../core/theme/theme_provider.dart';
 import '../../Candidate Dashboard/ui/candidate_dashboard.dart';
 import '../../Employer Dashboard/bloc/employer_dashboard_bloc.dart';
 import '../../Employer Dashboard/ui/employer_dashboard.dart';
+import '../candidate_registration_bloc/candidate_registration_bloc.dart';
+import 'candidate_registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final String userType;
@@ -312,11 +314,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => BlocProvider(
-                                        create: (context) => RegistrationBloc(),
+                                        create: (context) =>
+                                            EmployerRegistrationBloc(),
                                         child: RegistrationScreen(),
                                       ),
                                     ))
-                                : null;
+                                : Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BlocProvider(
+                                        create: (context) =>
+                                            CandidateRegistrationBloc(),
+                                        child: CandidateRegistrationScreen(),
+                                      ),
+                                    ));
                           },
                           child: Text(
                             'Sign Up',

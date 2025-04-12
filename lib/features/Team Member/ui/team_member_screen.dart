@@ -20,7 +20,8 @@ class TeamMembersScreen extends StatefulWidget {
   final Employer currentEmployer;
   final String companyId;
 
-  const TeamMembersScreen({super.key, required this.currentEmployer, required this.companyId});
+  const TeamMembersScreen(
+      {super.key, required this.currentEmployer, required this.companyId});
 
   @override
   State<TeamMembersScreen> createState() => _TeamMembersScreenState();
@@ -29,14 +30,15 @@ class TeamMembersScreen extends StatefulWidget {
 class _TeamMembersScreenState extends State<TeamMembersScreen> {
   @override
   void initState() {
-    BlocProvider.of<TeamMembersBloc>(context).add(FetchTeamMembersEvent(widget.companyId));
+    BlocProvider.of<TeamMembersBloc>(context)
+        .add(FetchTeamMembersEvent(widget.companyId));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).primaryColor;
     final textTheme = Theme.of(context).textTheme;
 
@@ -52,9 +54,11 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
             padding: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton.icon(
               onPressed: () => _showAddEmployerDialog(context),
-              icon: Icon(Icons.add,color: Colors.white,),
+              icon: Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
               label: Text('Add'),
-
               style: ElevatedButton.styleFrom(
                 //backgroundColor: primaryColor.withOpacity(0.5),
                 elevation: 8,
@@ -73,18 +77,21 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
           }
 
           if (state is TeamMemberAdded) {
-            SnackBarUtils.showGreenSnackBar("Team member added successfully!", context);
-
+            SnackBarUtils.showGreenSnackBar(
+                "Team member added successfully!", context);
           }
 
           if (state is TeamMemberDeleted) {
-            SnackBarUtils.showGreenSnackBar("Team member removed successfully!", context);
-
+            SnackBarUtils.showGreenSnackBar(
+                "Team member removed successfully!", context);
           }
         },
         builder: (context, state) {
           if (state is TeamMembersLoading) {
-            return Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20),);
+            return Center(
+              child: LoadingAnimationWidget.hexagonDots(
+                  color: AppColors.lightPrimary, size: 20),
+            );
           } else if (state is TeamMembersLoaded) {
             List<Employer> teamMembers = state.teamMembers;
             return Padding(
@@ -99,41 +106,44 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                         color: primaryColor,
                         size: 28,
                       ),
-                      SizedBox(width: screenSize.width*0.02),
+                      SizedBox(width: screenSize.width * 0.02),
                       Text(
                         'Manage Your Team',
                         style: textTheme.displaySmall,
                       ),
                     ],
                   ),
-                  SizedBox(height: screenSize.height*0.01),
+                  SizedBox(height: screenSize.height * 0.01),
                   Text(
                     'Your team has ${teamMembers.length} members',
                     style: textTheme.bodySmall,
                   ),
-                  SizedBox(height: screenSize.height*0.02),
+                  SizedBox(height: screenSize.height * 0.02),
                   Expanded(
                     child: teamMembers.isEmpty
                         ? _buildEmptyState()
                         : ListView.builder(
-                      itemCount: teamMembers.length,
-                      itemBuilder: (context, index) {
-                       Employer member = teamMembers[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: _buildTeamMemberCard(member,screenSize),
-                        );
-                      },
-                    ),
+                            itemCount: teamMembers.length,
+                            itemBuilder: (context, index) {
+                              Employer member = teamMembers[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: _buildTeamMemberCard(member, screenSize),
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
             );
           } else if (state is TeamMembersFailure) {
-            return CustomErrorScreen(message: state.error,onRetry: (){
-              BlocProvider.of<TeamMembersBloc>(context)
-                  .add(FetchTeamMembersEvent(widget.companyId));
-            },);
+            return CustomErrorScreen(
+              message: state.error,
+              onRetry: () {
+                BlocProvider.of<TeamMembersBloc>(context)
+                    .add(FetchTeamMembersEvent(widget.companyId));
+              },
+            );
           }
           return Container();
         },
@@ -144,7 +154,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
   Widget _buildEmptyState() {
     final textTheme = Theme.of(context).textTheme;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final secondaryTextColor = isDarkMode ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+    final secondaryTextColor =
+        isDarkMode ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
 
     return Center(
       child: Column(
@@ -177,7 +188,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
     );
   }
 
-  Widget _buildTeamMemberCard(dynamic member,Size screenSize) {
+  Widget _buildTeamMemberCard(dynamic member, Size screenSize) {
     final textTheme = Theme.of(context).textTheme;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).primaryColor;
@@ -185,7 +196,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
     final isCurrentUser = member.id == widget.currentEmployer.id;
 
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -193,7 +204,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
               create: (context) => SeeProfileBloc(),
               child: UserProfileScreen(
                 userId: member.id,
-                userType: "employer", currentUserId: widget.currentEmployer.id, currentUserType:"employer" , // Ensure StoryModel has type
+                userType: "employer", currentUserId: widget.currentEmployer.id,
+                currentUserType: "employer", // Ensure StoryModel has type
               ),
             ),
           ),
@@ -204,7 +216,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
             color: isAdmin
-                ? (isDarkMode ? Colors.amber.withOpacity(0.5) : Colors.amber.shade300)
+                ? (isDarkMode
+                    ? Colors.amber.withOpacity(0.5)
+                    : Colors.amber.shade300)
                 : Colors.grey,
             width: isAdmin ? 1 : 1,
           ),
@@ -224,17 +238,26 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     fit: BoxFit.cover,
                     placeholder: (context, url) => CircleAvatar(
                       radius: 30,
-                      backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
-                      child: Icon(Icons.person, color: isDarkMode ? AppColors.darkSecondaryText : AppColors.lightSecondaryText),
+                      backgroundColor: isDarkMode
+                          ? AppColors.darkSurface
+                          : AppColors.lightSurface,
+                      child: Icon(Icons.person,
+                          color: isDarkMode
+                              ? AppColors.darkSecondaryText
+                              : AppColors.lightSecondaryText),
                     ),
                     errorWidget: (context, url, error) => CircleAvatar(
                       radius: 30,
-                      backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+                      backgroundColor: isDarkMode
+                          ? AppColors.darkSurface
+                          : AppColors.lightSurface,
                       child: Text(
                         member.personalInfo.fullName[0],
                         style: TextStyle(
                           fontSize: 24,
-                          color: isDarkMode ? AppColors.darkText : AppColors.lightText,
+                          color: isDarkMode
+                              ? AppColors.darkText
+                              : AppColors.lightText,
                         ),
                       ),
                     ),
@@ -265,15 +288,19 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                         Expanded(
                           child: Text(
                             member.personalInfo.fullName,
-                            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                            style: textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (isCurrentUser)
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isDarkMode ? Colors.blueGrey[700] : Colors.blueGrey[100],
+                              color: isDarkMode
+                                  ? Colors.blueGrey[700]
+                                  : Colors.blueGrey[100],
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -292,24 +319,36 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     Row(
                       children: [
                         Container(
-                          width: screenSize.width*0.2,
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          width: screenSize.width * 0.2,
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: isAdmin
-                                ? (isDarkMode ? Colors.amber.withOpacity(0.2) : Colors.amber.withOpacity(0.2))
-                                : (isDarkMode ? Colors.blue.withOpacity(0.2) : Colors.blue.withOpacity(0.1)),
+                                ? (isDarkMode
+                                    ? Colors.amber.withOpacity(0.2)
+                                    : Colors.amber.withOpacity(0.2))
+                                : (isDarkMode
+                                    ? Colors.blue.withOpacity(0.2)
+                                    : Colors.blue.withOpacity(0.1)),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(
                             child: Text(
-                              isAdmin ? 'Admin' : member.companyDetails?.designation ?? 'Team Member',
+                              isAdmin
+                                  ? 'Admin'
+                                  : member.companyDetails?.designation ??
+                                      'Team Member',
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: screenSize.width*0.03,
+                                fontSize: screenSize.width * 0.03,
                                 fontWeight: FontWeight.w500,
                                 color: isAdmin
-                                    ? (isDarkMode ? Colors.amber[200] : Colors.amber[800])
-                                    : (isDarkMode ? Colors.blue[200] : Colors.blue[700]),
+                                    ? (isDarkMode
+                                        ? Colors.amber[200]
+                                        : Colors.amber[800])
+                                    : (isDarkMode
+                                        ? Colors.blue[200]
+                                        : Colors.blue[700]),
                               ),
                             ),
                           ),
@@ -334,7 +373,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                   children: [
                     IconButton(
                       icon: Icon(Icons.mail_outline,
-                          color: isDarkMode ? Colors.blue[200] : Colors.blue[700]),
+                          color:
+                              isDarkMode ? Colors.blue[200] : Colors.blue[700]),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -343,14 +383,16 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                               create: (context) => ChatBloc(
                                 ChatRepository(),
                                 member.id, // receiverId
-                                 "employer", // receiverType
-                                widget.currentEmployer.id, // Correct currentUserId
+                                "employer", // receiverType
+                                widget.currentEmployer
+                                    .id, // Correct currentUserId
                                 "employer",
                               ),
                               child: ChatScreen(
                                 receiverId: member.id,
                                 receiverType: "employer",
-                                receiverName: member.personalInfo.fullName, profilePic: member.personalInfo.profilePic,
+                                receiverName: member.personalInfo.fullName,
+                                profilePic: member.personalInfo.profilePic,
                               ),
                             ),
                           ),
@@ -361,7 +403,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     IconButton(
                       icon: Icon(Icons.delete_outline,
                           color: Theme.of(context).colorScheme.error),
-                      onPressed: () => _showDeleteConfirmationDialog(context, member.id),
+                      onPressed: () =>
+                          _showDeleteConfirmationDialog(context, member.id),
                       tooltip: 'Remove member',
                     ),
                   ],
@@ -403,7 +446,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     labelText: 'Full Name',
                     prefixIcon: Icon(Icons.person_outline),
                   ),
-                  validator: (value) => value!.isEmpty ? 'Name is required' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Name is required' : null,
                 ),
                 SizedBox(height: 16),
                 TextFormField(
@@ -412,7 +456,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     labelText: 'Email Address',
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
-                  validator: (value) => value!.isEmpty ? 'Email is required' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Email is required' : null,
                 ),
                 SizedBox(height: 16),
                 TextFormField(
@@ -421,7 +466,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     labelText: 'Phone Number',
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
-                  validator: (value) => value!.isEmpty ? 'Phone number is required' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Phone number is required' : null,
                 ),
                 SizedBox(height: 16),
                 TextFormField(
@@ -430,7 +476,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     labelText: 'Designation',
                     prefixIcon: Icon(Icons.work_outline),
                   ),
-                  validator: (value) => value!.isEmpty ? 'Designation is required' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Designation is required' : null,
                 ),
               ],
             ),
@@ -448,11 +495,14 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                   'fullName': nameController.text,
                   'email': emailController.text,
                   'phoneNumber': phoneController.text,
-                  'designation': designationController.text.isEmpty ? 'Team Member' : designationController.text,
+                  'designation': designationController.text.isEmpty
+                      ? 'Team Member'
+                      : designationController.text,
                   'password': '1234', // Adjust as needed
                 };
                 BlocProvider.of<TeamMembersBloc>(parentContext).add(
-                  AddTeamMemberEvent(companyId: widget.companyId, employerData: employerData),
+                  AddTeamMemberEvent(
+                      companyId: widget.companyId, employerData: employerData),
                 );
                 Navigator.pop(dialogContext);
               }
@@ -465,13 +515,14 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
   }
 
   void _showDeleteConfirmationDialog(BuildContext context, String employerId) {
-    final BuildContext parentContext=context;
+    final BuildContext parentContext = context;
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error),
+            Icon(Icons.warning_amber_rounded,
+                color: Theme.of(context).colorScheme.error),
             SizedBox(width: 8),
             Text('Delete Team Member'),
           ],
@@ -487,11 +538,15 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
           ElevatedButton.icon(
             onPressed: () {
               BlocProvider.of<TeamMembersBloc>(parentContext).add(
-                DeleteTeamMemberEvent(employerId: employerId, companyId: widget.companyId),
+                DeleteTeamMemberEvent(
+                    employerId: employerId, companyId: widget.companyId),
               );
               Navigator.pop(dialogContext);
             },
-            icon: Icon(Icons.delete,color: Colors.white,),
+            icon: Icon(
+              Icons.delete,
+              color: Colors.white,
+            ),
             label: Text('Delete'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,

@@ -1,209 +1,226 @@
-
-
 import 'dart:io';
 import 'package:android/core/constants/app_constants.dart';
 import 'package:android/core/utils/hiveUtils.dart';
 import 'package:android/data/models/story/story_model.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 
 class StoryApiService {
-
   final dio = Dio();
 
-
-  Future<List<StoryModel>> fetchStories(int page) async{
-
-    try{
-      print("fetchStories api");
+  Future<List<StoryModel>> fetchStories(int page) async {
+    try {
+      if (kDebugMode) {
+        print("fetchStories api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('${AppConstants.baseUrl}/stories/all?page=$page',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/stories/all?page=$page',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
+        List<Map<String, dynamic>> rawStories = List<Map<String, dynamic>>.from(
+            (response.data['stories'] as List).where((story) => story != null));
 
-        List<Map<String,dynamic>> rawStories=List<Map<String,dynamic>>.from((response.data['stories'] as List).where((story)=>story!=null));
+        if (kDebugMode) {
+          print("raw response $rawStories");
+        }
+        List<StoryModel> stories =
+            rawStories.map((story) => StoryModel.fromJson(story)).toList();
 
-        print("raw response $rawStories");
-        List<StoryModel> stories = rawStories
-            .map((story) => StoryModel.fromJson(story))
-            .toList();
-
-        print("stories $stories");
         return stories;
-      }else{
-        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+      } else {
+        if (kDebugMode) {
+          print(
+              "Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> $response");
+        }
         throw Exception('Failed to Load stories ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<List<StoryModel>> fetchMyStories(int page) async{
-
-    try{
-      print("fetchMyStories api");
+  Future<List<StoryModel>> fetchMyStories(int page) async {
+    try {
+      if (kDebugMode) {
+        print("fetchMyStories api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('${AppConstants.baseUrl}/stories/myStories?page=$page',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/stories/myStories?page=$page',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
+        List<Map<String, dynamic>> rawStories =
+            List<Map<String, dynamic>>.from(response.data['myStories']);
 
-        List<Map<String,dynamic>> rawStories=List<Map<String,dynamic>>.from(response.data['myStories']);
+        if (kDebugMode) {
+          print("raw response $rawStories");
+        }
+        List<StoryModel> stories =
+            rawStories.map((json) => StoryModel.fromJson(json)).toList();
 
-        print("raw response $rawStories");
-        List<StoryModel> stories = rawStories
-            .map((json) => StoryModel.fromJson(json))
-            .toList();
-
-        print("stories $StoryModel");
+        if (kDebugMode) {
+          print("stories $StoryModel");
+        }
         return stories;
-      }else{
-        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+      } else {
+        if (kDebugMode) {
+          print(
+              "Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> $response");
+        }
         throw Exception('Failed to Load stories ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
-      throw Exception('An unexpected error occurred');
-    }
-  }
-  Future<List<StoryModel>> fetchSavedStories(int page) async{
-
-    try{
-      print("fetchSavedStories api");
-
-      String? accessToken = await HiveUtils.getAccessToken();
-
-      if(accessToken==null || accessToken.isEmpty){
-        throw Exception("AccessToken not found");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
       }
-      final response = await dio.get('${AppConstants.baseUrl}/stories/savedStories?page=$page',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
-      );
-
-      if (response.statusCode == 200) {
-
-        List<Map<String,dynamic>> rawStories=List<Map<String,dynamic>>.from(response.data['savedStories']);
-
-        print("raw response $rawStories");
-        List<StoryModel> stories = rawStories.map((json) => StoryModel.fromJson(json)).toList();
-
-        print("stories $StoryModel");
-        return stories;
-      }else{
-        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
-        throw Exception('Failed to Load stories ${response.statusMessage}');
-      }
-
-
-    }on DioException catch (e) {
-      if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
-        throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
-        throw Exception('Network error occurred');
-      }
-    }
-    catch(e){
-      print("Error: $e");
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<Map<String,dynamic>> fetchStoriesStats() async {
-
-    try{
-      print("fetchStoriesStats api");
+  Future<List<StoryModel>> fetchSavedStories(int page) async {
+    try {
+      if (kDebugMode) {
+        print("fetchSavedStories api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('${AppConstants.baseUrl}/stories/stats',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/stories/savedStories?page=$page',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
+        List<Map<String, dynamic>> rawStories =
+            List<Map<String, dynamic>>.from(response.data['savedStories']);
 
-        Map<String,dynamic> storiesStats=Map<String,dynamic>.from(response.data['stats']);
+        if (kDebugMode) {
+          print("raw response $rawStories");
+        }
+        List<StoryModel> stories =
+            rawStories.map((json) => StoryModel.fromJson(json)).toList();
 
+        if (kDebugMode) {
+          print("stories $StoryModel");
+        }
+        return stories;
+      } else {
+        if (kDebugMode) {
+          print(
+              "Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> $response");
+        }
+        throw Exception('Failed to Load stories ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
+        throw Exception('Network error occurred');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
+      throw Exception('An unexpected error occurred');
+    }
+  }
 
-        print("stories $storiesStats");
+  Future<Map<String, dynamic>> fetchStoriesStats() async {
+    try {
+      if (kDebugMode) {
+        print("fetchStoriesStats api");
+      }
+
+      String? accessToken = await HiveUtils.getAccessToken();
+
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception("AccessToken not found");
+      }
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/stories/stats',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> storiesStats =
+            Map<String, dynamic>.from(response.data['stats']);
+
+        if (kDebugMode) {
+          print("stories $storiesStats");
+        }
         return storiesStats;
-      }else{
-        throw Exception('Failed to Load stories stats ${response.statusMessage}');
+      } else {
+        throw Exception(
+            'Failed to Load stories stats ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
@@ -258,26 +275,22 @@ class StoryApiService {
             mimeType = 'application/msword';
             break;
           case 'docx':
-            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            mimeType =
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
             break;
           default:
             throw Exception('Unsupported file type: $extension');
         }
 
-        formData.files.add(
-            MapEntry('media',
-                await MultipartFile.fromFile(
-                    imagePaths[i],
-                    filename: 'file$i.$extension',
-                    contentType: MediaType.parse(mimeType)
-                )
-            )
-        );
+        formData.files.add(MapEntry(
+            'media',
+            await MultipartFile.fromFile(imagePaths[i],
+                filename: 'file$i.$extension',
+                contentType: MediaType.parse(mimeType))));
       }
 
       // Make the request with reasonable timeouts
-      final response = await dio.post(
-          '${AppConstants.baseUrl}/stories/create',
+      final response = await dio.post('${AppConstants.baseUrl}/stories/create',
           options: Options(
             headers: {
               'Authorization': 'Bearer $accessToken',
@@ -285,91 +298,91 @@ class StoryApiService {
             sendTimeout: const Duration(minutes: 2),
             receiveTimeout: const Duration(minutes: 2),
             contentType: 'multipart/form-data',
-          ),
-          onSendProgress: (sent, total) {
-            if (total != -1) {
-              final progress = (sent / total * 100).toStringAsFixed(2);
-              print('Upload Progress: $progress%');
-            }
-          },
-          data: formData
-      );
+          ), onSendProgress: (sent, total) {
+        if (total != -1) {
+          final progress = (sent / total * 100).toStringAsFixed(2);
+          if (kDebugMode) {
+            print('Upload Progress: $progress%');
+          }
+        }
+      }, data: formData);
 
       if (response.statusCode == 201) {
-        Map<String, dynamic> rawStory = Map<String, dynamic>.from(response.data['story']);
+        Map<String, dynamic> rawStory =
+            Map<String, dynamic>.from(response.data['story']);
         return StoryModel.fromJson(rawStory);
       } else {
         throw Exception('Failed to create story: ${response.statusMessage}');
       }
-
     } on DioException catch (e) {
-      print("DioException details:");
-      print("Status code: ${e.response?.statusCode}");
-      print("Error response: ${e.response?.data}");
-      print("Error type: ${e.type}");
-      print("Error message: ${e.message}");
+      if (kDebugMode) {
+        print("Error message: ${e.message}");
+      }
 
       if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Upload timed out. Please check your internet connection.');
+        throw Exception(
+            'Upload timed out. Please check your internet connection.');
       } else if (e.response != null) {
         throw Exception(e.response?.data['message'] ?? "An error occurred");
       } else {
         throw Exception('Network error occurred: ${e.message}');
       }
     } catch (e) {
-      print("Error: $e");
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred: $e');
     }
   }
 
-  Future<bool> deleteStory(String storyId) async{
-    try{
-      print("deleteStory api");
-
+  Future<bool> deleteStory(String storyId) async {
+    try {
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.delete('${AppConstants.baseUrl}/stories/delete/$storyId',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.delete(
+        '${AppConstants.baseUrl}/stories/delete/$storyId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
-
-
         bool success = response.data['success'] ?? false;
 
-
-        print("success $success");
+        if (kDebugMode) {
+          print("success $success");
+        }
         return success;
-      }else{
-        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+      } else {
+        if (kDebugMode) {
+          print(
+              "Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> $response");
+        }
         throw Exception('Failed to delete stories ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<StoryModel> updateStory(Map<String, dynamic> story,String storyId) async {
+  Future<StoryModel> updateStory(
+      Map<String, dynamic> story, String storyId) async {
     try {
       String? accessToken = await HiveUtils.getAccessToken();
       if (accessToken == null || accessToken.isEmpty) {
@@ -381,13 +394,9 @@ class StoryApiService {
         "title": story["title"],
         'content': story['content'],
         'category': story['category'],
-        'keepMediaIds':story['keepMediaIds'],
+        'keepMediaIds': story['keepMediaIds'],
         'tags': story['tags'],
       });
-
-
-      print("story formData$formData");
-      print("story $story");
 
       // Handle images
       List<String> imagePaths = story['images'] ?? [];
@@ -424,400 +433,392 @@ class StoryApiService {
             mimeType = 'application/msword';
             break;
           case 'docx':
-            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            mimeType =
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
             break;
           default:
             throw Exception('Unsupported file type: $extension');
         }
 
-        formData.files.add(
-            MapEntry('media',
-                await MultipartFile.fromFile(
-                    imagePaths[i],
-                    filename: 'file$i.$extension',
-                    contentType: MediaType.parse(mimeType)
-                )
-            )
-        );
+        formData.files.add(MapEntry(
+            'media',
+            await MultipartFile.fromFile(imagePaths[i],
+                filename: 'file$i.$extension',
+                contentType: MediaType.parse(mimeType))));
       }
 
       // Make the request with reasonable timeouts
-      final response = await dio.put(
-          '${AppConstants.baseUrl}/stories/update/$storyId',
-          options: Options(
-            headers: {
-              'Authorization': 'Bearer $accessToken',
-            },
-            sendTimeout: const Duration(minutes: 2),
-            receiveTimeout: const Duration(minutes: 2),
-            contentType: 'multipart/form-data',
-          ),
-          onSendProgress: (sent, total) {
-            if (total != -1) {
-              final progress = (sent / total * 100).toStringAsFixed(2);
-              print('Upload Progress: $progress%');
-            }
-          },
-          data: formData
-      );
+      final response =
+          await dio.put('${AppConstants.baseUrl}/stories/update/$storyId',
+              options: Options(
+                headers: {
+                  'Authorization': 'Bearer $accessToken',
+                },
+                sendTimeout: const Duration(minutes: 2),
+                receiveTimeout: const Duration(minutes: 2),
+                contentType: 'multipart/form-data',
+              ), onSendProgress: (sent, total) {
+        if (total != -1) {
+          final progress = (sent / total * 100).toStringAsFixed(2);
+          if (kDebugMode) {
+            print('Upload Progress: $progress%');
+          }
+        }
+      }, data: formData);
 
       if (response.statusCode == 200) {
-        Map<String, dynamic> rawStory = Map<String, dynamic>.from(response.data['story']);
+        Map<String, dynamic> rawStory =
+            Map<String, dynamic>.from(response.data['story']);
         return StoryModel.fromJson(rawStory);
       } else {
         throw Exception('Failed to update story: ${response.statusMessage}');
       }
-
     } on DioException catch (e) {
-      print("DioException details:");
-      print("Status code: ${e.response?.statusCode}");
-      print("Error response: ${e.response?.data}");
-      print("Error type: ${e.type}");
-      print("Error message: ${e.message}");
+      if (kDebugMode) {
+        print("Error message: ${e.message}");
+      }
 
       if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Upload timed out. Please check your internet connection.');
+        throw Exception(
+            'Upload timed out. Please check your internet connection.');
       } else if (e.response != null) {
         throw Exception(e.response?.data['message'] ?? "An error occurred");
       } else {
         throw Exception('Network error occurred: ${e.message}');
       }
     } catch (e) {
-      print("Error: $e");
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred: $e');
     }
   }
 
-  Future<bool> likedStory (String storyId) async{
-    try{
-      print("likedStory api");
+  Future<bool> likedStory(String storyId) async {
+    try {
+      if (kDebugMode) {
+        print("likedStory api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.put('${AppConstants.baseUrl}/stories/$storyId/like',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.put(
+        '${AppConstants.baseUrl}/stories/$storyId/like',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
-        print("response ${response.data}");
-
+        if (kDebugMode) {
+          print("response ${response.data}");
+        }
 
         bool liked = response.data['liked'] ?? false;
 
-
-        print("success $liked");
+        if (kDebugMode) {
+          print("success $liked");
+        }
         return liked;
-      }else{
-        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+      } else {
+        if (kDebugMode) {
+          print(
+              "Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> $response");
+        }
         throw Exception('Failed to Liked stories ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<bool> savedStory (String storyId) async{
-    try{
-      print("savedStory api");
-
+  Future<bool> savedStory(String storyId) async {
+    try {
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.post('${AppConstants.baseUrl}/stories/saved/$storyId',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.post(
+        '${AppConstants.baseUrl}/stories/saved/$storyId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
-        print("response ${response.data}");
-
-
         bool success = response.data['saved'] ?? false;
 
-
-        print("success $success");
+        if (kDebugMode) {
+          print("success $success");
+        }
         return success;
-      }else{
-        print("Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${response}");
+      } else {
+        if (kDebugMode) {
+          print(
+              "Error->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> $response");
+        }
         throw Exception('Failed to Liked stories ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<Map<String,dynamic>> fetchLikes(String storyId) async {
-
-    try{
-      print("fetchLikes api");
+  Future<Map<String, dynamic>> fetchLikes(String storyId) async {
+    try {
+      if (kDebugMode) {
+        print("fetchLikes api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('${AppConstants.baseUrl}/stories/$storyId/likes',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/stories/$storyId/likes',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
-
-        Map<String,dynamic> likes=Map<String,dynamic>.from(response.data);
-
-
+        Map<String, dynamic> likes = Map<String, dynamic>.from(response.data);
 
         return likes;
-      }else{
+      } else {
         throw Exception('Failed to fetch likes ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<Map<String,dynamic>> fetchComments(String storyId) async {
-
-    try{
-      print("fetchComments api");
+  Future<Map<String, dynamic>> fetchComments(String storyId) async {
+    try {
+      if (kDebugMode) {
+        print("fetchComments api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.get('${AppConstants.baseUrl}/stories/$storyId/comments',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.get(
+        '${AppConstants.baseUrl}/stories/$storyId/comments',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
-
-        Map<String,dynamic> comments=Map<String,dynamic>.from(response.data);
-
-
+        Map<String, dynamic> comments =
+            Map<String, dynamic>.from(response.data);
 
         return comments;
-      }else{
+      } else {
         throw Exception('Failed to fetch comments ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<Map<String,dynamic>> postComment(String storyId,String comment) async {
-
-    try{
-      print("postComment api");
+  Future<Map<String, dynamic>> postComment(
+      String storyId, String comment) async {
+    try {
+      if (kDebugMode) {
+        print("postComment api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.post('${AppConstants.baseUrl}/stories/$storyId/comment',
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
-        data: {
-        "text":comment
-        }
-      );
+      final response = await dio.post(
+          '${AppConstants.baseUrl}/stories/$storyId/comment',
+          options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+          data: {"text": comment});
 
       if (response.statusCode == 201) {
-
-        Map<String,dynamic> comments=Map<String,dynamic>.from(response.data["comment"]);
-
-
+        Map<String, dynamic> comments =
+            Map<String, dynamic>.from(response.data["comment"]);
 
         return comments;
-      }else{
+      } else {
         throw Exception('Failed to post comments ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<Map<String,dynamic>> updateComment(String storyId,String commentId,String comment) async {
-
-    try{
-      print("updateComment api");
+  Future<Map<String, dynamic>> updateComment(
+      String storyId, String commentId, String comment) async {
+    try {
+      if (kDebugMode) {
+        print("updateComment api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.put('${AppConstants.baseUrl}/stories/$storyId/comments/$commentId',
-          options:  Options(
-              headers: {
-                'Authorization':'Bearer $accessToken'
-              }
-          ),
-          data: {
-            "text":comment
-          }
-      );
+      final response = await dio.put(
+          '${AppConstants.baseUrl}/stories/$storyId/comments/$commentId',
+          options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+          data: {"text": comment});
 
       if (response.statusCode == 200) {
+        Map<String, dynamic> updatedComment =
+            Map<String, dynamic>.from(response.data["comment"]);
 
-        Map<String,dynamic> updatedComment=Map<String,dynamic>.from(response.data["comment"]);
-
-        print("update comment $updatedComment");
+        if (kDebugMode) {
+          print("update comment $updatedComment");
+        }
 
         return updatedComment;
-      }else{
+      } else {
         throw Exception('Failed to updated comment ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<bool> deleteComment(String storyId,String commentId) async {
-
-    try{
-      print("updateComment api");
+  Future<bool> deleteComment(String storyId, String commentId) async {
+    try {
+      if (kDebugMode) {
+        print("updateComment api");
+      }
 
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.delete('${AppConstants.baseUrl}/stories/$storyId/comments/$commentId',
-          options:  Options(
-              headers: {
-                'Authorization':'Bearer $accessToken'
-              }
-          ),
+      final response = await dio.delete(
+        '${AppConstants.baseUrl}/stories/$storyId/comments/$commentId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
+        bool success = response.data["success"] ?? false;
 
-        bool success = response.data["success"]?? false;
-
-        print("update comment $success");
+        if (kDebugMode) {
+          print("update comment $success");
+        }
 
         return success;
-      }else{
+      } else {
         throw Exception('Failed to delete comment ${response.statusMessage}');
       }
-
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
-        print("Error message ${e.response?.data["message"]}");
+        if (kDebugMode) {
+          print("Error message ${e.response?.data["message"]}");
+        }
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
-        print("Error sending request: ${e.message}");
+      } else {
+        if (kDebugMode) {
+          print("Error sending request: ${e.message}");
+        }
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
-      print("Error: $e");
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
       throw Exception('An unexpected error occurred');
     }
   }
-
 }

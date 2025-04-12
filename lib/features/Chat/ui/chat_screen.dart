@@ -36,7 +36,6 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     context.read<ChatBloc>().add(LoadMessages());
     context.read<ChatBloc>().add(FetchLastSeen());
-
   }
 
   void _scrollToBottom() {
@@ -59,14 +58,17 @@ class _ChatScreenState extends State<ChatScreen> {
           title: Row(
             children: [
               CircleAvatar(
-                backgroundImage: widget.profilePic != null &&widget.profilePic!.isNotEmpty
-                    ? NetworkImage(widget.profilePic!)
-                    : null,
+                backgroundImage:
+                    widget.profilePic != null && widget.profilePic!.isNotEmpty
+                        ? NetworkImage(widget.profilePic!)
+                        : null,
                 child: widget.profilePic == null || widget.profilePic!.isEmpty
                     ? Text(widget.receiverName[0].toUpperCase())
                     : null,
               ),
-              SizedBox(width: size.width*0.05,),
+              SizedBox(
+                width: size.width * 0.05,
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -76,11 +78,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       if (state is MessagesLoaded && state.lastSeen != null) {
                         return Text(
                           'Last seen: ${timeago.format(state.lastSeen!)}',
-
                           style: const TextStyle(fontSize: 12),
                         );
                       }
-                      return const Text('Last seen: TBD', style: TextStyle(fontSize: 12));
+                      return const Text('Last seen: TBD',
+                          style: TextStyle(fontSize: 12));
                     },
                   ),
                 ],
@@ -100,16 +102,20 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         body: Column(
           children: [
-            if (_uploadedMediaUrl != null) _buildMediaPreview(), // Show preview if media is uploaded
+            if (_uploadedMediaUrl != null)
+              _buildMediaPreview(), // Show preview if media is uploaded
             Expanded(
               child: BlocConsumer<ChatBloc, ChatState>(
                 listener: (context, state) {
                   print('Bloc state changed: $state');
                   if (state is MessagesLoaded) {
-                    print('Messages loaded, scrolling to bottom: ${state.messages}');
-                    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                    print(
+                        'Messages loaded, scrolling to bottom: ${state.messages}');
+                    WidgetsBinding.instance
+                        .addPostFrameCallback((_) => _scrollToBottom());
                   } else if (state is ChatError) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.message}')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${state.message}')));
                   } else if (state is MediaUploaded) {
                     setState(() {
                       _uploadedMediaUrl = state.mediaUrl;
@@ -135,7 +141,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           Text('Error: ${state.message}'),
                           const SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: () => context.read<ChatBloc>().add(LoadMessages()),
+                            onPressed: () =>
+                                context.read<ChatBloc>().add(LoadMessages()),
                             child: const Text('Retry'),
                           ),
                         ],
@@ -201,24 +208,29 @@ class _ChatScreenState extends State<ChatScreen> {
         return GestureDetector(
           onLongPress: isMe
               ? () {
-            showDialog(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: const Text('Delete Message'),
-                content: const Text('Are you sure you want to delete this message?'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<ChatBloc>().add(DeleteMessage(message.id));
-                      Navigator.pop(dialogContext);
-                    },
-                    child: const Text('Delete'),
-                  ),
-                ],
-              ),
-            );
-          }
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('Delete Message'),
+                      content: const Text(
+                          'Are you sure you want to delete this message?'),
+                      actions: [
+                        TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Cancel')),
+                        ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<ChatBloc>()
+                                .add(DeleteMessage(message.id));
+                            Navigator.pop(dialogContext);
+                          },
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               : null,
           child: Align(
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -230,7 +242,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
-                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
                   if (message.mediaUrl != null && message.mediaUrl!.isNotEmpty)
                     ClipRRect(
@@ -250,18 +263,22 @@ class _ChatScreenState extends State<ChatScreen> {
                   if (message.content.isNotEmpty)
                     Text(
                       message.content,
-                      style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                      style:
+                          TextStyle(color: isMe ? Colors.white : Colors.black),
                     ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         timeago.format(DateTime.parse(message.timestamp)),
-                        style: TextStyle(fontSize: 10, color: isMe ? Colors.white70 : Colors.black54),
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: isMe ? Colors.white70 : Colors.black54),
                       ),
                       if (isMe && message.status == 'read') ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.done_all, size: 14, color: Colors.white70),
+                        const Icon(Icons.done_all,
+                            size: 14, color: Colors.white70),
                       ] else if (isMe) ...[
                         const SizedBox(width: 4),
                         const Icon(Icons.done, size: 14, color: Colors.white70),
@@ -281,8 +298,12 @@ class _ChatScreenState extends State<ChatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(offset: const Offset(0, -2), blurRadius: 4, color: Colors.black.withOpacity(0.1))],
+        boxShadow: [
+          BoxShadow(
+              offset: const Offset(0, -2),
+              blurRadius: 4,
+              color: Colors.black.withOpacity(0.1))
+        ],
       ),
       child: Row(
         children: [
@@ -291,7 +312,15 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () async {
               final result = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
-                allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'],
+                allowedExtensions: [
+                  'jpg',
+                  'jpeg',
+                  'png',
+                  'gif',
+                  'pdf',
+                  'doc',
+                  'docx'
+                ],
               );
               if (result != null) {
                 final file = File(result.files.single.path!);
@@ -302,21 +331,26 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               controller: _textController,
-              decoration: const InputDecoration(hintText: 'Type a message', border: InputBorder.none),
+              decoration: const InputDecoration(
+                  hintText: 'Type a message', border: InputBorder.none),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.send),
             onPressed: () {
-              if (_textController.text.trim().isNotEmpty || _uploadedMediaUrl != null) {
+              if (_textController.text.trim().isNotEmpty ||
+                  _uploadedMediaUrl != null) {
                 context.read<ChatBloc>().add(
-                  SendMessage(
-                    _textController.text.trim(),
-                    mediaUrl: _uploadedMediaUrl != null
-                        ? {'url': _uploadedMediaUrl!, 'publicId': _uploadedPublicId!}
-                        : null,
-                  ),
-                );
+                      SendMessage(
+                        _textController.text.trim(),
+                        mediaUrl: _uploadedMediaUrl != null
+                            ? {
+                                'url': _uploadedMediaUrl!,
+                                'publicId': _uploadedPublicId!
+                              }
+                            : null,
+                      ),
+                    );
                 _textController.clear();
                 setState(() {
                   _uploadedMediaUrl = null;

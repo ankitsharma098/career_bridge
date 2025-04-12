@@ -1,7 +1,8 @@
 import 'package:android/features/Stories/data/story_api_service.dart';
-import 'package:bloc/bloc.dart';
+
 import 'package:equatable/equatable.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../data/models/story/story_model.dart';
 
@@ -9,64 +10,69 @@ part 'story_event.dart';
 part 'story_state.dart';
 
 class StoryBloc extends Bloc<StoryEvent, StoryState> {
-
   StoryApiService apiService = StoryApiService();
-   StoryBloc() : super(StoryInitialState()) {
+  StoryBloc() : super(StoryInitialState()) {
     on<FetchStoriesEvent>(_onFetchStories);
     on<LoadMoreStories>(_onLoadMoreStories);
     on<ToggleStoryLikeEvent>(_onToggleStoryLikeEvent);
     on<ToggleSavedStoryEvent>(_onToggleSavedStoryEvent);
-
   }
 
   Future<void> _onFetchStories(
-      FetchStoriesEvent event,
-      Emitter<StoryState> emit
-      ) async {
+      FetchStoriesEvent event, Emitter<StoryState> emit) async {
     emit(StoryLoadingState());
     try {
-
-      List<StoryModel> stories =await apiService.fetchStories(1);
+      List<StoryModel> stories = await apiService.fetchStories(1);
       final int pageSize = 10; // Adjust this to match your API's page size
-      final bool hasReachedMax = stories.isEmpty || stories.length < pageSize; // assuming pageSize is 10
-      emit(StoryLoadedState(stories: stories, hasReachedMax: hasReachedMax, currentPage: 1));
-      print("Initial fetch - Stories count: ${stories.length}, hasReachedMax: $hasReachedMax");
+      final bool hasReachedMax = stories.isEmpty ||
+          stories.length < pageSize; // assuming pageSize is 10
+      emit(StoryLoadedState(
+          stories: stories, hasReachedMax: hasReachedMax, currentPage: 1));
+      if (kDebugMode) {
+        print(
+            "Initial fetch - Stories count: ${stories.length}, hasReachedMax: $hasReachedMax");
+      }
     } catch (e) {
       emit(StoryErrorState(e.toString()));
     }
   }
 
-  Future<void> _onLoadMoreStories(LoadMoreStories events, Emitter<StoryState> emit) async {
+  Future<void> _onLoadMoreStories(
+      LoadMoreStories events, Emitter<StoryState> emit) async {
     final currentState = state;
     if (currentState is StoryLoadedState) {
       if (currentState.hasReachedMax) {
-        print("Already reached max, skipping load more");
+        if (kDebugMode) {
+          print("Already reached max, skipping load more");
+        }
         return;
       }
-        try {
-          final nextPage = currentState.currentPage + 1;
-          List<StoryModel> newStories = await apiService.fetchStories(nextPage);
+      try {
+        final nextPage = currentState.currentPage + 1;
+        List<StoryModel> newStories = await apiService.fetchStories(nextPage);
 
-          bool hasReachedMax=newStories.isEmpty || newStories.length < 10 ;
-          final updatedStories = [...currentState.stories, ...newStories];
-          print("Load more - New stories count: ${newStories.length}, hasReachedMax: $hasReachedMax");
-
-
-          emit(StoryLoadedState(
-              stories: updatedStories,
-              hasReachedMax: hasReachedMax,
-              currentPage: nextPage
-          ));
-
-        } catch (e) {
-        print("error $e");
-          emit(StoryErrorState(e.toString()));
+        bool hasReachedMax = newStories.isEmpty || newStories.length < 10;
+        final updatedStories = [...currentState.stories, ...newStories];
+        if (kDebugMode) {
+          print(
+              "Load more - New stories count: ${newStories.length}, hasReachedMax: $hasReachedMax");
         }
 
+        emit(StoryLoadedState(
+            stories: updatedStories,
+            hasReachedMax: hasReachedMax,
+            currentPage: nextPage));
+      } catch (e) {
+        if (kDebugMode) {
+          print("error $e");
+        }
+        emit(StoryErrorState(e.toString()));
+      }
     }
   }
 
-  Future<void> _onToggleStoryLikeEvent(ToggleStoryLikeEvent event, Emitter<StoryState> emit) async {
+  Future<void> _onToggleStoryLikeEvent(
+      ToggleStoryLikeEvent event, Emitter<StoryState> emit) async {
     if (state is StoryLoadedState) {
       final currentState = state as StoryLoadedState;
 
@@ -76,7 +82,8 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
           final newIsLiked = !story.isLiked;
           return story.copyWith(
             isLiked: newIsLiked,
-            likesCount: newIsLiked ? story.likesCount + 1 : story.likesCount - 1,
+            likesCount:
+                newIsLiked ? story.likesCount + 1 : story.likesCount - 1,
           );
         }
         return story;
@@ -92,7 +99,10 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
       try {
         // Make API call
         final success = await apiService.likedStory(event.storyId);
-        print("Toggle Like for ${event.storyId}: ${success ? 'Liked' : 'Unliked'}");
+        if (kDebugMode) {
+          print(
+              "Toggle Like for ${event.storyId}: ${success ? 'Liked' : 'Unliked'}");
+        }
 
         // No need to revert state here unless API actually fails
         // The optimistic update is correct regardless of success value
@@ -103,12 +113,12 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
           hasReachedMax: currentState.hasReachedMax,
           currentPage: currentState.currentPage,
         ));
-
       }
     }
   }
 
-  Future<void> _onToggleSavedStoryEvent(ToggleSavedStoryEvent event, Emitter<StoryState> emit) async {
+  Future<void> _onToggleSavedStoryEvent(
+      ToggleSavedStoryEvent event, Emitter<StoryState> emit) async {
     if (state is StoryLoadedState) {
       final currentState = state as StoryLoadedState;
 
@@ -132,8 +142,10 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
       try {
         // Make API call
         final success = await apiService.savedStory(event.storyId);
-        print("Toggle saved for ${event.storyId}: ${success ? 'Saved' : 'Save'}");
-
+        if (kDebugMode) {
+          print(
+              "Toggle saved for ${event.storyId}: ${success ? 'Saved' : 'Save'}");
+        }
       } catch (e) {
         emit(StoryErrorState(e.toString()));
         emit(StoryLoadedState(
@@ -141,9 +153,7 @@ class StoryBloc extends Bloc<StoryEvent, StoryState> {
           hasReachedMax: currentState.hasReachedMax,
           currentPage: currentState.currentPage,
         ));
-
       }
     }
   }
-
 }

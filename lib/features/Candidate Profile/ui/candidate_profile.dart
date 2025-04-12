@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:android/core/utils/snackBarUtils.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -10,11 +12,8 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
-
 import '../../../core/constants/colors.dart';
-import '../../../core/utils/customErrorUtils.dart';
 import '../../../data/models/candidate/candidate_model.dart';
-import '../../../data/models/employer/employer_model.dart';
 import '../bloc/candidate_profile_bloc.dart';
 
 class CandidateProfile extends StatefulWidget {
@@ -238,13 +237,86 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             child: Hero(
                               tag: 'profile_image',
                               child: CircleAvatar(
-                                backgroundImage: candidate
-                                            .personalInfo.profilePic !=
-                                        null
-                                    ? NetworkImage(
-                                        candidate.personalInfo.profilePic!)
-                                    : AssetImage('assets/default_profile.png')
-                                        as ImageProvider,
+                                radius: screenSize.width *
+                                    0.15, // Consistent radius for both cases
+                                backgroundColor:
+                                    candidate.personalInfo.profilePic != null
+                                        ? Colors.transparent
+                                        : Theme.of(context)
+                                            .primaryColor
+                                            .withOpacity(0.1),
+                                child: candidate.personalInfo.profilePic != null
+                                    ? ClipOval(
+                                        // Using ClipOval instead of ClipRRect for perfect circle
+                                        child: CachedNetworkImage(
+                                          imageUrl: candidate
+                                              .personalInfo.profilePic
+                                              .toString(),
+                                          width: screenSize.width *
+                                              0.3, // Double the radius
+                                          height: screenSize.width *
+                                              0.3, // Double the radius
+                                          fit: BoxFit
+                                              .cover, // Changed to cover for better circle filling
+                                          placeholder: (context, url) =>
+                                              Container(
+                                            width: screenSize.width * 0.3,
+                                            height: screenSize.width * 0.3,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.darkSurface
+                                                  : AppColors.lightSurface,
+                                            ),
+                                            child: Icon(
+                                              Icons.person,
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.darkSecondaryText
+                                                  : AppColors
+                                                      .lightSecondaryText,
+                                            ),
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              Container(
+                                            width: screenSize.width * 0.3,
+                                            height: screenSize.width * 0.3,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.darkSurface
+                                                  : AppColors.lightSurface,
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                candidate
+                                                    .personalInfo.fullName[0],
+                                                style: TextStyle(
+                                                  fontSize: 24,
+                                                  color: Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.dark
+                                                      ? AppColors.darkText
+                                                      : AppColors.lightText,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        candidate.personalInfo.fullName[0],
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          color: Theme.of(context).primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
@@ -334,7 +406,6 @@ class _CandidateProfileState extends State<CandidateProfile> {
   }
 
   Widget _buildSectionHeader(String title, VoidCallback onAdd) {
-    final screenSize = MediaQuery.of(context).size;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -401,8 +472,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 ),
               ),
               IconButton(
-                icon:
-                    Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
+                icon: Icon(FontAwesomeIcons.penToSquare,
+                    color: AppColors.lightPrimary),
                 onPressed: () =>
                     _showPersonalInfoEditDialog(context, candidate),
               ),
@@ -425,8 +496,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
               Text('Profile Summary',
                   style: Theme.of(context).textTheme.displaySmall),
               IconButton(
-                icon:
-                    Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
+                icon: Icon(FontAwesomeIcons.penToSquare,
+                    color: AppColors.lightPrimary),
                 onPressed: () =>
                     _showProfileSummaryEditDialog(context, candidate),
               ),
@@ -463,8 +534,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
             children: [
               Text('About', style: Theme.of(context).textTheme.displaySmall),
               IconButton(
-                icon:
-                    Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
+                icon: Icon(FontAwesomeIcons.penToSquare,
+                    color: AppColors.lightPrimary),
                 onPressed: () => _showAboutEditDialog(context, candidate),
               ),
             ],
@@ -503,8 +574,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(),
               ),
               IconButton(
-                icon:
-                    Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
+                icon: Icon(FontAwesomeIcons.penToSquare,
+                    color: AppColors.lightPrimary),
                 onPressed: () =>
                     _showDisabilityDetailsEditDialog(context, candidate),
               ),
@@ -557,8 +628,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
               Text('Job Preferences',
                   style: Theme.of(context).textTheme.displaySmall),
               IconButton(
-                icon:
-                    Icon(FontAwesomeIcons.edit, color: AppColors.lightPrimary),
+                icon: Icon(FontAwesomeIcons.penToSquare,
+                    color: AppColors.lightPrimary),
                 onPressed: () =>
                     _showJobPreferencesEditDialog(context, candidate),
               ),
@@ -697,7 +768,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(FontAwesomeIcons.edit,
+                        icon: Icon(FontAwesomeIcons.penToSquare,
                             color: AppColors.lightPrimary),
                         onPressed: () =>
                             _showEditEducationDialog(context, edu, candidate),
@@ -705,7 +776,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
-                          print("EduId ${edu.id}");
+                          if (kDebugMode) {
+                            print("EduId ${edu.id}");
+                          }
                           _confirmDelete(context, 'education', edu.id,
                               '${edu.course} from ${edu.institution}');
                         },
@@ -765,7 +838,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              exp.position ?? 'Unknown Position',
+                              exp.position,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -776,7 +849,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             ),
                             SizedBox(height: screenSize.height * 0.005),
                             Text(
-                              exp.company ?? 'Unknown Company',
+                              exp.company,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
@@ -788,12 +861,12 @@ class _CandidateProfileState extends State<CandidateProfile> {
                                     color: AppColors.lightSecondaryText,
                                   ),
                             ),
-                            if (exp.descriptions?.isNotEmpty ?? false)
+                            if (exp.descriptions.isNotEmpty)
                               Padding(
                                 padding: EdgeInsets.only(
                                     top: screenSize.height * 0.005),
                                 child: Text(
-                                  exp.descriptions!,
+                                  exp.descriptions,
                                   style: Theme.of(context).textTheme.bodySmall,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -806,7 +879,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(FontAwesomeIcons.edit,
+                            icon: Icon(FontAwesomeIcons.penToSquare,
                                 color: AppColors.lightPrimary),
                             onPressed: () =>
                                 _showEditWorkExperienceDialog(context, exp),
@@ -816,7 +889,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             onPressed: () => _confirmDelete(
                               context,
                               'work-experience',
-                              exp.id ?? '',
+                              exp.id,
                               '${exp.position} at ${exp.company}',
                             ),
                           ),
@@ -877,7 +950,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              internship.projectName ?? 'Unknown Project',
+                              internship.projectName,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -887,7 +960,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             ),
                             SizedBox(height: screenSize.height * 0.005),
                             Text(
-                              internship.company ?? 'Unknown Company',
+                              internship.company,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
@@ -899,21 +972,21 @@ class _CandidateProfileState extends State<CandidateProfile> {
                                     color: AppColors.lightSecondaryText,
                                   ),
                             ),
-                            if (internship.role?.isNotEmpty ?? false)
+                            if (internship.role.isNotEmpty)
                               Text('Role: ${internship.role}'),
-                            if (internship.descriptions?.isNotEmpty ?? false)
+                            if (internship.descriptions.isNotEmpty)
                               Padding(
                                 padding: EdgeInsets.only(
                                     top: screenSize.height * 0.005),
                                 child: Text(
-                                  internship.descriptions!,
+                                  internship.descriptions,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            if (internship.skills?.isNotEmpty ?? false)
-                              Text('Skills: ${internship.skills!.join(', ')}'),
-                            if (internship.projectUrl?.isNotEmpty ?? false)
+                            if (internship.skills.isNotEmpty)
+                              Text('Skills: ${internship.skills.join(', ')}'),
+                            if (internship.projectUrl.isNotEmpty)
                               Text('URL: ${internship.projectUrl}'),
                           ],
                         ),
@@ -922,7 +995,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(FontAwesomeIcons.edit,
+                            icon: Icon(FontAwesomeIcons.penToSquare,
                                 color: AppColors.lightPrimary),
                             onPressed: () =>
                                 _showEditInternshipDialog(context, internship),
@@ -932,7 +1005,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             onPressed: () => _confirmDelete(
                               context,
                               'internship',
-                              internship.id ?? '',
+                              internship.id,
                               '${internship.projectName} at ${internship.company}',
                             ),
                           ),
@@ -993,7 +1066,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              project.projectName ?? 'Unknown Project',
+                              project.projectName,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -1011,19 +1084,19 @@ class _CandidateProfileState extends State<CandidateProfile> {
                                     color: AppColors.lightSecondaryText,
                                   ),
                             ),
-                            if (project.descriptions?.isNotEmpty ?? false)
+                            if (project.descriptions.isNotEmpty)
                               Padding(
                                 padding: EdgeInsets.only(
                                     top: screenSize.height * 0.005),
                                 child: Text(
-                                  project.descriptions!,
+                                  project.descriptions,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            if (project.skills?.isNotEmpty ?? false)
-                              Text('Skills: ${project.skills!.join(', ')}'),
-                            if (project.projectUrl?.isNotEmpty ?? false)
+                            if (project.skills.isNotEmpty)
+                              Text('Skills: ${project.skills.join(', ')}'),
+                            if (project.projectUrl.isNotEmpty)
                               Text('URL: ${project.projectUrl}'),
                           ],
                         ),
@@ -1032,7 +1105,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(FontAwesomeIcons.edit,
+                            icon: Icon(FontAwesomeIcons.penToSquare,
                                 color: AppColors.lightPrimary),
                             onPressed: () =>
                                 _showEditProjectDialog(context, project),
@@ -1042,8 +1115,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             onPressed: () => _confirmDelete(
                               context,
                               'project',
-                              project.id ?? '',
-                              project.projectName ?? '',
+                              project.id,
+                              project.projectName,
                             ),
                           ),
                         ],
@@ -1103,7 +1176,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              cert.name ?? 'Unknown Certification',
+                              cert.name,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -1113,8 +1186,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             ),
                             SizedBox(height: screenSize.height * 0.005),
                             Text(
-                              cert.issuingOrganization ??
-                                  'Unknown Organization',
+                              cert.issuingOrganization,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             if (cert.issueDate != null)
@@ -1127,10 +1199,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
                                       color: AppColors.lightSecondaryText,
                                     ),
                               ),
-                            if (cert.credentialID?.isNotEmpty ?? false)
+                            if (cert.credentialID.isNotEmpty)
                               Text('ID: ${cert.credentialID}'),
-                            if (cert.url?.isNotEmpty ?? false)
-                              Text('URL: ${cert.url}'),
+                            if (cert.url.isNotEmpty) Text('URL: ${cert.url}'),
                           ],
                         ),
                       ),
@@ -1138,7 +1209,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(FontAwesomeIcons.edit,
+                            icon: Icon(FontAwesomeIcons.penToSquare,
                                 color: AppColors.lightPrimary),
                             onPressed: () =>
                                 _showEditCertificationDialog(context, cert),
@@ -1148,8 +1219,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             onPressed: () => _confirmDelete(
                               context,
                               'certification',
-                              cert.id ?? '',
-                              cert.name ?? '',
+                              cert.id,
+                              cert.name,
                             ),
                           ),
                         ],
@@ -1175,19 +1246,16 @@ class _CandidateProfileState extends State<CandidateProfile> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Resume',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: AppColors.lightText,
-                ),
-          ),
+          Text('Resume', style: Theme.of(context).textTheme.displaySmall),
           SizedBox(height: screenSize.height * 0.02),
           StatefulBuilder(
             builder: (context, setState) =>
                 BlocListener<CandidateProfileBloc, CandidateProfileState>(
               listener: (context, state) {
                 if (state is ProfileUpdateSuccess) {
-                  print("State $state");
+                  if (kDebugMode) {
+                    print("State $state");
+                  }
                   SnackBarUtils.showGreenSnackBar(
                       'Resume uploaded successfully', context);
                 } else if (state is ProfileError) {
@@ -1396,7 +1464,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
   void _showProfileSummaryEditDialog(
       BuildContext parentContext, Candidate candidate) {
     final controller = TextEditingController(text: candidate.profileSummary);
-    final screenSize = MediaQuery.of(parentContext).size;
+    // final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
       context: parentContext,
@@ -1433,7 +1501,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
 
   void _showAboutEditDialog(BuildContext parentContext, Candidate candidate) {
     final controller = TextEditingController(text: candidate.about);
-    final screenSize = MediaQuery.of(parentContext).size;
+    //final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
       context: parentContext,
@@ -1598,7 +1666,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
                         .map((e) => e.trim())
                         .toList(),
                   );
-                  print(updatedDetails);
+                  if (kDebugMode) {
+                    print(updatedDetails);
+                  }
                   BlocProvider.of<CandidateProfileBloc>(parentContext)
                       .add(UpdateDisabilityDetails(updatedDetails));
                   Navigator.pop(dialogContext);
@@ -2027,7 +2097,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
     final descriptionController = TextEditingController();
     DateTime? startDate;
     DateTime? endDate;
-    final screenSize = MediaQuery.of(parentContext).size;
+    //final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
       context: parentContext,
@@ -2554,7 +2624,9 @@ class _CandidateProfileState extends State<CandidateProfile> {
                     .add(AddCertification(newCertification));
                 Navigator.pop(dialogContext);
               } else {
-                print("not pressed");
+                if (kDebugMode) {
+                  print("not pressed");
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -2642,7 +2714,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
 
   void _confirmDelete(
       BuildContext parentContext, String type, String id, String itemName) {
-    final screenSize = MediaQuery.of(parentContext).size;
+    // final screenSize = MediaQuery.of(parentContext).size;
 
     showDialog(
       context: parentContext,
@@ -2902,7 +2974,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: isUploaded ? Colors.green.shade300 : Colors.grey.shade300),
-        color: isUploaded ? Colors.green.shade50 : Colors.grey.shade50,
+        color: isUploaded ? Colors.green.shade50 : null,
       ),
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -2919,7 +2991,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
         ),
         title: Text(
           label,
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           isUploaded ? 'Resume uploaded successfully' : description,

@@ -14,7 +14,6 @@ import '../../See profile/ui/see_profile.dart';
 import '../create_story_bloc/create_story_bloc.dart';
 import '../reaction_bloc/story_reaction_bloc.dart';
 import '../stats_bloc/story_stats_bloc.dart';
-import 'create_story.dart';
 import 'edit_story.dart';
 
 class MyStoriesScreen extends StatefulWidget {
@@ -31,7 +30,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
 
   @override
   void initState() {
-    BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryEvent(isMyStory: true));
+    BlocProvider.of<StoryStatsBloc>(context)
+        .add(FetchStoryEvent(isMyStory: true));
     scrollController.addListener(_onScroll);
     super.initState();
   }
@@ -45,7 +45,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
   void _onScroll() {
     final state = context.read<StoryStatsBloc>().state;
     if (_isBottom && state is StoryLoaded && !state.hasReachedMax) {
-      BlocProvider.of<StoryStatsBloc>(context).add(LoadMoreStoriesEvent(isMyStory: true));
+      BlocProvider.of<StoryStatsBloc>(context)
+          .add(LoadMoreStoriesEvent(isMyStory: true));
     }
   }
 
@@ -112,23 +113,17 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
                   SizedBox(height: screenSize.height * 0.02),
                   Text(
                     'No Stories found',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   SizedBox(height: screenSize.height * 0.01),
                   Text(
                     'Click the + button above to post your first Story',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(
-                      color: Colors.grey[500],
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[500],
+                        ),
                   ),
                 ],
               ),
@@ -136,7 +131,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
           }
           return RefreshIndicator(
             onRefresh: () async {
-              BlocProvider.of<StoryStatsBloc>(context).add(FetchStoryEvent(isMyStory: true));
+              BlocProvider.of<StoryStatsBloc>(context)
+                  .add(FetchStoryEvent(isMyStory: true));
             },
             child: ListView.builder(
               controller: scrollController,
@@ -178,23 +174,17 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
               SizedBox(height: screenSize.height * 0.02),
               Text(
                 'Something went wrong',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               SizedBox(height: screenSize.height * 0.01),
               Text(
                 'Please try again later',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(
-                  color: Colors.grey[500],
-                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[500],
+                    ),
               ),
             ],
           ),
@@ -203,8 +193,9 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
     );
   }
 
-  Widget _buildStoryCard(StoryModel story, Size screenSize, BuildContext context) {
-    final date = DateTime.parse(story.createdAt);
+  Widget _buildStoryCard(
+      StoryModel story, Size screenSize, BuildContext context) {
+    //final date = DateTime.parse(story.createdAt);
     final isOwner = story.hostDetails.id == widget.currentUserId;
     final isExpanded = _expandedStories[story.id] ?? false;
 
@@ -234,7 +225,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildStoryHeader(story, isOwner, screenSize),
-            if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
+            if (story.mediaUrls.isNotEmpty)
+              _buildEnhancedMediaCarousel(story, screenSize),
             _buildStoryContent(story, isExpanded, screenSize),
             _buildTags(story, screenSize),
             const Divider(height: 1, thickness: 0.5),
@@ -272,7 +264,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
                       userId: story.hostDetails.id,
                       userType: story.userType,
                       currentUserId: widget.currentUserId,
-                      currentUserType: 'employer', // Adjust based on your app logic
+                      currentUserType:
+                          'employer', // Adjust based on your app logic
                     ),
                   ),
                 ),
@@ -336,7 +329,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
     );
   }
 
-  Widget _buildStoryContent(StoryModel story, bool isExpanded, Size screenSize) {
+  Widget _buildStoryContent(
+      StoryModel story, bool isExpanded, Size screenSize) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -357,7 +351,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
               Text(
                 story.content,
                 maxLines: isExpanded ? null : 3,
-                overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                overflow:
+                    isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: screenSize.width * 0.037,
                   color: Colors.grey[700],
@@ -378,9 +373,11 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
                       },
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -396,7 +393,9 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              isExpanded
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
                               size: screenSize.width * 0.04,
                               color: Theme.of(context).primaryColor,
                             ),
@@ -414,54 +413,53 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
   }
 
   Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
-    return Container(
-      child: Stack(
-        children: [
-          ClipRRect(
-            child: story.mediaUrls.length > 1
-                ? PageView.builder(
-              itemCount: story.mediaUrls.length,
-              itemBuilder: (context, index) => _buildMediaItem(
-                story.mediaUrls[index].url,
-                story.mediaUrls.map((m) => m.url).toList(),
-                index,
-                screenSize,
-              ),
-            )
-                : _buildMediaItem(
-              story.mediaUrls.first.url,
-              story.mediaUrls.map((m) => m.url).toList(),
-              0,
-              screenSize,
-            ),
-          ),
-          if (story.mediaUrls.length > 1)
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  story.mediaUrls.length,
-                      (index) => Container(
-                    width: 8,
-                    height: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
+    return Stack(
+      children: [
+        ClipRRect(
+          child: story.mediaUrls.length > 1
+              ? PageView.builder(
+                  itemCount: story.mediaUrls.length,
+                  itemBuilder: (context, index) => _buildMediaItem(
+                    story.mediaUrls[index].url,
+                    story.mediaUrls.map((m) => m.url).toList(),
+                    index,
+                    screenSize,
+                  ),
+                )
+              : _buildMediaItem(
+                  story.mediaUrls.first.url,
+                  story.mediaUrls.map((m) => m.url).toList(),
+                  0,
+                  screenSize,
+                ),
+        ),
+        if (story.mediaUrls.length > 1)
+          Positioned(
+            bottom: 10,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                story.mediaUrls.length,
+                (index) => Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
-  Widget _buildMediaItem(String url, List<String> allUrls, int index, Size screenSize) {
+  Widget _buildMediaItem(
+      String url, List<String> allUrls, int index, Size screenSize) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -485,7 +483,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
               child: CircularProgressIndicator(
                 color: Theme.of(context).primaryColor,
                 value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
                     : null,
               ),
             );
@@ -505,26 +504,30 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: story.tags.map((tag) => Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: Chip(
-              label: Text('#$tag'),
-              labelStyle: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.w500,
-                fontSize: screenSize.width * 0.033,
-              ),
-              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  width: 0.5,
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-            ),
-          )).toList(),
+          children: story.tags
+              .map((tag) => Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: Chip(
+                      label: Text('#$tag'),
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: screenSize.width * 0.033,
+                      ),
+                      backgroundColor:
+                          Theme.of(context).primaryColor.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
+                  ))
+              .toList(),
         ),
       ),
     );
@@ -539,7 +542,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => BlocProvider(
-                create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                create: (context) =>
+                    StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
                 child: StoryReactionsScreen(
                   story: story,
                   employerId: widget.currentUserId,
@@ -592,7 +596,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.grey[800]
@@ -668,7 +673,9 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
             label: story.isLiked ? 'Liked' : 'Like',
             color: story.isLiked ? Theme.of(context).primaryColor : null,
             onTap: () {
-              context.read<StoryStatsBloc>().add(ToggleStoryLikeEvent(story.id));
+              context
+                  .read<StoryStatsBloc>()
+                  .add(ToggleStoryLikeEvent(story.id));
             },
           ),
           Container(
@@ -684,7 +691,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => BlocProvider(
-                    create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                    create: (context) =>
+                        StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
                     child: StoryReactionsScreen(
                       story: story,
                       employerId: widget.currentUserId,
@@ -704,7 +712,9 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
             label: story.isSaved ? 'Saved' : 'Save',
             color: story.isSaved ? Theme.of(context).primaryColor : null,
             onTap: () {
-              context.read<StoryStatsBloc>().add(ToggleSavedStoryEvent(story.id));
+              context
+                  .read<StoryStatsBloc>()
+                  .add(ToggleSavedStoryEvent(story.id));
             },
           ),
         ],
@@ -788,7 +798,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
           color: Colors.red,
         ),
         onPressed: () {
-          BlocProvider.of<StoryStatsBloc>(context).add(DeleteStory(storyId: storyId));
+          BlocProvider.of<StoryStatsBloc>(context)
+              .add(DeleteStory(storyId: storyId));
         },
       ),
     );

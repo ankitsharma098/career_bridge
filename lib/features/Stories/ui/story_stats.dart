@@ -5,10 +5,7 @@ import 'package:android/features/Stories/ui/saved_stories.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-
-import '../../../core/constants/colors.dart';
 import '../../../core/utils/image_viewer.dart';
-import '../../Jobs/ui/shimmer/Job_stats_shimmer.dart';
 import '../../See profile/bloc/see_profile_bloc.dart';
 import '../../See profile/ui/see_profile.dart';
 import '../create_story_bloc/create_story_bloc.dart';
@@ -113,7 +110,9 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                       },
                     ),
                     SizedBox(height: screenSize.height * 0.03),
-                    if (mostViewedStory != null || mostLikedStory != null || latestStory != null)
+                    if (mostViewedStory != null ||
+                        mostLikedStory != null ||
+                        latestStory != null)
                       _buildTopStories(
                         context,
                         screenSize,
@@ -142,16 +141,16 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                 Text(
                   'Something went wrong',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.bold,
-                  ),
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 SizedBox(height: screenSize.height * 0.01),
                 Text(
                   'Please try again later',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
+                        color: Colors.grey[500],
+                      ),
                 ),
               ],
             ),
@@ -180,16 +179,16 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             Text(
               'No Stories Yet',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               'Create your first story to see stats here',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
           ],
         ),
@@ -209,8 +208,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             Text(
               'Story Insights',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const Icon(Icons.auto_stories),
           ],
@@ -220,10 +219,10 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
   }
 
   Widget _buildOverviewCards(
-      BuildContext context,
-      Size screenSize,
-      Map<String, dynamic> metrics,
-      ) {
+    BuildContext context,
+    Size screenSize,
+    Map<String, dynamic> metrics,
+  ) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -259,7 +258,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
               MaterialPageRoute(
                 builder: (context) => BlocProvider(
                   create: (context) => StoryStatsBloc(),
-                  child: SavedStoriesScreen(currentUserId: widget.currentUserId),
+                  child:
+                      SavedStoriesScreen(currentUserId: widget.currentUserId),
                 ),
               ),
             );
@@ -291,36 +291,40 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
   }
 
   Widget _buildTopStories(
-      BuildContext context,
-      Size screenSize,
-      StoryModel? mostViewed,
-      StoryModel? mostLiked,
-      StoryModel? latest,
-      ) {
+    BuildContext context,
+    Size screenSize,
+    StoryModel? mostViewed,
+    StoryModel? mostLiked,
+    StoryModel? latest,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Top Stories',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         SizedBox(height: screenSize.height * 0.02),
         if (mostViewed != null)
-          _buildStoryCard('Most Viewed Story', mostViewed, Icons.visibility, Colors.blue),
+          _buildStoryCard(
+              'Most Viewed Story', mostViewed, Icons.visibility, Colors.blue),
         SizedBox(height: mostViewed != null ? screenSize.height * 0.02 : 0),
         if (mostLiked != null)
-          _buildStoryCard('Most Liked Story', mostLiked, Icons.favorite, Colors.red),
+          _buildStoryCard(
+              'Most Liked Story', mostLiked, Icons.favorite, Colors.red),
         SizedBox(height: mostLiked != null ? screenSize.height * 0.02 : 0),
         if (latest != null)
-          _buildStoryCard('Latest Story', latest, Icons.access_time, Colors.green),
+          _buildStoryCard(
+              'Latest Story', latest, Icons.access_time, Colors.green),
         SizedBox(height: latest != null ? screenSize.height * 0.02 : 0),
       ],
     );
   }
 
-  Widget _buildStoryCard(String title, StoryModel story, IconData icon, Color color) {
+  Widget _buildStoryCard(
+      String title, StoryModel story, IconData icon, Color color) {
     final screenSize = MediaQuery.of(context).size;
     final isExpanded = _expandedStories[story.id] ?? false;
 
@@ -350,7 +354,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildStoryHeader(story, screenSize, title, icon, color),
-            if (story.mediaUrls.isNotEmpty) _buildEnhancedMediaCarousel(story, screenSize),
+            if (story.mediaUrls.isNotEmpty)
+              _buildEnhancedMediaCarousel(story, screenSize),
             _buildStoryContent(story, isExpanded, screenSize),
             _buildTags(story, screenSize),
             const Divider(height: 1, thickness: 0.5),
@@ -363,7 +368,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
     );
   }
 
-  Widget _buildStoryHeader(StoryModel story, Size screenSize, String title, IconData icon, Color color) {
+  Widget _buildStoryHeader(StoryModel story, Size screenSize, String title,
+      IconData icon, Color color) {
     final date = formatDate(story.createdAt);
     final isOwner = story.hostDetails.id == widget.currentUserId;
 
@@ -390,7 +396,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                       userId: story.hostDetails.id,
                       userType: story.userType,
                       currentUserId: widget.currentUserId,
-                      currentUserType: 'employer', // Adjust based on your app logic
+                      currentUserType:
+                          'employer', // Adjust based on your app logic
                     ),
                   ),
                 ),
@@ -478,7 +485,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
     );
   }
 
-  Widget _buildStoryContent(StoryModel story, bool isExpanded, Size screenSize) {
+  Widget _buildStoryContent(
+      StoryModel story, bool isExpanded, Size screenSize) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -499,7 +507,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
               Text(
                 story.content,
                 maxLines: isExpanded ? null : 3,
-                overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                overflow:
+                    isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: screenSize.width * 0.037,
                   color: Colors.grey[700],
@@ -520,9 +529,11 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                       },
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -538,7 +549,9 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              isExpanded
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
                               size: screenSize.width * 0.04,
                               color: Theme.of(context).primaryColor,
                             ),
@@ -556,54 +569,53 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
   }
 
   Widget _buildEnhancedMediaCarousel(StoryModel story, Size screenSize) {
-    return Container(
-      child: Stack(
-        children: [
-          ClipRRect(
-            child: story.mediaUrls.length > 1
-                ? PageView.builder(
-              itemCount: story.mediaUrls.length,
-              itemBuilder: (context, index) => _buildMediaItem(
-                story.mediaUrls[index].url,
-                story.mediaUrls.map((m) => m.url).toList(),
-                index,
-                screenSize,
-              ),
-            )
-                : _buildMediaItem(
-              story.mediaUrls.first.url,
-              story.mediaUrls.map((m) => m.url).toList(),
-              0,
-              screenSize,
-            ),
-          ),
-          if (story.mediaUrls.length > 1)
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  story.mediaUrls.length,
-                      (index) => Container(
-                    width: 8,
-                    height: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
+    return Stack(
+      children: [
+        ClipRRect(
+          child: story.mediaUrls.length > 1
+              ? PageView.builder(
+                  itemCount: story.mediaUrls.length,
+                  itemBuilder: (context, index) => _buildMediaItem(
+                    story.mediaUrls[index].url,
+                    story.mediaUrls.map((m) => m.url).toList(),
+                    index,
+                    screenSize,
+                  ),
+                )
+              : _buildMediaItem(
+                  story.mediaUrls.first.url,
+                  story.mediaUrls.map((m) => m.url).toList(),
+                  0,
+                  screenSize,
+                ),
+        ),
+        if (story.mediaUrls.length > 1)
+          Positioned(
+            bottom: 10,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                story.mediaUrls.length,
+                (index) => Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
-  Widget _buildMediaItem(String url, List<String> allUrls, int index, Size screenSize) {
+  Widget _buildMediaItem(
+      String url, List<String> allUrls, int index, Size screenSize) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -627,7 +639,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
               child: CircularProgressIndicator(
                 color: Theme.of(context).primaryColor,
                 value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
                     : null,
               ),
             );
@@ -647,26 +660,30 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: story.tags.map((tag) => Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: Chip(
-              label: Text('#$tag'),
-              labelStyle: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.w500,
-                fontSize: screenSize.width * 0.033,
-              ),
-              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  width: 0.5,
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-            ),
-          )).toList(),
+          children: story.tags
+              .map((tag) => Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: Chip(
+                      label: Text('#$tag'),
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: screenSize.width * 0.033,
+                      ),
+                      backgroundColor:
+                          Theme.of(context).primaryColor.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
+                  ))
+              .toList(),
         ),
       ),
     );
@@ -681,7 +698,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             context,
             MaterialPageRoute(
               builder: (context) => BlocProvider(
-                create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                create: (context) =>
+                    StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
                 child: StoryReactionsScreen(
                   story: story,
                   employerId: widget.currentUserId,
@@ -734,7 +752,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.grey[800]
@@ -810,7 +829,9 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             label: story.isLiked ? 'Liked' : 'Like',
             color: story.isLiked ? Theme.of(context).primaryColor : null,
             onTap: () {
-              context.read<StoryStatsBloc>().add(ToggleStoryLikeEvent(story.id));
+              context
+                  .read<StoryStatsBloc>()
+                  .add(ToggleStoryLikeEvent(story.id));
             },
           ),
           Container(
@@ -826,7 +847,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => BlocProvider(
-                    create: (context) => StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
+                    create: (context) =>
+                        StoryReactionBloc()..add(FetchReactionsEvent(story.id)),
                     child: StoryReactionsScreen(
                       story: story,
                       employerId: widget.currentUserId,
@@ -846,7 +868,9 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
             label: story.isSaved ? 'Saved' : 'Save',
             color: story.isSaved ? Theme.of(context).primaryColor : null,
             onTap: () {
-              context.read<StoryStatsBloc>().add(ToggleSavedStoryEvent(story.id));
+              context
+                  .read<StoryStatsBloc>()
+                  .add(ToggleSavedStoryEvent(story.id));
             },
           ),
         ],
@@ -889,7 +913,8 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
     );
   }
 
-  Widget _statsCard(String title, String count, IconData icon, Color color, Size screenSize) {
+  Widget _statsCard(
+      String title, String count, IconData icon, Color color, Size screenSize) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
@@ -904,20 +929,20 @@ class _StoryStatsTabState extends State<StoryStatsTab> {
           Text(
             count,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color,
-              fontSize: screenSize.width * 0.04,
-            ),
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                  fontSize: screenSize.width * 0.04,
+                ),
           ),
           Text(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w200,
-              color: color,
-              fontSize: screenSize.width * 0.035,
-            ),
+                  fontWeight: FontWeight.w200,
+                  color: color,
+                  fontSize: screenSize.width * 0.035,
+                ),
           ),
         ],
       ),

@@ -27,16 +27,12 @@ import '../../Team Member/ui/team_member_screen.dart';
 import '../bloc/employer_dashboard_bloc.dart';
 import 'dashboard_stats.dart';
 
-
-
-
 class EmployerDashboardScreen extends StatefulWidget {
-
   const EmployerDashboardScreen({super.key});
 
-
   @override
-  State<EmployerDashboardScreen> createState() => _EmployerDashboardScreenState();
+  State<EmployerDashboardScreen> createState() =>
+      _EmployerDashboardScreenState();
 }
 
 class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
@@ -46,14 +42,12 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
-   Future<void>  logout() async {
-
+  Future<void> logout() async {
     return await HiveUtils.clearUserData();
-   }
-
+  }
 
   @override
-  void initState()  {
+  void initState() {
     // TODO: implement initState
     super.initState();
     _initializeData();
@@ -75,10 +69,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             ),
             ElevatedButton(
               child: Text('Logout'),
-              onPressed: ()  {
-
-
-                 logout();
+              onPressed: () {
+                logout();
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
@@ -97,8 +89,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
 
   Future<void> _initializeData() async {
     try {
-      Map<String,dynamic> employerMap = await HiveUtils.getEmployerData();
-      Map<String,dynamic> companyMap = await HiveUtils.getCompanyData();
+      Map<String, dynamic> employerMap = await HiveUtils.getEmployerData();
+      Map<String, dynamic> companyMap = await HiveUtils.getCompanyData();
 
       setState(() {
         employerData = employerMap.isNotEmpty
@@ -119,7 +111,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     }
   }
 
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -131,33 +122,30 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
     Size screenSize = MediaQuery.of(context).size;
     if (isLoading) {
-      return  Scaffold(
-        body:Center(child: LoadingAnimationWidget.hexagonDots(color: AppColors.lightPrimary, size: 20)),
+      return Scaffold(
+        body: Center(
+            child: LoadingAnimationWidget.hexagonDots(
+                color: AppColors.lightPrimary, size: 20)),
       );
     }
-    return  Scaffold(
+    return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedIndex == 0
-            ? 'Dashboard'
-            : _selectedIndex == 1
-            ? 'Stories'
-            : 'Settings'
-        ),
+        title: Text(_selectedIndex == 0 ? 'Dashboard' : 'Stories'),
         actions: [
+          // IconButton(
+          //   icon: Icon(Icons.notifications),
+          //   onPressed: () {},
+          // ),
           IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed:()=> themeProvider.toggleTheme(),
+            icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => themeProvider.toggleTheme(),
           ),
         ],
       ),
@@ -175,13 +163,16 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           ),
           BlocProvider(
             create: (context) => StoryBloc(),
-            child: StoriesScreen(currentUserId: employerData!.id, currentUserType: 'employer',),
+            child: StoriesScreen(
+              currentUserId: employerData!.id,
+              currentUserType: 'employer',
+            ),
           ),
-          Center(child: Text("Working"),)
+          // Center(
+          //   child: Text("Working"),
+          // )
         ],
       ),
-
-
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -192,24 +183,24 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
             icon: Icon(Icons.article),
             label: 'Stories',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.settings),
+          //   label: 'Settings',
+          // ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
-
-
       drawer: Container(
-        color: Theme.of(context).brightness == Brightness.dark ?Colors.grey[850] : Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[850]
+            : Colors.white,
         width: screenSize.width * 0.6,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             SizedBox(
-              height: screenSize.height*0.28,
+              height: screenSize.height * 0.28,
               child: DrawerHeader(
                 // decoration: BoxDecoration(
                 //   color: AppColors.primary,
@@ -219,73 +210,82 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: screenSize.width * 0.15, // Consistent radius for both cases
-                      backgroundColor: employerData?.personalInfo.profilePic != null
-                          ? Colors.transparent
-                          : Theme.of(context).primaryColor.withOpacity(0.1),
+                      radius: screenSize.width *
+                          0.15, // Consistent radius for both cases
+                      backgroundColor:
+                          employerData?.personalInfo.profilePic != null
+                              ? Colors.transparent
+                              : Theme.of(context).primaryColor.withOpacity(0.1),
                       child: employerData?.personalInfo.profilePic != null
-                          ? ClipOval( // Using ClipOval instead of ClipRRect for perfect circle
-                        child: CachedNetworkImage(
-                          imageUrl: employerData!.personalInfo.profilePic.toString(),
-                          width: screenSize.width * 0.3,  // Double the radius
-                          height: screenSize.width * 0.3, // Double the radius
-                          fit: BoxFit.cover, // Changed to cover for better circle filling
-                          placeholder: (context, url) => Container(
-                            width: screenSize.width * 0.3,
-                            height: screenSize.width * 0.3,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: isDarkMode ? AppColors.darkSecondaryText : AppColors.lightSecondaryText,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            width: screenSize.width * 0.3,
-                            height: screenSize.width * 0.3,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
-                            ),
-                            child: Center(
-                              child: Text(
-                                employerData!.personalInfo.fullName[0],
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  color: isDarkMode ? AppColors.darkText : AppColors.lightText,
+                          ? ClipOval(
+                              // Using ClipOval instead of ClipRRect for perfect circle
+                              child: CachedNetworkImage(
+                                imageUrl: employerData!.personalInfo.profilePic
+                                    .toString(),
+                                width:
+                                    screenSize.width * 0.3, // Double the radius
+                                height:
+                                    screenSize.width * 0.3, // Double the radius
+                                fit: BoxFit
+                                    .cover, // Changed to cover for better circle filling
+                                placeholder: (context, url) => Container(
+                                  width: screenSize.width * 0.3,
+                                  height: screenSize.width * 0.3,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDarkMode
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurface,
+                                  ),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: isDarkMode
+                                        ? AppColors.darkSecondaryText
+                                        : AppColors.lightSecondaryText,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  width: screenSize.width * 0.3,
+                                  height: screenSize.width * 0.3,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDarkMode
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurface,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      employerData!.personalInfo.fullName[0],
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        color: isDarkMode
+                                            ? AppColors.darkText
+                                            : AppColors.lightText,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                      )
+                            )
                           : Text(
-                        employerData!.personalInfo.fullName[0],
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                              employerData!.personalInfo.fullName[0],
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
-                    Text(
-                        employerData!.personalInfo.fullName ,
+                    Text(employerData!.personalInfo.fullName,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: screenSize.width*0.045,
-                            fontWeight: FontWeight.w600
-                        )
-                    ),
-                    Text(
-                        employerData!.personalInfo.email,
+                            fontSize: screenSize.width * 0.045,
+                            fontWeight: FontWeight.w600)),
+                    Text(employerData!.personalInfo.email,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: screenSize.width*0.03,
-                            fontWeight: FontWeight.w300
-                        )
-                    ),
+                            fontSize: screenSize.width * 0.03,
+                            fontWeight: FontWeight.w300)),
                   ],
                 ),
               ),
@@ -306,7 +306,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => JobStatsScreen(), // You'll need to create this screen
+                    builder: (context) =>
+                        JobStatsScreen(), // You'll need to create this screen
                   ),
                 );
               },
@@ -353,7 +354,9 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
                       create: (context) => StoryStatsBloc(),
-                      child: StoryStatsTab(currentUserId: employerData!.id,),
+                      child: StoryStatsTab(
+                        currentUserId: employerData!.id,
+                      ),
                     ), // You'll need to create this screen
                   ),
                 );
@@ -363,14 +366,17 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
               icon: Icons.message,
               title: 'Messages',
               onTap: () {
-
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => BlocProvider(
-                    create: (context) => ConversationsBloc(ChatRepository(), employerData?.id , "employer"),
-                    child: ConversationsScreen(userId: employerData!.id, userType: 'employer',),
-                  ), // You'll need to create this screen
+                      create: (context) => ConversationsBloc(
+                          ChatRepository(), employerData?.id, "employer"),
+                      child: ConversationsScreen(
+                        userId: employerData!.id,
+                        userType: 'employer',
+                      ),
+                    ), // You'll need to create this screen
                   ),
                 );
               },
@@ -396,7 +402,8 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AboutUsScreen(), // You'll need to create this screen
+                    builder: (context) =>
+                        AboutUsScreen(), // You'll need to create this screen
                   ),
                 );
               },
@@ -417,18 +424,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
     );
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
   Widget _buildDrawerItem({
     required IconData icon,
     required String title,
@@ -443,12 +438,11 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
       title: Text(
         title,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          //color: color ?? Colors.black87,
-          fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
-        ),
+              //color: color ?? Colors.black87,
+              fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
+            ),
       ),
       onTap: onTap,
     );
   }
-
 }

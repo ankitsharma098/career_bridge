@@ -14,11 +14,8 @@ class StoryReactionsScreen extends StatefulWidget {
   final StoryModel story;
   final String employerId;
 
-  const StoryReactionsScreen({
-    super.key,
-    required this.story,
-    required this.employerId
-  });
+  const StoryReactionsScreen(
+      {super.key, required this.story, required this.employerId});
 
   @override
   State<StoryReactionsScreen> createState() => _StoryReactionsScreenState();
@@ -146,7 +143,9 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                 SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
-                    context.read<StoryReactionBloc>().add(FetchReactionsEvent(widget.story.id));
+                    context
+                        .read<StoryReactionBloc>()
+                        .add(FetchReactionsEvent(widget.story.id));
                   },
                   child: Text('Retry'),
                 ),
@@ -212,7 +211,8 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                   ),
                   child: CircleAvatar(
                     radius: 24,
-                    backgroundImage: NetworkImage(widget.story.hostDetails.profilePic),
+                    backgroundImage:
+                        NetworkImage(widget.story.hostDetails.profilePic),
                   ),
                 ),
                 SizedBox(width: 12),
@@ -240,8 +240,7 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
               ],
             ),
           ),
-          if (widget.story.mediaUrls.isNotEmpty)
-            _buildEnhancedMediaSection(),
+          if (widget.story.mediaUrls.isNotEmpty) _buildEnhancedMediaSection(),
           Padding(
             padding: EdgeInsets.all(16),
             child: Column(
@@ -302,13 +301,15 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                       child: CircularProgressIndicator(
                         color: Theme.of(context).primaryColor,
                         value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
                             : null,
                       ),
                     );
                   },
                   errorBuilder: (context, error, stackTrace) => Center(
-                    child: Icon(Icons.broken_image, size: 50, color: Colors.grey[400]),
+                    child: Icon(Icons.broken_image,
+                        size: 50, color: Colors.grey[400]),
                   ),
                 ),
               );
@@ -323,7 +324,7 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   widget.story.mediaUrls.length,
-                      (index) => Container(
+                  (index) => Container(
                     width: 8,
                     height: 8,
                     margin: EdgeInsets.symmetric(horizontal: 4),
@@ -346,26 +347,30 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: widget.story.tags.map((tag) => Container(
-            margin: EdgeInsets.only(right: 8),
-            child: Chip(
-              label: Text('#$tag'),
-              labelStyle: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-              ),
-              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  width: 0.5,
-                ),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 4),
-            ),
-          )).toList(),
+          children: widget.story.tags
+              .map((tag) => Container(
+                    margin: EdgeInsets.only(right: 8),
+                    child: Chip(
+                      label: Text('#$tag'),
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
+                      backgroundColor:
+                          Theme.of(context).primaryColor.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                    ),
+                  ))
+              .toList(),
         ),
       ),
     );
@@ -449,14 +454,18 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
               style: TextStyle(color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: widget.story.isLiked ? Theme.of(context).primaryColor : Colors.grey[600],
+              backgroundColor: widget.story.isLiked
+                  ? Theme.of(context).primaryColor
+                  : Colors.grey[600],
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               elevation: 0,
             ),
             onPressed: () {
-              context.read<StoryBloc>().add(ToggleStoryLikeEvent(widget.story.id));
+              context
+                  .read<StoryBloc>()
+                  .add(ToggleStoryLikeEvent(widget.story.id));
             },
           ),
         ],
@@ -509,7 +518,7 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
             ],
           ),
           SizedBox(height: 16),
-          Container(
+          SizedBox(
             height: 90,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -531,7 +540,8 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                         ),
                         child: CircleAvatar(
                           radius: 24,
-                          backgroundImage: NetworkImage(like['user']['profilePic']),
+                          backgroundImage:
+                              NetworkImage(like['user']['profilePic']),
                         ),
                       ),
                       SizedBox(height: 8),
@@ -556,7 +566,8 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
     );
   }
 
-  Widget _buildCommentsSection(List<Map<String, dynamic>> comments, Size screenSize) {
+  Widget _buildCommentsSection(
+      List<Map<String, dynamic>> comments, Size screenSize) {
     if (comments.isEmpty) return SizedBox.shrink();
 
     return Container(
@@ -629,13 +640,16 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isCurrentUser ? Theme.of(context).primaryColor : Colors.transparent,
+                          color: isCurrentUser
+                              ? Theme.of(context).primaryColor
+                              : Colors.transparent,
                           width: 2,
                         ),
                       ),
                       child: CircleAvatar(
                         radius: 18,
-                        backgroundImage: NetworkImage(comment['user']['profilePic']),
+                        backgroundImage:
+                            NetworkImage(comment['user']['profilePic']),
                       ),
                     ),
                     SizedBox(width: 12),
@@ -653,10 +667,11 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                                 ),
                               ),
                               SizedBox(width: 8),
-                              Container(
+                              SizedBox(
                                 width: screenSize.width * 0.32,
                                 child: Text(
-                                  DateFormat('MMM d • h:mm a').format(timestamp),
+                                  DateFormat('MMM d • h:mm a')
+                                      .format(timestamp),
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: Colors.grey[600],
@@ -673,7 +688,8 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                                 TextField(
                                   controller: _commentController,
                                   decoration: InputDecoration(
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
                                       borderSide: BorderSide(
@@ -691,7 +707,8 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     TextButton.icon(
-                                      icon: Icon(Icons.cancel, color: Colors.red),
+                                      icon:
+                                          Icon(Icons.cancel, color: Colors.red),
                                       label: Text(
                                         'Cancel',
                                         style: TextStyle(color: Colors.red),
@@ -703,9 +720,11 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                                       icon: Icon(Icons.check),
                                       label: Text('Save'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Theme.of(context).primaryColor,
+                                        backgroundColor:
+                                            Theme.of(context).primaryColor,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
                                       ),
                                       onPressed: _submitComment,
@@ -716,13 +735,17 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                             )
                           else
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
                                 color: isCurrentUser
-                                    ? Theme.of(context).primaryColor.withOpacity(0.1)
-                                    : Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey[800]
-                                    : Colors.grey[200],
+                                    ? Theme.of(context)
+                                        .primaryColor
+                                        .withOpacity(0.1)
+                                    : Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey[800]
+                                        : Colors.grey[200],
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -759,16 +782,19 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                               color: Colors.red,
                             ),
                             onPressed: () {
-                              final BuildContext parentContext=context;
+                              final BuildContext parentContext = context;
                               showDialog(
                                 context: context,
-                                builder: (BuildContext dialogContext) => AlertDialog(
+                                builder: (BuildContext dialogContext) =>
+                                    AlertDialog(
                                   title: Text('Delete Comment'),
-                                  content: Text('Are you sure you want to delete this comment?'),
+                                  content: Text(
+                                      'Are you sure you want to delete this comment?'),
                                   actions: [
                                     TextButton(
                                       child: Text('Cancel'),
-                                      onPressed: () => Navigator.pop(dialogContext),
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
                                     ),
                                     TextButton(
                                       child: Text(
@@ -777,7 +803,9 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
                                       ),
                                       onPressed: () {
                                         Navigator.pop(dialogContext);
-                                        BlocProvider.of<StoryReactionBloc>(parentContext).add(
+                                        BlocProvider.of<StoryReactionBloc>(
+                                                parentContext)
+                                            .add(
                                           CommentDelete(
                                             storyId: widget.story.id,
                                             commentId: comment["_id"],
@@ -888,12 +916,12 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
 
     if (_editingCommentId != null) {
       context.read<StoryReactionBloc>().add(
-        PostCommentUpdate(
-          storyId: widget.story.id,
-          commentId: _editingCommentId!,
-          comment: _commentController.text,
-        ),
-      );
+            PostCommentUpdate(
+              storyId: widget.story.id,
+              commentId: _editingCommentId!,
+              comment: _commentController.text,
+            ),
+          );
       // Clear editing state
       setState(() {
         _editingCommentId = null;
@@ -901,11 +929,11 @@ class _StoryReactionsScreenState extends State<StoryReactionsScreen> {
       });
     } else {
       context.read<StoryReactionBloc>().add(
-        PostCommentEvent(
-          widget.story.id,
-          _commentController.text,
-        ),
-      );
+            PostCommentEvent(
+              widget.story.id,
+              _commentController.text,
+            ),
+          );
       _commentController.clear();
     }
   }

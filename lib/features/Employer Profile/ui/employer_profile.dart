@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:android/core/constants/colors.dart';
 import 'package:android/core/utils/customErrorUtils.dart';
 import 'package:android/data/models/company/company_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -260,13 +261,86 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                             child: Hero(
                               tag: 'profile_image',
                               child: CircleAvatar(
-                                backgroundImage: employer
-                                            .personalInfo.profilePic !=
-                                        null
-                                    ? NetworkImage(
-                                        employer.personalInfo.profilePic!)
-                                    : AssetImage('assets/default_profile.png')
-                                        as ImageProvider,
+                                radius: screenSize.width *
+                                    0.15, // Consistent radius for both cases
+                                backgroundColor:
+                                    employer.personalInfo.profilePic != null
+                                        ? Colors.transparent
+                                        : Theme.of(context)
+                                            .primaryColor
+                                            .withOpacity(0.1),
+                                child: employer.personalInfo.profilePic != null
+                                    ? ClipOval(
+                                        // Using ClipOval instead of ClipRRect for perfect circle
+                                        child: CachedNetworkImage(
+                                          imageUrl: employer
+                                              .personalInfo.profilePic
+                                              .toString(),
+                                          width: screenSize.width *
+                                              0.3, // Double the radius
+                                          height: screenSize.width *
+                                              0.3, // Double the radius
+                                          fit: BoxFit
+                                              .cover, // Changed to cover for better circle filling
+                                          placeholder: (context, url) =>
+                                              Container(
+                                            width: screenSize.width * 0.3,
+                                            height: screenSize.width * 0.3,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.darkSurface
+                                                  : AppColors.lightSurface,
+                                            ),
+                                            child: Icon(
+                                              Icons.person,
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.darkSecondaryText
+                                                  : AppColors
+                                                      .lightSecondaryText,
+                                            ),
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              Container(
+                                            width: screenSize.width * 0.3,
+                                            height: screenSize.width * 0.3,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.darkSurface
+                                                  : AppColors.lightSurface,
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                employer
+                                                    .personalInfo.fullName[0],
+                                                style: TextStyle(
+                                                  fontSize: 24,
+                                                  color: Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.dark
+                                                      ? AppColors.darkText
+                                                      : AppColors.lightText,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        employer.personalInfo.fullName[0],
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          color: Theme.of(context).primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
                           ),

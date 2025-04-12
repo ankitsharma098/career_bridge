@@ -1,5 +1,3 @@
-
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -13,107 +11,88 @@ import '../../../data/models/company/company_model.dart';
 import '../../../data/models/employer/employer_model.dart';
 
 class AuthApiServices {
-
   final dio = Dio();
 
 //Employer Side APIs
 
-
   Future<void> employerLogin(String email, String password) async {
-
-
-    try{
-      final response = await dio.post("${AppConstants.baseUrl}/employer/login",
-
-        data: {
-        "email":email,
-          "password":password
-        },
-
+    try {
+      final response = await dio.post(
+        "${AppConstants.baseUrl}/employer/login",
+        data: {"email": email, "password": password},
       );
-      if(response.statusCode==200){
+      if (response.statusCode == 200) {
         print("Full Response: ${jsonEncode(response.data)}");
 
         final employerData = Map<String, dynamic>.from(response.data['user']);
 
-        final companyData = Map<String,dynamic>.from(response.data["companyDetails"]);
-        final tokens = response.data["tokens"] as Map<String,dynamic>;
-
-
+        final companyData =
+            Map<String, dynamic>.from(response.data["companyDetails"]);
+        final tokens = response.data["tokens"] as Map<String, dynamic>;
 
         // final employerResponse = Employer.fromJson(employerData);
         // final companyResponse = CompanyDetails.fromJson(companyData);
 
         print("////employer runtimeType ${companyData.runtimeType}");
         print("////companyDetails runtimeType ${employerData.runtimeType}");
-        Map<String,dynamic> data={
+        Map<String, dynamic> data = {
           "employer": employerData,
           "companyDetails": companyData,
-          'accessToken':tokens['accessTokens'],
-          'refreshToken':tokens['refreshToken'],
+          'accessToken': tokens['accessTokens'],
+          'refreshToken': tokens['refreshToken'],
         };
         await HiveUtils.storeEmployerData(data);
-
       }
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
         print("Error message ${e.response?.data["message"]}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
+      } else {
         print("Error sending request: ${e.message}");
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
+    } catch (e) {
       print("Error: $e");
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<void> saveToken(String fcmToken) async{
-    try{
+  Future<void> saveToken(String fcmToken) async {
+    try {
       print("tokens saved-------");
       String? accessToken = await HiveUtils.getAccessToken();
 
-      if(accessToken==null || accessToken.isEmpty){
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception("AccessToken not found");
       }
-      final response = await dio.post("${AppConstants.baseUrl}/notification/save-token",
-        options:  Options(
-            headers: {
-              'Authorization':'Bearer $accessToken'
-            }
-        ),
+      final response = await dio.post(
+        "${AppConstants.baseUrl}/notification/save-token",
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
         data: {
-          "fcmToken":fcmToken,
+          "fcmToken": fcmToken,
         },
-
       );
-      if(response.statusCode==200) {
+      if (response.statusCode == 200) {
         print("tokens saved-------");
         bool isSavedFcmToken = response.data['status'] ?? false;
         print("isSavedToken $isSavedFcmToken");
       }
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
         print("Error message ${e.response?.data["message"]}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
+      } else {
         print("Error sending request: ${e.message}");
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
+    } catch (e) {
       print("Error: $e");
       throw Exception('An unexpected error occurred');
     }
   }
 
-  Future<Map<String, dynamic>> checkCompany(String email, String companyName) async {
+  Future<Map<String, dynamic>> checkCompany(
+      String email, String companyName) async {
     try {
       final response = await dio.post(
         "${AppConstants.baseUrl}/employer/check-company", // Adjust endpoint as needed
@@ -160,7 +139,8 @@ class AuthApiServices {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       ];
       if (!allowedMimes.contains(mimeType)) {
-        throw Exception('Unsupported file type: $mimeType. Allowed types: jpg, png, gif, pdf, doc, docx');
+        throw Exception(
+            'Unsupported file type: $mimeType. Allowed types: jpg, png, gif, pdf, doc, docx');
       }
 
       final formData = FormData.fromMap({
@@ -173,7 +153,9 @@ class AuthApiServices {
       final response = await dio.post(
         "${AppConstants.baseUrl}/media/upload",
         data: formData,
-        options: token != null ? Options(headers: {'Authorization': 'Bearer $token'}) : null,
+        options: token != null
+            ? Options(headers: {'Authorization': 'Bearer $token'})
+            : null,
       );
 
       return {
@@ -213,7 +195,6 @@ class AuthApiServices {
     }
   }
 
-
   Future<String> verifyOtp(String email, String otp) async {
     try {
       final response = await dio.post(
@@ -241,11 +222,10 @@ class AuthApiServices {
     }
   }
 
-  Future<void> completeRegistration({
+  Future<void> employerCompleteRegistration({
     required Map<String, dynamic> companyData,
     required Map<String, dynamic> employerData,
     required Map<String, dynamic> documentUrls,
-    required String verificationToken,
   }) async {
     try {
       final response = await dio.post(
@@ -254,7 +234,6 @@ class AuthApiServices {
           "companyData": companyData,
           "employerData": employerData,
           "documentUrls": documentUrls,
-          "verificationToken": verificationToken,
         },
       );
 
@@ -276,57 +255,79 @@ class AuthApiServices {
     }
   }
 
-
-
-
-
   //Candidate side apis
 
   Future<void> candidateLogin(String email, String password) async {
-
-
-    try{
-      final response = await dio.post("${AppConstants.baseUrl}/candidate/login",
-
-        data: {
-          "email":email,
-          "password":password
-        },
-
+    try {
+      final response = await dio.post(
+        "${AppConstants.baseUrl}/candidate/login",
+        data: {"email": email, "password": password},
       );
-      if(response.statusCode==200){
+      if (response.statusCode == 200) {
         print("Full Response: ${jsonEncode(response.data)}");
 
         final candidateData = Map<String, dynamic>.from(response.data['user']);
 
-        Map<String, String> tokens = Map<String, String>.from(response.data['tokens']);
-
+        Map<String, String> tokens =
+            Map<String, String>.from(response.data['tokens']);
 
         print("////candidateData tokens ${tokens}");
-        Map<String,dynamic> data={
+        Map<String, dynamic> data = {
           "candidate": candidateData,
-          'accessToken':tokens['accessToken'],
-          'refreshToken':tokens['refreshToken'],
+          'accessToken': tokens['accessToken'],
+          'refreshToken': tokens['refreshToken'],
         };
 
         print("data $data");
         await HiveUtils.storeCandidateData(data);
-
       }
-
-    }on DioException catch (e) {
+    } on DioException catch (e) {
       if (e.response != null) {
         print("Error message ${e.response?.data["message"]}");
         throw Exception(e.response?.data['message'] ?? "An Error occurred");
-      }
-      else{
+      } else {
         print("Error sending request: ${e.message}");
         throw Exception('Network error occurred');
       }
-    }
-    catch(e){
+    } catch (e) {
       print("Error: $e");
       throw Exception('An unexpected error occurred');
+    }
+  }
+
+  Future<void> candidateCompleteRegistration(
+      {required Map<String, dynamic> personalInfo,
+      required Map<String, dynamic> disabilityDetails,
+      required List<String> skills,
+      required Map<String, dynamic> jobPreferences,
+      required Map<String, dynamic> auth}) async {
+    try {
+      final response = await dio.post(
+        "${AppConstants.baseUrl}/candidate/register",
+        data: {
+          "personalInfo": personalInfo,
+          "disabilityDetails": disabilityDetails,
+          "skills": skills,
+          "jobPreferences": jobPreferences,
+          "auth": auth,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        // Optionally store data in Hive if needed
+        return;
+      } else {
+        throw Exception(response.data['error'] ?? 'Registration failed');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print("Error message ${e.response?.data["message"]}");
+        throw Exception(e.response?.data['message'] ?? "An Error occurred");
+      } else {
+        throw Exception('Network error occurred');
+      }
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 }

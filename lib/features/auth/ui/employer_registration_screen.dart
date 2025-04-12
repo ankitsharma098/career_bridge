@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import '../registration_bloc/registration_bloc.dart';
+import '../employer_registration_bloc/employer_registration_bloc.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -73,7 +73,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     'verification': {'url': '', 'publicId': ''},
   };
 
-  String? verificationToken;
   int step = 1;
   String currentUploadingDocType = '';
 
@@ -81,8 +80,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
     return BlocProvider(
-      create: (context) => RegistrationBloc(),
-      child: BlocConsumer<RegistrationBloc, RegistrationState>(
+      create: (context) => EmployerRegistrationBloc(),
+      child: BlocConsumer<EmployerRegistrationBloc, EmployerRegistrationState>(
         listener: (context, state) {
           print("Listener received state: $state");
           if (state is RegistrationFailure) {
@@ -103,10 +102,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             SnackBarUtils.showGreenSnackBar(
                 'OTP sent to ${emailController.text}', context);
           } else if (state is OtpVerified) {
-            setState(() {
-              verificationToken = state.token;
-            });
-            // Auto-submit after OTP verification
             _submitRegistration(context);
           } else if (state is RegistrationSuccess) {
             SnackBarUtils.showGreenSnackBar(
@@ -300,7 +295,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: BlocBuilder<RegistrationBloc, RegistrationState>(
+              child: BlocBuilder<EmployerRegistrationBloc,
+                  EmployerRegistrationState>(
                 builder: (context, state) {
                   if (state is RegistrationLoading) {
                     return LoadingAnimationWidget.hexagonDots(
@@ -375,7 +371,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             () {
               if (_formKey.currentState!.validate()) {
                 saveDataForCurrentStep();
-                BlocProvider.of<RegistrationBloc>(context).add(
+                BlocProvider.of<EmployerRegistrationBloc>(context).add(
                   CheckCompanyEvent(
                     email: emailController.text,
                     companyName: companyNameController.text,
@@ -712,7 +708,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     );
 
                     // Add upload event
-                    BlocProvider.of<RegistrationBloc>(context).add(
+                    BlocProvider.of<EmployerRegistrationBloc>(context).add(
                       UploadDocumentEvent(filePath: result.files.single.path!),
                     );
 
@@ -786,7 +782,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             () {
               if (_formKey.currentState!.validate()) {
                 saveDataForCurrentStep();
-                BlocProvider.of<RegistrationBloc>(context).add(
+                BlocProvider.of<EmployerRegistrationBloc>(context).add(
                   SendOtpEvent(email: emailController.text),
                 );
                 setState(() => step = 4);
@@ -821,7 +817,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             () {
               if (_otpFormKey.currentState!.validate()) {
                 saveDataForCurrentStep();
-                BlocProvider.of<RegistrationBloc>(context).add(
+                BlocProvider.of<EmployerRegistrationBloc>(context).add(
                   VerifyOtpEvent(
                       email: emailController.text, otp: otpController.text),
                 );
@@ -832,7 +828,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           SizedBox(height: screenSize.height * 0.02),
           TextButton(
             onPressed: () {
-              BlocProvider.of<RegistrationBloc>(context)
+              BlocProvider.of<EmployerRegistrationBloc>(context)
                   .add(SendOtpEvent(email: emailController.text));
             },
             child: Text('Resend OTP', style: TextStyle(color: Colors.blue)),
@@ -876,12 +872,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       'phoneNumber': phoneController.text,
       'email': emailController.text,
     };
-    BlocProvider.of<RegistrationBloc>(context).add(
+    BlocProvider.of<EmployerRegistrationBloc>(context).add(
       SubmitRegistrationEvent(
         companyData: companyData,
         employerData: employerData,
         documentUrls: documentUrls,
-        verificationToken: verificationToken!,
       ),
     );
   }

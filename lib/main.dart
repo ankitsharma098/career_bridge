@@ -1,7 +1,6 @@
 import 'package:android/Firebase/notification_services.dart';
 import 'package:android/core/utils/hiveUtils.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
