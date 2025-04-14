@@ -3,9 +3,11 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  dialogflow_grpc
   emoji_picker_flutter
   file_selector_windows
   firebase_core
+  flutter_tts
   permission_handler_windows
   url_launcher_windows
 )

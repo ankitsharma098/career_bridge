@@ -174,7 +174,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
   Widget _buildSliverAppBar(
       Employer employer, CompanyDetails companyDetails, Size screenSize) {
     return SliverAppBar(
-      expandedHeight: screenSize.height * 0.25,
+      expandedHeight: screenSize.height * 0.3,
       floating: false,
       pinned: true,
       stretch: true,
@@ -231,8 +231,8 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
             ),
             // Profile content with enhanced styling
             Positioned(
-              top: 40,
-              bottom: 10,
+              top: 20,
+              bottom: 5,
               left: 0,
               right: 0,
               child: Column(
@@ -261,8 +261,7 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                             child: Hero(
                               tag: 'profile_image',
                               child: CircleAvatar(
-                                radius: screenSize.width *
-                                    0.15, // Consistent radius for both cases
+                                // Consistent radius for both cases
                                 backgroundColor:
                                     employer.personalInfo.profilePic != null
                                         ? Colors.transparent
@@ -276,16 +275,14 @@ class _EmployerProfileScreenState extends State<EmployerProfileScreen> {
                                           imageUrl: employer
                                               .personalInfo.profilePic
                                               .toString(),
-                                          width: screenSize.width *
-                                              0.3, // Double the radius
-                                          height: screenSize.width *
-                                              0.3, // Double the radius
+                                          width: 130,
+                                          height: 130, // Double the radius
                                           fit: BoxFit
                                               .cover, // Changed to cover for better circle filling
                                           placeholder: (context, url) =>
                                               Container(
-                                            width: screenSize.width * 0.3,
-                                            height: screenSize.width * 0.3,
+                                            width: 130,
+                                            height: 130,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                               color: Theme.of(context)

@@ -1,4 +1,5 @@
 import 'package:android/core/utils/snackBarUtils.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:android/core/constants/colors.dart';
@@ -279,7 +280,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
               SizedBox(width: 16),
 
               // Member Info
-              Expanded(
+              Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -318,47 +319,53 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     SizedBox(height: 8),
                     Row(
                       children: [
-                        Container(
-                          width: screenSize.width * 0.2,
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isAdmin
-                                ? (isDarkMode
-                                    ? Colors.amber.withOpacity(0.2)
-                                    : Colors.amber.withOpacity(0.2))
-                                : (isDarkMode
-                                    ? Colors.blue.withOpacity(0.2)
-                                    : Colors.blue.withOpacity(0.1)),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              isAdmin
-                                  ? 'Admin'
-                                  : member.companyDetails?.designation ??
-                                      'Team Member',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: screenSize.width * 0.03,
-                                fontWeight: FontWeight.w500,
-                                color: isAdmin
-                                    ? (isDarkMode
-                                        ? Colors.amber[200]
-                                        : Colors.amber[800])
-                                    : (isDarkMode
-                                        ? Colors.blue[200]
-                                        : Colors.blue[700]),
+                        Flexible(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isAdmin
+                                  ? (isDarkMode
+                                      ? Colors.amber.withOpacity(0.2)
+                                      : Colors.amber.withOpacity(0.2))
+                                  : (isDarkMode
+                                      ? Colors.blue.withOpacity(0.2)
+                                      : Colors.blue.withOpacity(0.1)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                isAdmin
+                                    ? 'Admin'
+                                    : member.companyDetails?.designation ??
+                                        'Team Member',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: screenSize.width * 0.03,
+                                  fontWeight: FontWeight.w500,
+                                  overflow: TextOverflow.ellipsis,
+                                  color: isAdmin
+                                      ? (isDarkMode
+                                          ? Colors.amber[200]
+                                          : Colors.amber[800])
+                                      : (isDarkMode
+                                          ? Colors.blue[200]
+                                          : Colors.blue[700]),
+                                ),
                               ),
                             ),
                           ),
                         ),
                         if (member.personalInfo.phoneNumber != null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text(
-                              member.personalInfo.phoneNumber,
-                              style: textTheme.bodySmall,
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: AutoSizeText(
+                                member.personalInfo.phoneNumber,
+                                style: textTheme.bodySmall,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                             ),
                           ),
                       ],
@@ -372,7 +379,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                 Row(
                   children: [
                     IconButton(
+                      padding: EdgeInsets.all(0),
                       icon: Icon(Icons.mail_outline,
+                          size: 20,
                           color:
                               isDarkMode ? Colors.blue[200] : Colors.blue[700]),
                       onPressed: () {
@@ -401,8 +410,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                       tooltip: 'Send email',
                     ),
                     IconButton(
+                      padding: EdgeInsets.all(0),
                       icon: Icon(Icons.delete_outline,
-                          color: Theme.of(context).colorScheme.error),
+                          size: 20, color: Theme.of(context).colorScheme.error),
                       onPressed: () =>
                           _showDeleteConfirmationDialog(context, member.id),
                       tooltip: 'Remove member',

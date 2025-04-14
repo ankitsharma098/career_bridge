@@ -207,8 +207,8 @@ class _CandidateProfileState extends State<CandidateProfile> {
               ),
             ),
             Positioned(
-              top: 60,
-              bottom: 10,
+              top: 20,
+              bottom: 5,
               left: 0,
               right: 0,
               child: Column(
@@ -237,8 +237,6 @@ class _CandidateProfileState extends State<CandidateProfile> {
                             child: Hero(
                               tag: 'profile_image',
                               child: CircleAvatar(
-                                radius: screenSize.width *
-                                    0.15, // Consistent radius for both cases
                                 backgroundColor:
                                     candidate.personalInfo.profilePic != null
                                         ? Colors.transparent
@@ -252,16 +250,14 @@ class _CandidateProfileState extends State<CandidateProfile> {
                                           imageUrl: candidate
                                               .personalInfo.profilePic
                                               .toString(),
-                                          width: screenSize.width *
-                                              0.3, // Double the radius
-                                          height: screenSize.width *
-                                              0.3, // Double the radius
+                                          width: 130,
+                                          height: 130,
                                           fit: BoxFit
                                               .cover, // Changed to cover for better circle filling
                                           placeholder: (context, url) =>
                                               Container(
-                                            width: screenSize.width * 0.3,
-                                            height: screenSize.width * 0.3,
+                                            width: 130,
+                                            height: 130,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                               color: Theme.of(context)
@@ -642,7 +638,7 @@ class _CandidateProfileState extends State<CandidateProfile> {
             if (jp.roles.isNotEmpty)
               _buildInfoRow('Roles', jp.roles.join(', ')),
             if (jp.preferredSalary > 0)
-              _buildInfoRow('Salary', '\₹${jp.preferredSalary}'),
+              _buildInfoRow('Salary', '₹${jp.preferredSalary}'),
             if (jp.location.isNotEmpty)
               _buildInfoRow('Locations', jp.location.join(', ')),
             if (jp.workMode.isNotEmpty) _buildInfoRow('Work Mode', jp.workMode),

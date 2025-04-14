@@ -27,7 +27,7 @@ class CandidateTabJobs extends StatelessWidget {
             tabs: [
               Tab(
                 child: SizedBox(
-                  width: screenSize.width * 0.35,
+                  width: screenSize.width * 0.33,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
