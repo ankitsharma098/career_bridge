@@ -1,4 +1,3 @@
-// lib/features/voice_system/ui/voice_overlay.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -25,7 +24,13 @@ class _VoiceOverlayState extends State<VoiceOverlay>
   bool _isListening = false;
   String _recognizedText = '';
   bool _isProcessing = false;
+
+  bool _isCapturingFullCommand = false;
   Timer? _debounceTimer;
+  Timer? _commandCaptureTimer;
+  final commandCaptureDelay = const Duration(milliseconds: 1500);
+  StreamSubscription<bool>? _listeningSubscription; // Add subscription variable
+  StreamSubscription<String>? _textSubscription; // Add for text stream
 
   @override
   void initState() {
@@ -37,41 +42,57 @@ class _VoiceOverlayState extends State<VoiceOverlay>
     )..repeat(reverse: true);
 
     // Get listening state updates from the controller
-    widget.voiceController.listeningStateStream.listen((isListening) {
-      setState(() {
-        _isListening = isListening;
-      });
+    _listeningSubscription =
+        widget.voiceController.listeningStateStream.listen((isListening) {
+      if (mounted) {
+        // Check if widget is still mounted
+        setState(() {
+          _isListening = isListening;
+        });
 
-      if (isListening) {
-        _animationController.repeat(reverse: true);
-      } else if (!_isProcessing) {
-        _animationController.stop();
+        if (isListening) {
+          _animationController.repeat(reverse: true);
+        } else if (!_isProcessing) {
+          _animationController.stop();
+        }
       }
     });
 
-    // Listen for processing state
-    //  widget.voiceController.addListener(_updateProcessingState);
-
     // Get recognized text updates from the controller with debounce
-    widget.voiceController.textStream.listen((text) {
+    _textSubscription = widget.voiceController.textStream.listen((text) {
       _debounceTimer?.cancel();
-      _debounceTimer = Timer(const Duration(milliseconds: 100), () {
-        if (mounted) {
-          setState(() {
-            _recognizedText = text;
-            if (text.contains("unavailable") || text.contains("error")) {
-              // Show error UI
-            }
-          });
-        }
-      });
+
+      if (mounted) {
+        // Check if widget is still mounted
+        setState(() {
+          _recognizedText = text;
+
+          // Check if we're still collecting a command
+          if (text.startsWith('Heard:')) {
+            _isCapturingFullCommand = true;
+            _commandCaptureTimer?.cancel();
+            _commandCaptureTimer = Timer(commandCaptureDelay, () {
+              if (mounted && _isCapturingFullCommand) {
+                setState(() {
+                  _recognizedText += " (still listening...)";
+                });
+              }
+            });
+          } else if (text.contains("Processing:")) {
+            _isCapturingFullCommand = false;
+            _commandCaptureTimer?.cancel();
+          }
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    _listeningSubscription?.cancel(); // Cancel the stream subscription
+    _textSubscription?.cancel(); // Cancel the text stream subscription
     _debounceTimer?.cancel();
-    //  widget.voiceController.removeListener(_updateProcessingState);
+    _commandCaptureTimer?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -88,10 +109,7 @@ class _VoiceOverlayState extends State<VoiceOverlay>
             right: 0,
             child: Column(
               children: [
-                // Voice control buttons
                 VoiceControlButtons(voiceController: widget.voiceController),
-
-                // Status indicator
                 if (_isListening || _isProcessing)
                   Padding(
                     padding: const EdgeInsets.only(top: 20.0),

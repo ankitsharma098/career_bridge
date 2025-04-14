@@ -7,7 +7,8 @@ class EmployerDashboardShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get the current theme mode
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark ? true :false;
+    bool isDarkMode =
+        Theme.of(context).brightness == Brightness.dark ? true : false;
 
     // Define shimmer colors based on theme
     Color baseColor = isDarkMode ? Colors.grey[800]! : Colors.grey[300]!;
@@ -17,9 +18,7 @@ class EmployerDashboardShimmer extends StatelessWidget {
     Color containerColor = isDarkMode ? Colors.grey[850]! : Colors.white;
 
     // Define card color based on theme
-    final cardColor = isDarkMode
-        ? Theme.of(context).cardColor
-        : Colors.white;
+    final cardColor = isDarkMode ? Theme.of(context).cardColor : Colors.white;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -58,7 +57,6 @@ class EmployerDashboardShimmer extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 _buildShimmerCard(
                   cardColor: cardColor,
                   child: Column(
@@ -94,7 +92,6 @@ class EmployerDashboardShimmer extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 _buildShimmerCard(
                   cardColor: cardColor,
                   child: Column(
@@ -104,7 +101,7 @@ class EmployerDashboardShimmer extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildShimmerText(
-                            width: 180,
+                            width: 150,
                             height: 24,
                             color: containerColor,
                           ),
@@ -131,7 +128,6 @@ class EmployerDashboardShimmer extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 _buildShimmerCard(
                   cardColor: cardColor,
                   child: Column(
@@ -216,7 +212,7 @@ class EmployerDashboardShimmer extends StatelessWidget {
 
   Widget _buildShimmerInsightCard(Color color) {
     return Container(
-      width: 100,
+      width: 90,
       height: 100,
       decoration: BoxDecoration(
         color: color,
@@ -231,23 +227,25 @@ class EmployerDashboardShimmer extends StatelessWidget {
       children: [
         _buildShimmerText(width: 120, height: 20, color: color),
         SizedBox(height: 8),
-        ...List.generate(3, (_) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              SizedBox(width: 8),
-              _buildShimmerText(width: 100, height: 16, color: color),
-            ],
-          ),
-        )),
+        ...List.generate(
+            3,
+            (_) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      _buildShimmerText(width: 100, height: 16, color: color),
+                    ],
+                  ),
+                )),
       ],
     );
   }

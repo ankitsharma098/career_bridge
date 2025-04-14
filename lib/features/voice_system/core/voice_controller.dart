@@ -1,9 +1,11 @@
-// lib/features/voice_system/core/voice_controller.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../services/nlp_services.dart';
 import '../services/speech_recognition_services.dart';
 import '../services/tts_services.dart';
 import './command_registry.dart';
+import '../models/command_result.dart';
 
 class VoiceController extends ChangeNotifier {
   final SpeechRecognitionService speechService;
@@ -15,6 +17,10 @@ class VoiceController extends ChangeNotifier {
   String _statusMessage = "Voice Assistant Inactive";
   String _lastCommand = "";
   bool _isProcessingCommand = false;
+
+  bool _processingCommand = false;
+  final Duration _processingTimeout = Duration(seconds: 5);
+  Timer? _processingTimer;
 
   VoiceController({
     required this.speechService,
@@ -55,65 +61,83 @@ class VoiceController extends ChangeNotifier {
   }
 
   Future<void> processCommand(String command) async {
-    if (_isProcessingCommand || ttsService.isSpeaking) {
-      debugPrint('Ignoring command during processing or TTS: "$command"');
+    if (_processingCommand) {
+      debugPrint('Already processing a command, ignoring: $command');
       return;
     }
 
+    _processingCommand = true;
+    _isProcessingCommand = true;
+    notifyListeners();
+
     try {
-      _isProcessingCommand = true;
-      notifyListeners();
+      // Stop listening while processing to avoid interference
+      await stopListening();
 
-      // Step 1: Use NLP service to identify intent
-      final intentResponse = await nlpService.processText(command);
-      final intent = intentResponse.intent;
-      debugPrint('Identified intent: $intent for command: "$command"');
+      // Create timeout to prevent hanging
+      _processingTimer = Timer(_processingTimeout, () {
+        _processingCommand = false;
+        _isProcessingCommand = false;
+        notifyListeners();
+        debugPrint('Command processing timed out');
+        ttsService.speak("Sorry, command processing took too long");
+      });
 
-      if (intent.isEmpty) {
-        debugPrint('No intent found for: "$command"');
-        await ttsService.speak("I didn't understand that command");
-        return;
-      }
+      // Process the command with NLP
+      debugPrint('Detecting intent for command: $command');
+      final nlpResponse = await nlpService.detectIntent(command);
+      final intent = nlpResponse.intent;
 
-      // Step 2: Find matching command
-      final commandResult = commandRegistry.findMatchingCommand(command);
+      // Clear the timeout since we successfully processed
+      _processingTimer?.cancel();
 
-      if (!commandResult.isSuccessful || commandResult.matchedCommand == null) {
-        debugPrint('No matching command found for intent: $intent');
-        await ttsService.speak("I'm not sure how to handle that request");
-        return;
-      }
+      if (intent.isNotEmpty && nlpResponse.confidence > 0.6) {
+        debugPrint('Executing command with intent: $intent');
+        // Execute command via registry
+        CommandResult result = await commandRegistry.executeCommand(
+            intent, nlpResponse.parameters);
 
-      // Step 3: Execute the command
-      final Map<String, dynamic> parameters = intentResponse.parameters;
-      final result = await commandRegistry.executeCommand(
-          commandResult.matchedCommand!.id, parameters);
-
-      // Step 4: Provide feedback
-      if (result.isSuccessful) {
-        await ttsService.speak("Done");
+        if (result.status == CommandStatus.success) {
+          debugPrint('Command executed successfully: $intent');
+          ttsService.speak("Command executed");
+        } else {
+          debugPrint('Command failed: $intent, reason: ${result.message}');
+          ttsService.speak("Command not found or failed");
+        }
       } else {
-        await ttsService.speak("I couldn't complete that action");
+        debugPrint(
+            'No intent detected or low confidence: ${nlpResponse.confidence}');
+        ttsService.speak("I didn't understand that command");
       }
     } catch (e) {
       debugPrint('Error processing command: $e');
-      await ttsService.speak("Sorry, something went wrong");
+      ttsService.speak("Error processing your command");
     } finally {
+      _processingCommand = false;
       _isProcessingCommand = false;
       notifyListeners();
+      // Restart listening after command processing
+      debugPrint('Restarting listening after command processing');
+      await Future.delayed(Duration(milliseconds: 1000));
+      await startListening();
     }
   }
 
   Future<bool> startListening() async {
+    debugPrint('Starting listening via VoiceController');
     final success = await speechService.startListening();
     if (success) {
-      await ttsService.speak("I'm listening");
-      await Future.delayed(const Duration(milliseconds: 200));
+      debugPrint('Listening started successfully');
+      // TTS feedback is handled in SpeechRecognitionService
+    } else {
+      debugPrint('Failed to start listening');
+      ttsService.speak("Failed to start listening");
     }
     return success;
   }
 
   Future<void> stopListening() async {
+    debugPrint('Stopping listening via VoiceController');
     await speechService.stopListening();
     _isActive = false;
     _statusMessage = "Voice Assistant Inactive";
@@ -122,6 +146,7 @@ class VoiceController extends ChangeNotifier {
 
   @override
   void dispose() {
+    debugPrint('Disposing VoiceController');
     speechService.dispose();
     ttsService.dispose();
     super.dispose();

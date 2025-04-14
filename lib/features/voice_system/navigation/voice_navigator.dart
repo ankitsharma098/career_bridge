@@ -172,11 +172,14 @@ class VoiceNavigator {
   }
 
   bool _goToRoute(String route) {
+    debugPrint('Navigating to route: $route');
     final NavigatorState? navigator = navigatorKey.currentState;
     if (navigator != null) {
+      debugPrint('Navigator state found, pushing route: $route');
       navigator.pushNamed(route);
       return true;
     }
+    debugPrint('Navigator state is null, cannot navigate to: $route');
     return false;
   }
 }

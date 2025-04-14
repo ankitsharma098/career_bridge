@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 import '../models/voice_command.dart';
 import '../models/command_result.dart';
 
@@ -9,6 +11,7 @@ class CommandRegistry {
     VoiceCommand command,
     Function(Map<String, dynamic>) handler,
   ) {
+    debugPrint('Registering command: ${command.id}');
     _commands[command.id] = command;
     _commandHandlers[command.id] = handler;
   }
@@ -23,6 +26,7 @@ class CommandRegistry {
     for (final command in _commands.values) {
       for (final phrase in command.triggerPhrases) {
         if (normalizedInput.contains(phrase.toLowerCase())) {
+          debugPrint('Found matching command: ${command.id} for input: $input');
           return CommandResult(
             status: CommandStatus.success,
             matchedCommand: command,
@@ -31,6 +35,7 @@ class CommandRegistry {
       }
     }
 
+    debugPrint('No matching command found for input: $input');
     return CommandResult(
       status: CommandStatus.failure,
       message: 'No matching command found.',
@@ -39,10 +44,13 @@ class CommandRegistry {
 
   Future<CommandResult> executeCommand(
       String commandId, Map<String, dynamic> parameters) async {
+    debugPrint(
+        'Attempting to execute command: $commandId with parameters: $parameters');
     final command = _commands[commandId];
     final handler = _commandHandlers[commandId];
 
     if (command == null || handler == null) {
+      debugPrint('Command or handler not found for ID: $commandId');
       return CommandResult(
         status: CommandStatus.failure,
         message: 'Command not found.',
@@ -50,7 +58,9 @@ class CommandRegistry {
     }
 
     try {
+      debugPrint('Executing handler for command: $commandId');
       final result = await handler(parameters);
+      debugPrint('Command $commandId executed with result: $result');
       return CommandResult(
         status: CommandStatus.success,
         message: 'Command executed successfully.',
@@ -58,6 +68,7 @@ class CommandRegistry {
         matchedCommand: command,
       );
     } catch (e) {
+      debugPrint('Error executing command $commandId: $e');
       return CommandResult(
         status: CommandStatus.failure,
         message: 'Failed to execute command: $e',

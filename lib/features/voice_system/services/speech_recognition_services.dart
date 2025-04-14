@@ -1,4 +1,3 @@
-// lib/features/voice_system/services/speech_recognition_services.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -43,6 +42,7 @@ class SpeechRecognitionService {
         final result = await Permission.microphone.request();
         if (!result.isGranted) {
           debugPrint('Microphone permission denied');
+          _ttsService?.speak("Microphone permission denied");
           return false;
         }
       }
@@ -56,6 +56,7 @@ class SpeechRecognitionService {
 
         if (_isInitialized) {
           debugPrint('Speech recognition initialized successfully');
+          _ttsService?.speak("Speech recognition ready");
           return true;
         }
 
@@ -65,9 +66,11 @@ class SpeechRecognitionService {
 
       debugPrint(
           'Speech recognition initialization failed after $_maxRetries attempts');
+      _ttsService?.speak("Failed to initialize speech recognition");
       return false;
     } catch (e) {
       debugPrint('Error initializing speech recognition: $e');
+      _ttsService?.speak("Error setting up speech recognition");
       return false;
     }
   }
@@ -91,15 +94,19 @@ class SpeechRecognitionService {
     try {
       debugPrint('Starting command listening mode...');
       _textStreamController.add('Listening for commands...');
+      _ttsService?.speak("Listening for your command");
 
-      // Start listening with extended durations
+      // Start listening with optimized durations
       await _speech.listen(
         onResult: _handleCommandResult,
-        listenFor: const Duration(seconds: 60), // Increased to 60 seconds
-        pauseFor: const Duration(seconds: 5), // Increased to 5 seconds
-        listenMode: stt.ListenMode.dictation,
+        listenFor: const Duration(seconds: 120), // Extended to 2 minutes
+        pauseFor: const Duration(
+            seconds: 3), // Slightly reduced for more responsiveness
+        listenMode: stt.ListenMode
+            .dictation, // Use dictation mode for better continuous speech
         partialResults: true,
         localeId: 'en-US',
+        cancelOnError: false, // Prevent cancellation on minor errors
       );
 
       // Verify listening state
@@ -109,6 +116,7 @@ class SpeechRecognitionService {
 
       if (!_isListening) {
         _textStreamController.add("Couldn't start listening");
+        _ttsService?.speak("Couldn't start listening");
         return false;
       }
 
@@ -116,26 +124,53 @@ class SpeechRecognitionService {
     } catch (e) {
       debugPrint('Error starting listening: $e');
       _textStreamController.add("Error starting listening: $e");
+      _ttsService?.speak("Error starting to listen");
       _isListening = false;
       _listeningStateController.add(false);
       return false;
     }
   }
 
+  String _partialTextBuffer = '';
+  Timer? _completionTimer;
+  final Duration _completionDelay = Duration(milliseconds: 1500);
+
   void _handleCommandResult(stt.SpeechRecognitionResult result) {
+    // Always update the partial text buffer
+    _partialTextBuffer = result.recognizedWords;
+
+    // Update UI with current recognition
     if (!result.finalResult) {
       _textStreamController.add('Heard: ${result.recognizedWords}');
     }
 
     debugPrint('Command recognition result: ${result.recognizedWords}');
 
+    // If we get a final result, process it immediately
     if (result.finalResult && result.recognizedWords.isNotEmpty) {
-      final command = result.recognizedWords;
-      _commandStreamController.add(command);
-      _textStreamController.add('Processing: "$command"');
-      _awaitingFinalResult = false; // Got a final result
-      _restartListeningIfNeeded();
+      _processCommand(result.recognizedWords);
     }
+    // Otherwise, set a timer to process after a pause in speech
+    else if (!result.finalResult && result.recognizedWords.isNotEmpty) {
+      // Cancel any existing timer
+      _completionTimer?.cancel();
+
+      // Set a new timer for processing after delay
+      _completionTimer = Timer(_completionDelay, () {
+        if (_partialTextBuffer.isNotEmpty) {
+          _processCommand(_partialTextBuffer);
+        }
+      });
+    }
+  }
+
+  void _processCommand(String command) {
+    _commandStreamController.add(command);
+    _textStreamController.add('Processing: "$command"');
+    _ttsService?.speak("Processing command: $command");
+    _partialTextBuffer = ''; // Clear the buffer
+    _awaitingFinalResult = false;
+    _restartListeningIfNeeded();
   }
 
   void _handleSpeechStatus(String status) {
@@ -143,6 +178,7 @@ class SpeechRecognitionService {
     if (status == 'done' || status == 'notListening') {
       _isListening = false;
       _listeningStateController.add(false);
+      _ttsService?.speak("Stopped listening");
       _restartListeningIfNeeded();
     }
   }
@@ -150,6 +186,7 @@ class SpeechRecognitionService {
   void _restartListeningIfNeeded() async {
     if (_awaitingFinalResult && _retryCount < _maxRetries) {
       debugPrint('No final result received, restarting listening...');
+      _ttsService?.speak("Retrying to listen");
       _retryCount++;
       await Future.delayed(const Duration(milliseconds: 500));
       await startListening();
@@ -163,6 +200,7 @@ class SpeechRecognitionService {
     debugPrint(
         'Speech error: ${error.errorMsg}, permanent: ${error.permanent}');
     _textStreamController.add('Error: ${error.errorMsg}');
+    _ttsService?.speak("Speech error: ${error.errorMsg}");
     _isListening = false;
     _listeningStateController.add(false);
     if (error.permanent) {
@@ -177,6 +215,9 @@ class SpeechRecognitionService {
     bool available = await _speech.initialize();
     if (!available) {
       debugPrint('Speech recognition not available on this device');
+      _ttsService?.speak("Speech recognition not available");
+    } else {
+      _ttsService?.speak("Speech recognition is available");
     }
     return available;
   }
@@ -187,6 +228,7 @@ class SpeechRecognitionService {
       _isListening = false;
       _listeningStateController.add(false);
       _textStreamController.add('Voice assistant stopped');
+      _ttsService?.speak("Voice assistant stopped");
     }
   }
 
