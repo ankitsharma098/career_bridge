@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-
 import '../../../core/constants/colors.dart';
 import '../../../core/utils/image_viewer.dart';
 import '../../../core/utils/snackBarUtils.dart';
@@ -14,7 +13,6 @@ import '../../See profile/bloc/see_profile_bloc.dart';
 import '../../See profile/ui/see_profile.dart';
 import '../bloc/story_bloc.dart';
 import '../create_story_bloc/create_story_bloc.dart';
-
 import '../reaction_bloc/story_reaction_bloc.dart';
 import 'create_story.dart';
 import 'edit_story.dart';
@@ -571,20 +569,27 @@ class _StoriesScreenState extends State<StoriesScreen> {
       children: [
         ClipRRect(
           child: story.mediaUrls.length > 1
-              ? PageView.builder(
-                  itemCount: story.mediaUrls.length,
-                  itemBuilder: (context, index) => _buildMediaItem(
-                    story.mediaUrls[index].url,
-                    story.mediaUrls.map((m) => m.url).toList(),
-                    index,
-                    screenSize,
+              ? SizedBox(
+                  height: screenSize.width * 0.6,
+                  child: PageView.builder(
+                    itemCount: story.mediaUrls.length,
+                    itemBuilder: (context, index) => _buildMediaItem(
+                      story.mediaUrls[index].url,
+                      story.mediaUrls.map((m) => m.url).toList(),
+                      index,
+                      screenSize,
+                    ),
                   ),
                 )
-              : _buildMediaItem(
-                  story.mediaUrls.first.url,
-                  story.mediaUrls.map((m) => m.url).toList(),
-                  0,
-                  screenSize,
+              : SizedBox(
+                  height: screenSize.width * 0.6,
+                  width: double.infinity,
+                  child: _buildMediaItem(
+                    story.mediaUrls.first.url,
+                    story.mediaUrls.map((m) => m.url).toList(),
+                    0,
+                    screenSize,
+                  ),
                 ),
         ),
         if (story.mediaUrls.length > 1)
@@ -630,7 +635,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
         ),
         child: Image.network(
           url,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Center(

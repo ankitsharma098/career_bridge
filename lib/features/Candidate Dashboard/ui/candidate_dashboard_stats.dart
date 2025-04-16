@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../../../core/constants/colors.dart';
 import '../../../core/utils/customErrorUtils.dart';
 import '../../../core/utils/snackBarUtils.dart';
@@ -890,13 +889,23 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent>
           'No application trend data available', Icons.trending_up, screenSize);
     }
 
+    // Calculate the proper values for chart display
+    final List<FlSpot> spots = [];
+    for (int i = 0; i < successTrend.length; i++) {
+      final successRate = successTrend[i]['successRate'].toDouble();
+      spots.add(FlSpot(i.toDouble(), successRate));
+    }
+
+    // Determine interval for axis labels to avoid congestion
+    // Only show every nth point if there are more than 4 data points
+    final showEveryNth = successTrend.length > 4 ? 2 : 1;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Success Trend',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                //fontSize: screenSize.width * 0.04,
                 fontWeight: FontWeight.w500,
               ),
         ),
@@ -915,7 +924,8 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent>
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: false,
-                horizontalInterval: 0.2,
+                // Less frequent horizontal grid lines
+                horizontalInterval: 0.25, // Show at 0%, 25%, 50%, 75%, 100%
                 getDrawingHorizontalLine: (value) {
                   return FlLine(
                     color: Colors.grey.withOpacity(0.2),
@@ -927,30 +937,44 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent>
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    interval: 0.2,
-                    getTitlesWidget: (value, meta) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Text(
-                        '${(value * 100).toInt()}%',
-                        style: GoogleFonts.poppins(
-                          fontSize: screenSize.width * 0.03,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
+                    // Only show 0%, 50%, 100% to reduce congestion
+                    interval: 0.5,
+                    getTitlesWidget: (value, meta) {
+                      // Only show certain percentage values
+                      if (value == 0 || value == 0.5 || value == 1.0) {
+                        return Text(
+                          '${(value * 100).toInt()}%',
+                          style: GoogleFonts.poppins(
+                            fontSize: screenSize.width * 0.03,
+                            color: Colors.grey,
+                          ),
+                        );
+                      }
+                      return const SizedBox();
+                    },
                     reservedSize: 36,
                   ),
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
+                    reservedSize: 28,
+                    // This ensures we only show labels at exact data point positions
+                    interval: 1, // Show every point (1 unit apart)
                     getTitlesWidget: (value, meta) {
                       int index = value.toInt();
+
+                      // Only show labels for actual data points
                       if (index >= 0 && index < successTrend.length) {
+                        final month = successTrend[index]['month'];
+                        final year = successTrend[index]['year']
+                            .toString()
+                            .substring(2); // Last 2 digits
+
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
-                            '${successTrend[index]['month']}/${successTrend[index]['year']}',
+                            '$month/$year',
                             style: GoogleFonts.poppins(
                               fontSize: screenSize.width * 0.03,
                               color: Colors.grey,
@@ -960,7 +984,6 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent>
                       }
                       return const SizedBox();
                     },
-                    reservedSize: 28,
                   ),
                 ),
                 topTitles:
@@ -971,14 +994,37 @@ class _CandidateDashboardContentState extends State<CandidateDashboardContent>
               borderData: FlBorderData(show: false),
               minY: 0,
               maxY: 1,
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  // tooltipBgColor: Theme.of(context).brightness == Brightness.dark
+                  //     ? Colors.grey[800]!
+                  //     : Colors.white,
+                  tooltipPadding: const EdgeInsets.all(8),
+                  getTooltipItems: (touchedSpots) {
+                    return touchedSpots.map((spot) {
+                      final index = spot.x.toInt();
+                      final month = successTrend[index]['month'];
+                      final year = successTrend[index]['year'];
+                      final successRate = (spot.y * 100).toInt();
+
+                      return LineTooltipItem(
+                        '$month/$year: $successRate%',
+                        TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+                handleBuiltInTouches: true,
+                touchSpotThreshold: 20,
+              ),
               lineBarsData: [
                 LineChartBarData(
-                  spots: successTrend
-                      .asMap()
-                      .entries
-                      .map((e) => FlSpot(
-                          e.key.toDouble(), e.value['successRate'].toDouble()))
-                      .toList(),
+                  spots: spots,
                   isCurved: true,
                   color: Theme.of(context).brightness == Brightness.dark
                       ? AppColors.darkPrimary
