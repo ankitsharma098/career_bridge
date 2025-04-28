@@ -2,12 +2,20 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+
     }
 }
 
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    afterEvaluate {
+        android {
+            if (!namespace) {
+                namespace = project.name == 'app' ? 'com.example.android' : "is.mideind.${project.name}"
+            }
+        }
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")

@@ -1,17 +1,15 @@
+import 'package:android/app.dart';
 import 'package:android/core/theme/app_theme.dart';
 import 'package:android/core/utils/snackBarUtils.dart';
+import 'package:android/features/Candidate%20Dashboard/bloc/candidate_dashboard_bloc.dart';
 import 'package:android/features/auth/bloc/auth_bloc.dart';
-import 'package:android/features/auth/data/auth_api_service.dart';
 import 'package:android/features/auth/employer_registration_bloc/employer_registration_bloc.dart';
 import 'package:android/features/auth/ui/employer_registration_screen.dart';
-import 'package:android/features/auth/ui/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:provider/provider.dart';
 
 import '../../../core/constants/colors.dart';
-import '../../../core/theme/theme_provider.dart';
 import '../../Candidate Dashboard/ui/candidate_dashboard.dart';
 import '../../Employer Dashboard/bloc/employer_dashboard_bloc.dart';
 import '../../Employer Dashboard/ui/employer_dashboard.dart';
@@ -42,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     Size screenSize = MediaQuery.of(context).size;
     return BlocListener<LoginBloc, LoginState>(
       listener: (context, state) {
@@ -51,29 +48,37 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBarUtils.showRedSnackBar(state.error.toString(), context);
         }
         if (state is LoginSuccess) {
-          if (widget.userType == "candidate") {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BlocProvider(
-                  create: (context) => EmployerDashboardBloc(),
-                  child: CandidateDashboardScreen(),
-                ),
-              ),
-              (Route<dynamic> route) => false,
-            );
-          } else if (widget.userType == "employer") {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BlocProvider(
-                  create: (context) => EmployerDashboardBloc(),
-                  child: EmployerDashboardScreen(),
-                ),
-              ),
-              (Route<dynamic> route) => false,
-            );
-          }
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  MyApp(), // This will reinitialize the app with voice services
+            ),
+            (Route<dynamic> route) => false,
+          );
+          // if (widget.userType == "candidate") {
+          //   Navigator.pushAndRemoveUntil(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (context) => BlocProvider(
+          //         create: (context) => CandidateDashboardBloc(),
+          //         child: CandidateDashboardScreen(),
+          //       ),
+          //     ),
+          //     (Route<dynamic> route) => false,
+          //   );
+          // } else if (widget.userType == "employer") {
+          //   Navigator.pushAndRemoveUntil(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (context) => BlocProvider(
+          //         create: (context) => EmployerDashboardBloc(),
+          //         child: EmployerDashboardScreen(),
+          //       ),
+          //     ),
+          //     (Route<dynamic> route) => false,
+          //   );
+          // }
         }
       },
       child: Scaffold(
@@ -284,9 +289,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   .textTheme
                                   .bodyMedium
                                   ?.copyWith(
-                                      fontSize: screenSize.width * 0.045,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey),
+                                    fontSize: screenSize.width * 0.045,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                           );
                         },

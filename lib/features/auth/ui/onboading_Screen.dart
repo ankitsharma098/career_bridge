@@ -4,11 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingScreen extends StatefulWidget {
-
-
-  const OnboardingScreen({
-    Key? key,
-  }) : super(key: key);
+  const OnboardingScreen({super.key});
 
   @override
   _OnboardingScreenState createState() => _OnboardingScreenState();
@@ -22,18 +18,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       'icon': FontAwesomeIcons.wheelchair,
       'title': 'Inclusive Workplace',
-      'description': 'Breaking barriers and creating equal employment opportunities for individuals with disabilities.'
+      'description':
+          'Breaking barriers and creating equal employment opportunities for individuals with disabilities.'
     },
     {
       'icon': FontAwesomeIcons.handHoldingHeart,
       'title': 'Empowerment Through Work',
-      'description': 'Connecting talented individuals with employers who value diversity and unique perspectives.'
+      'description':
+          'Connecting talented individuals with employers who value diversity and unique perspectives.'
     },
     {
       'icon': FontAwesomeIcons.solidStar,
       'title': 'Celebrating Abilities',
-      'description': 'A platform dedicated to showcasing the incredible talents and potential of disabled professionals.',
-      'quote': '"Disability is not a hindrance to success, but an opportunity for extraordinary achievement."'
+      'description':
+          'A platform dedicated to showcasing the incredible talents and potential of disabled professionals.',
+      'quote':
+          '"Disability is not a hindrance to success, but an opportunity for extraordinary achievement."'
     }
   ];
 
@@ -49,9 +49,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Text(
                 'Bridging Talents, Breaking Barriers',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -91,15 +91,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Skip button
                   _currentPage != onboardingData.length - 1
                       ? TextButton(
-                    onPressed: () {
-                      _pageController.animateToPage(
-                        onboardingData.length - 1,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    child: const Text('Skip'),
-                  )
+                          onPressed: () {
+                            _pageController.animateToPage(
+                              onboardingData.length - 1,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          child: const Text('Skip'),
+                        )
                       : const SizedBox(),
 
                   // Next/Get Started button
@@ -109,9 +109,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         // Navigate to Authentication Screen
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (context) => AuthenticationScreen(
-
-                            ),
+                            builder: (context) => AuthenticationScreen(),
                           ),
                         );
                       } else {
@@ -152,8 +150,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text(
             page['title'],
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 15),
@@ -171,9 +169,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Text(
               page['quote'],
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontStyle: FontStyle.italic,
-                color: Colors.grey[700],
-              ),
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey[700],
+                  ),
               textAlign: TextAlign.center,
             ),
           ]

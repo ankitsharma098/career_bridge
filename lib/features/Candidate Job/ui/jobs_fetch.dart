@@ -1,5 +1,6 @@
 import 'package:android/features/Candidate%20Job/Apply%20Job%20Bloc/apply_job_bloc.dart';
 import 'package:android/features/Candidate%20Job/model/candidate_job_model.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -15,66 +16,70 @@ class CandidateTabJobs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          TabBar(
-            labelColor: Theme.of(context).primaryColor,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Theme.of(context).primaryColor,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold),
-            tabs: [
-              Tab(
-                child: SizedBox(
-                  width: screenSize.width * 0.33,
+    return Scaffold(
+      body: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            TabBar(
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Theme.of(context).primaryColor,
+              labelStyle: TextStyle(fontWeight: FontWeight.bold),
+              tabs: [
+                Tab(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.analytics_outlined),
                       SizedBox(width: 8),
-                      Text(
+                      AutoSizeText(
                         'Search Jobs',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(fontSize: screenSize.width * 0.025),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-              ),
-              Tab(
-                child: SizedBox(
-                  width: screenSize.width * 0.46,
+                Tab(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.work_outline),
                       SizedBox(width: 8),
-                      Text(
-                        'Recommended Jobs',
+                      AutoSizeText(
+                        'Recommend Jobs',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(fontSize: screenSize.width * 0.025),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
-              physics: const BouncingScrollPhysics(),
-              children: [
-                BlocProvider(
-                  create: (context) => CandidateJobBloc(),
-                  child: SearchOrAllJobs(isRecommended: false),
-                ),
-                BlocProvider(
-                  create: (context) => CandidateJobBloc(),
-                  child: RecommendationJobs(isRecommended: true),
-                ),
               ],
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  BlocProvider(
+                    create: (context) => CandidateJobBloc(),
+                    child: SearchOrAllJobs(isRecommended: false),
+                  ),
+                  BlocProvider(
+                    create: (context) => CandidateJobBloc(),
+                    child: RecommendationJobs(isRecommended: true),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

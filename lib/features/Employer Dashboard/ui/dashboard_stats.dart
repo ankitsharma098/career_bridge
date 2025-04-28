@@ -54,12 +54,6 @@ class _DashboardContentState extends State<DashboardContent> {
         }
       },
       builder: (context, state) {
-        // if (widget.employerData == null || widget.companyData == null) {
-        //   return const CustomErrorScreen(
-        //     message: "Unable to load user data",
-        //     onRetry: null,
-        //   );
-        // }
         if (state is EmployerDashboardLoading) {
           return EmployerDashboardShimmer();
         }

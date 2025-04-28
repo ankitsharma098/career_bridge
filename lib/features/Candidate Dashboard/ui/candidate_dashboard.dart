@@ -28,8 +28,6 @@ import '../../Employer Profile/ui/employer_profile.dart';
 import '../../Jobs/ui/jobs.dart';
 import '../../Stories/ui/all_story.dart';
 import '../../Stories/ui/story_stats.dart';
-import '../../voice_system/core/voice_controller.dart';
-import '../../voice_system/core/voice_controller_buttons.dart';
 import '../bloc/candidate_dashboard_bloc.dart';
 import 'candidate_dashboard_stats.dart';
 

@@ -54,6 +54,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  audio_session:
+    dependency: "direct main"
+    description:
+      name: audio_session
+      sha256: "2b7fff16a552486d078bfc09a8cde19f426dc6d6329262b684182597bec5b1ac"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.25"
+  audio_streamer:
+    dependency: "direct main"
+    description:
+      name: audio_streamer
+      sha256: c5a310e4d3e622f17249f36840688304bcd62bcdfbd46189c8b3cfa6721b0a64
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
+  audiofileplayer:
+    dependency: "direct main"
+    description:
+      name: audiofileplayer
+      sha256: a77d22c1494bad1708c930c25128397a1cb8f26624c1622058f244d83efccfef
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.1"
+  auto_route:
+    dependency: "direct main"
+    description:
+      name: auto_route
+      sha256: eb33554581a0a4aa7e6da0f13a44291a55bf71359012f1d9feb41634ff908ff8
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.9.2"
   auto_size_text:
     dependency: "direct main"
     description:
@@ -206,6 +238,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.0"
+  complex:
+    dependency: "direct main"
+    description:
+      name: complex
+      sha256: "033b3f880e70aaea9679bece95c02ae160f5afcd54cc658c03dbbb76bd63a1ef"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.0"
   convert:
     dependency: transitive
     description:
@@ -571,6 +611,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.3"
+  flutter_snowboy:
+    dependency: "direct main"
+    description:
+      name: flutter_snowboy
+      sha256: e920c7350f23d06a4d83c570196850d89d78234f20b072f0ad480482a6da2e9d
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2+1"
+  flutter_sound:
+    dependency: "direct main"
+    description:
+      name: flutter_sound
+      sha256: ef89477f6e8ce2fa395158ebc4a8b11982e3ada440b4021c06fd97a4e771554b
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.28.0"
+  flutter_sound_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_sound_platform_interface
+      sha256: "3394d7e664a09796818014ff85a81db0dec397f4c286cbe52f8783886fa5a497"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.28.0"
+  flutter_sound_web:
+    dependency: transitive
+    description:
+      name: flutter_sound_web
+      sha256: "4e10c94a8574bd93bb8668af59bf76f5312a890bccd3778d73168a7133217dc5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.28.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -588,10 +660,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_tts
-      sha256: baa3cb6b4990318460fe28bfa8c7869399e97223971532c02bd97c5e876aa3c5
+      sha256: cbb3fd43b946e62398560235469e6113e4fe26c40eab1b7cb5e7c417503fb3a8
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.2"
+    version: "3.8.5"
   flutter_voice_processor:
     dependency: "direct main"
     description:
@@ -621,6 +693,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  get_it:
+    dependency: "direct main"
+    description:
+      name: get_it
+      sha256: d85128a5dae4ea777324730dc65edd9c9f43155c109d5cc0a69cab74139fbac1
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.7.0"
   glob:
     dependency: transitive
     description:
@@ -677,6 +757,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.4"
+  highlight_text:
+    dependency: "direct main"
+    description:
+      name: highlight_text
+      sha256: c5c6ae54f89183b10b1029ab33549d32e5f52841524fd0da3df92e11c4534127
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.8.0"
   hive:
     dependency: "direct main"
     description:
@@ -817,10 +905,10 @@ packages:
     dependency: transitive
     description:
       name: js
-      sha256: c1b2e9b5ea78c45e1a0788d29606ba27dc5f71f019f32ca5140f61ef071838cf
+      sha256: f2c445dce49627136094980615a031419f7f3eb393237e4ecd97ac15dea343f3
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.1"
+    version: "0.6.7"
   json_annotation:
     dependency: "direct main"
     description:
@@ -877,6 +965,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  logger:
+    dependency: transitive
+    description:
+      name: logger
+      sha256: be4b23575aac7ebf01f225a241eb7f6b5641eeaf43c6a8613510fc2f8cf187d1
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.0"
   logging:
     dependency: transitive
     description:
@@ -1041,50 +1137,42 @@ packages:
     dependency: "direct main"
     description:
       name: permission_handler
-      sha256: "18bf33f7fefbd812f37e72091a15575e72d5318854877e0e4035a24ac1113ecb"
+      sha256: bc56bfe9d3f44c3c612d8d393bd9b174eb796d706759f9b495ac254e4294baa5
       url: "https://pub.dev"
     source: hosted
-    version: "11.3.1"
+    version: "10.4.5"
   permission_handler_android:
     dependency: transitive
     description:
       name: permission_handler_android
-      sha256: "71bbecfee799e65aff7c744761a57e817e73b738fedf62ab7afd5593da21f9f1"
+      sha256: "59c6322171c29df93a22d150ad95f3aa19ed86542eaec409ab2691b8f35f9a47"
       url: "https://pub.dev"
     source: hosted
-    version: "12.0.13"
+    version: "10.3.6"
   permission_handler_apple:
     dependency: transitive
     description:
       name: permission_handler_apple
-      sha256: e6f6d73b12438ef13e648c4ae56bd106ec60d17e90a59c4545db6781229082a0
+      sha256: "99e220bce3f8877c78e4ace901082fb29fa1b4ebde529ad0932d8d664b34f3f5"
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.5"
-  permission_handler_html:
-    dependency: transitive
-    description:
-      name: permission_handler_html
-      sha256: "38f000e83355abb3392140f6bc3030660cfaef189e1f87824facb76300b4ff24"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.3+5"
+    version: "9.1.4"
   permission_handler_platform_interface:
     dependency: transitive
     description:
       name: permission_handler_platform_interface
-      sha256: e9c8eadee926c4532d0305dff94b85bf961f16759c3af791486613152af4b4f9
+      sha256: "6760eb5ef34589224771010805bea6054ad28453906936f843a8cc4d3a55c4a4"
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.3"
+    version: "3.12.0"
   permission_handler_windows:
     dependency: transitive
     description:
       name: permission_handler_windows
-      sha256: "1a790728016f79a41216d88672dbc5df30e686e811ad4e698bfc51f76ad91f1e"
+      sha256: cc074aace208760f1eee6aa4fae766b45d947df85bc831cde77009cdb4720098
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.1"
+    version: "0.1.3"
   petitparser:
     dependency: transitive
     description:
@@ -1318,10 +1406,18 @@ packages:
     dependency: "direct main"
     description:
       name: speech_to_text
-      sha256: "6cf8f284997490ebef1d68f8707bef57dcf083f43c0f915cc285428520bfe6be"
+      sha256: "57fef1d41bdebe298e84842c89bb4ac91f31cdbec7830c8cb1fc6b91d03abd42"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.0"
+    version: "6.6.0"
+  speech_to_text_macos:
+    dependency: transitive
+    description:
+      name: speech_to_text_macos
+      sha256: e685750f7542fcaa087a5396ee471e727ec648bf681f4da83c84d086322173f6
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   speech_to_text_platform_interface:
     dependency: transitive
     description:

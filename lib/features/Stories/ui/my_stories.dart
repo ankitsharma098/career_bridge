@@ -417,20 +417,27 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
       children: [
         ClipRRect(
           child: story.mediaUrls.length > 1
-              ? PageView.builder(
-                  itemCount: story.mediaUrls.length,
-                  itemBuilder: (context, index) => _buildMediaItem(
-                    story.mediaUrls[index].url,
-                    story.mediaUrls.map((m) => m.url).toList(),
-                    index,
-                    screenSize,
+              ? SizedBox(
+                  height: screenSize.width * 0.6,
+                  child: PageView.builder(
+                    itemCount: story.mediaUrls.length,
+                    itemBuilder: (context, index) => _buildMediaItem(
+                      story.mediaUrls[index].url,
+                      story.mediaUrls.map((m) => m.url).toList(),
+                      index,
+                      screenSize,
+                    ),
                   ),
                 )
-              : _buildMediaItem(
-                  story.mediaUrls.first.url,
-                  story.mediaUrls.map((m) => m.url).toList(),
-                  0,
-                  screenSize,
+              : SizedBox(
+                  height: screenSize.width * 0.6,
+                  width: double.infinity,
+                  child: _buildMediaItem(
+                    story.mediaUrls.first.url,
+                    story.mediaUrls.map((m) => m.url).toList(),
+                    0,
+                    screenSize,
+                  ),
                 ),
         ),
         if (story.mediaUrls.length > 1)
@@ -476,7 +483,7 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
         ),
         child: Image.network(
           url,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Center(

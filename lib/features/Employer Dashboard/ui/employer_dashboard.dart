@@ -41,13 +41,13 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
   bool isLoading = true;
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
-
+  // final VoiceSystemManager _voiceManager = VoiceSystemManager();
   Future<void> logout() async {
     return await HiveUtils.clearUserData();
   }
 
   @override
-  void initState() {
+  Future<void> initState() async {
     // TODO: implement initState
     super.initState();
     _initializeData();
@@ -138,10 +138,6 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
       appBar: AppBar(
         title: Text(_selectedIndex == 0 ? 'Dashboard' : 'Stories'),
         actions: [
-          // IconButton(
-          //   icon: Icon(Icons.notifications),
-          //   onPressed: () {},
-          // ),
           IconButton(
             icon: Icon(
                 themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
@@ -149,28 +145,40 @@ class _EmployerDashboardScreenState extends State<EmployerDashboardScreen> {
           ),
         ],
       ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+      body: Stack(
         children: [
-          BlocProvider(
-            create: (context) => EmployerDashboardBloc(),
-            child: DashboardContent(),
+          PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            children: [
+              BlocProvider(
+                create: (context) => EmployerDashboardBloc(),
+                child: DashboardContent(),
+              ),
+              BlocProvider(
+                create: (context) => StoryBloc(),
+                child: StoriesScreen(
+                  currentUserId: employerData!.id,
+                  currentUserType: 'employer',
+                ),
+              ),
+              // Center(
+              //   child: Text("Working"),
+              // )
+            ],
           ),
-          BlocProvider(
-            create: (context) => StoryBloc(),
-            child: StoriesScreen(
-              currentUserId: employerData!.id,
-              currentUserType: 'employer',
-            ),
-          ),
-          // Center(
-          //   child: Text("Working"),
-          // )
+          // Positioned(
+          //   bottom: 0,
+          //   left: 0,
+          //   right: 0,
+          //   child: VoiceCommandWidget(
+          //     controller: _voiceManager.controller,
+          //   ),
+          // ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
